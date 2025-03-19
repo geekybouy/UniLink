@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "536645951170",
+    "project_id": "unilink-6e8fd",
+    "storage_bucket": "unilink-6e8fd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:536645951170:android:a3d6f75e60cd068ea2e55b",
+        "android_client_info": {
+          "package_name": "com.example.unilink"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "536645951170-b4tjqkt12mkl939lctt8n2enkmbcujof.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.unilink",
+            "certificate_hash": "271a55b4043a991ba804c169f963fa9d480dff55"
+          }
+        },
+        {
+          "client_id": "536645951170-k8j3eishd91n7psrk369br2s0oqcrl16.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYpfaaqSQEMfQexEIDb432C_gSD_NOumY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "536645951170-k8j3eishd91n7psrk369br2s0oqcrl16.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
