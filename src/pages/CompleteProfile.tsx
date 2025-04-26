@@ -26,11 +26,16 @@ const CompleteProfile = () => {
 
     setIsSubmitting(true);
     try {
+      // Convert batch_year to number if it's not empty
+      const batchYearValue = formData.batch_year ? parseInt(formData.batch_year) : null;
+      
       const { error } = await supabase
         .from('profiles')
         .update({
-          ...formData,
-          is_profile_complete: true,
+          bio: formData.bio,
+          location: formData.location,
+          batch_year: batchYearValue,
+          course: formData.course,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);

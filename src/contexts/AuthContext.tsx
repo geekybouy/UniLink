@@ -55,13 +55,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('is_profile_complete')
+        .select('*')
         .eq('id', userId)
         .single();
 
       if (error) throw error;
 
-      if (profile?.is_profile_complete) {
+      // Check if profile data indicates profile is complete
+      const isComplete = profile && 
+        Boolean(profile.batch_year) && 
+        Boolean(profile.course) && 
+        Boolean(profile.location);
+
+      if (isComplete) {
         navigate('/dashboard');
       } else {
         navigate('/complete-profile');
