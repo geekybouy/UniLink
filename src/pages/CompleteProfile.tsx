@@ -14,10 +14,8 @@ const CompleteProfile = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    bio: '',
-    location: '',
-    batch_year: '',
-    course: ''
+    full_name: '',
+    email: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,17 +24,11 @@ const CompleteProfile = () => {
 
     setIsSubmitting(true);
     try {
-      // Convert batch_year to number if it's not empty
-      const batchYearValue = formData.batch_year ? parseInt(formData.batch_year) : null;
-      
       const { error } = await supabase
         .from('profiles')
         .update({
-          bio: formData.bio,
-          location: formData.location,
-          batch_year: batchYearValue,
-          course: formData.course,
-          updated_at: new Date().toISOString()
+          full_name: formData.full_name,
+          email: formData.email,
         })
         .eq('id', user.id);
 
@@ -66,37 +58,19 @@ const CompleteProfile = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Input
-              name="bio"
-              placeholder="Tell us about yourself"
-              value={formData.bio}
+              name="full_name"
+              placeholder="Your full name"
+              value={formData.full_name}
               onChange={handleChange}
               className="w-full"
             />
           </div>
           <div>
             <Input
-              name="location"
-              placeholder="Your location"
-              value={formData.location}
-              onChange={handleChange}
-              className="w-full"
-            />
-          </div>
-          <div>
-            <Input
-              name="batch_year"
-              type="number"
-              placeholder="Graduation Year"
-              value={formData.batch_year}
-              onChange={handleChange}
-              className="w-full"
-            />
-          </div>
-          <div>
-            <Input
-              name="course"
-              placeholder="Your course"
-              value={formData.course}
+              name="email"
+              type="email"
+              placeholder="Your email address"
+              value={formData.email}
               onChange={handleChange}
               className="w-full"
             />

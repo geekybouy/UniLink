@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
@@ -24,13 +25,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
 
         if (event === 'SIGNED_IN') {
-          checkProfileCompletion(session?.user?.id);
+          await checkProfileCompletion(session?.user?.id);
         }
       }
     );
@@ -59,10 +60,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
+      const requiredFields = ['full_name', 'email'];
       const isComplete = profile && 
-        Boolean(profile.batch_year) && 
-        Boolean(profile.course) && 
-        Boolean(profile.location);
+        requiredFields.every(field => profile[field as keyof typeof profile]);
 
       if (isComplete) {
         navigate('/dashboard');
