@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
@@ -9,6 +8,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
   isLoading: boolean;
 }
@@ -22,7 +23,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
@@ -30,13 +30,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
 
         if (event === 'SIGNED_IN') {
-          // Check if profile is complete when user signs in
           checkProfileCompletion(session?.user?.id);
         }
       }
     );
 
-    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -61,7 +59,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      // Check if profile data indicates profile is complete
       const isComplete = profile && 
         Boolean(profile.batch_year) && 
         Boolean(profile.course) && 
@@ -93,6 +90,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInWithEmail = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Error signing in with email:', error);
+      throw error;
+    }
+  };
+
+  const signUpWithEmail = async (email: string, password: string, fullName: string) => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+        },
+      });
+      if (error) throw error;
+      toast.success('Please check your email to confirm your account');
+    } catch (error: any) {
+      console.error('Error signing up with email:', error);
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -105,7 +134,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, signInWithGoogle, signOut, isLoading }}>
+    <AuthContext.Provider 
+      value={{ 
+        user, 
+        session, 
+        signInWithGoogle, 
+        signInWithEmail, 
+        signUpWithEmail, 
+        signOut, 
+        isLoading 
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
