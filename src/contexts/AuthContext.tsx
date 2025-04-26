@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
 
         if (event === 'SIGNED_IN') {
-          await checkProfileCompletion(session?.user?.id);
+          await checkProfileCompletion(session?.user);
         }
       }
     );
@@ -41,21 +41,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       setIsLoading(false);
       if (session?.user) {
-        checkProfileCompletion(session.user.id);
+        checkProfileCompletion(session.user);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const checkProfileCompletion = async (userId: string | undefined) => {
-    if (!userId) return;
+  const checkProfileCompletion = async (user: User | null | undefined) => {
+    if (!user) return;
 
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user.id)
         .single();
 
       if (error) throw error;
