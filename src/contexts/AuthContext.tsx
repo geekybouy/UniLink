@@ -25,12 +25,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth event:', event);
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
 
         if (event === 'SIGNED_IN') {
-          await checkProfileCompletion(session?.user);
+          setTimeout(() => {
+            checkProfileCompletion(session?.user);
+          }, 0);
         }
       }
     );
@@ -40,7 +43,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       setIsLoading(false);
       if (session?.user) {
-        checkProfileCompletion(session.user);
+        setTimeout(() => {
+          checkProfileCompletion(session.user);
+        }, 0);
       }
     });
 
@@ -97,7 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Authentication failed. No redirect URL provided.');
       }
       
-      console.log('Redirecting to Google auth URL');
+      console.log('Redirecting to Google auth URL:', data.url);
       window.location.href = data.url;
     } catch (error: any) {
       console.error('Error signing in with Google:', error);

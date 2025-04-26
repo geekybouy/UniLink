@@ -11,7 +11,7 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        console.log('Auth callback page loaded');
+        console.log('Auth callback page loaded with URL:', window.location.href);
         
         // Get the current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -22,23 +22,23 @@ const AuthCallback = () => {
         }
 
         if (!session) {
-          console.log('No session found in callback, attempting to exchange code for session');
+          console.log('No session found in callback, attempting to process OAuth response');
           
-          // Try to refresh the session by handling the URL hash
-          const { error: exchangeError } = await supabase.auth.refreshSession();
+          // PKCE flow should automatically exchange the code for a session
+          // Let's explicitly get the session again
+          const { data, error: exchangeError } = await supabase.auth.refreshSession();
           
           if (exchangeError) {
             console.error('Failed to exchange code for session:', exchangeError);
             throw exchangeError;
           }
           
-          // Get the new session after exchange
-          const { data: { session: newSession }, error: newSessionError } = await supabase.auth.getSession();
-          
-          if (newSessionError || !newSession) {
-            console.error('No session after exchange:', newSessionError);
-            throw newSessionError || new Error('Authentication failed - no session available');
+          if (!data.session) {
+            console.error('No session after exchange attempt');
+            throw new Error('Authentication failed - no session available');
           }
+          
+          console.log('Successfully obtained session after exchange');
         }
 
         console.log('Successfully authenticated, checking profile');
