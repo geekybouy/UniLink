@@ -20,7 +20,7 @@ const AuthCallback = () => {
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', session.user.id)
+            .eq('user_id', session.user.id)
             .single();
 
           if (profileError && profileError.code !== 'PGRST116') {
@@ -31,13 +31,12 @@ const AuthCallback = () => {
             // Create initial profile if it doesn't exist
             const { error: insertError } = await supabase
               .from('profiles')
-              .insert([
-                {
-                  id: session.user.id,
-                  email: session.user.email,
-                  full_name: session.user.user_metadata.full_name || '',
-                }
-              ]);
+              .insert({
+                user_id: session.user.id,
+                email: session.user.email || '',
+                full_name: session.user.user_metadata.full_name || '',
+                password: '' // Required field based on your schema
+              });
 
             if (insertError) throw insertError;
             navigate('/complete-profile');

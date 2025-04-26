@@ -30,7 +30,7 @@ const CompleteProfile = () => {
           full_name: formData.full_name,
           email: formData.email,
         })
-        .eq('id', user.id);
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
