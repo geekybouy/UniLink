@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Feed from "./pages/Feed";
 import NewPost from "./pages/NewPost";
 import NotFound from "./pages/NotFound";
+import AlumniProfile from "./pages/AlumniProfile";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/feed" element={<Feed />} />
           <Route path="/new-post" element={<NewPost />} />
+          <Route path="/profile" element={<AlumniProfile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
