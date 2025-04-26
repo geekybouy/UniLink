@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Google } from "lucide-react";
+import { Chrome } from "lucide-react";
 
 const AuthForms = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -46,7 +46,7 @@ const AuthForms = () => {
             variant="outline" 
             className="w-full border-gray-300 hover:bg-gray-50"
           >
-            <Google className="mr-2 h-4 w-4" />
+            <Chrome className="mr-2 h-4 w-4" />
             Sign up with Google
           </Button>
           
