@@ -14,38 +14,39 @@ const AuthCallback = () => {
         console.log('Auth callback page loaded');
         
         // Get the current session
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error('Auth callback session error:', error);
-          throw error;
+        if (sessionError) {
+          console.error('Initial session check error:', sessionError);
+          throw sessionError;
         }
-        
+
         if (!session) {
           console.log('No session found in callback, attempting to exchange code for session');
           
           // Try to refresh the session by handling the URL hash
-          // This covers the OAuth redirect scenario
           const { error: exchangeError } = await supabase.auth.refreshSession();
+          
           if (exchangeError) {
             console.error('Failed to exchange code for session:', exchangeError);
             throw exchangeError;
           }
           
-          // Try to get session again after exchange
+          // Get the new session after exchange
           const { data: { session: newSession }, error: newSessionError } = await supabase.auth.getSession();
+          
           if (newSessionError || !newSession) {
-            console.error('Still no session after exchange:', newSessionError);
-            throw newSessionError || new Error('No session after auth exchange');
+            console.error('No session after exchange:', newSessionError);
+            throw newSessionError || new Error('Authentication failed - no session available');
           }
         }
-        
+
         console.log('Successfully authenticated, checking profile');
-        // Re-get session as it might have been updated
+        // Get the latest session
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         
         if (currentSession?.user) {
-          // Check if user profile exists and is complete
+          // Check if user profile exists
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -58,8 +59,7 @@ const AuthCallback = () => {
           }
 
           if (!profile) {
-            // Create initial profile if it doesn't exist
-            console.log('Creating new profile for user');
+            console.log('Creating new profile');
             const { error: insertError } = await supabase
               .from('profiles')
               .insert({
@@ -91,13 +91,11 @@ const AuthCallback = () => {
             navigate('/complete-profile');
           }
         } else {
-          console.error('No user in session after auth callback');
-          toast.error('Authentication unsuccessful');
-          navigate('/');
+          throw new Error('No user in session after authentication');
         }
       } catch (error: any) {
-        console.error('Error in auth callback:', error);
-        toast.error('Authentication failed: ' + (error.message || 'Unknown error'));
+        console.error('Auth callback error:', error);
+        toast.error('Authentication failed: ' + (error.message || 'Please try again'));
         navigate('/');
       }
     };
