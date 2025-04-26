@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Google } from "lucide-react";
 
 const AuthForms = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -39,39 +41,60 @@ const AuthForms = () => {
           </Button>
         </form>
       ) : (
-        <form className="space-y-4">
-          <div>
-            <Input
-              type="text"
-              placeholder="Full Name"
-              className="w-full"
-            />
-          </div>
-          <div>
-            <Input
-              type="email"
-              placeholder="Email"
-              className="w-full"
-            />
-          </div>
-          <div>
-            <Input
-              type="password"
-              placeholder="Password"
-              className="w-full"
-            />
-          </div>
-          <div>
-            <Input
-              type="password"
-              placeholder="Confirm Password"
-              className="w-full"
-            />
-          </div>
-          <Button className="w-full bg-primary hover:bg-primary/90">
-            Sign Up
+        <div className="space-y-4">
+          <Button 
+            variant="outline" 
+            className="w-full border-gray-300 hover:bg-gray-50"
+          >
+            <Google className="mr-2 h-4 w-4" />
+            Sign up with Google
           </Button>
-        </form>
+          
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <Separator className="w-full" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-muted-foreground">
+                or
+              </span>
+            </div>
+          </div>
+
+          <form className="space-y-4">
+            <div>
+              <Input
+                type="text"
+                placeholder="Full Name"
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Input
+                type="email"
+                placeholder="Email"
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Input
+                type="password"
+                placeholder="Password"
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Input
+                type="password"
+                placeholder="Confirm Password"
+                className="w-full"
+              />
+            </div>
+            <Button className="w-full bg-primary hover:bg-primary/90">
+              Sign Up
+            </Button>
+          </form>
+        </div>
       )}
       
       <div className="text-center">
