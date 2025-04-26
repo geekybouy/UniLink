@@ -7,6 +7,7 @@ import { Chrome } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { Spinner } from '@/components/ui/spinner';
 import ManualAuthForm from './ManualAuthForm';
+import { toast } from 'sonner';
 
 const AuthForms = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -14,9 +15,16 @@ const AuthForms = () => {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   const handleGoogleSignIn = async () => {
-    setIsAuthenticating(true);
-    await signInWithGoogle();
-    setIsAuthenticating(false);
+    try {
+      setIsAuthenticating(true);
+      toast.info('Redirecting to Google sign-in...');
+      await signInWithGoogle();
+      // Note: No need to set isAuthenticating to false here as we're redirecting
+    } catch (error) {
+      console.error('Google sign-in failed:', error);
+      setIsAuthenticating(false);
+      // Error is already handled in signInWithGoogle function
+    }
   };
 
   if (isLoading) {
@@ -35,17 +43,20 @@ const AuthForms = () => {
       
       <Button 
         variant="outline" 
-        className="w-full border-gray-300 hover:bg-gray-50"
+        className="w-full border-gray-300 hover:bg-gray-50 relative"
         onClick={handleGoogleSignIn}
         disabled={isAuthenticating}
       >
         {isAuthenticating ? (
-          <Spinner />
+          <span className="flex items-center justify-center">
+            <Spinner />
+            <span className="ml-2">Connecting to Google...</span>
+          </span>
         ) : (
-          <>
+          <span className="flex items-center justify-center">
             <Chrome className="mr-2 h-4 w-4" />
             {isLogin ? "Sign in with Google" : "Sign up with Google"}
-          </>
+          </span>
         )}
       </Button>
 

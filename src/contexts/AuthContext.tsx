@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
@@ -77,16 +76,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      console.log('Starting Google sign-in process');
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            prompt: 'select_account',
+          }
         }
       });
-      if (error) throw error;
-    } catch (error) {
+      
+      if (error) {
+        console.error('Google sign-in error:', error);
+        throw error;
+      }
+      
+      if (!data.url) {
+        console.error('No redirect URL returned from Supabase');
+        throw new Error('Authentication failed. No redirect URL provided.');
+      }
+      
+      console.log('Redirecting to Google auth URL');
+      window.location.href = data.url;
+    } catch (error: any) {
       console.error('Error signing in with Google:', error);
-      toast.error('Failed to sign in with Google');
+      toast.error('Failed to sign in with Google: ' + (error.message || 'Unknown error'));
     }
   };
 
