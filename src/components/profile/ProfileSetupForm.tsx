@@ -101,6 +101,8 @@ export default function ProfileSetupForm() {
         avatarUrl = await handleImageUpload(data.avatar[0]);
       }
 
+      const graduationYear = data.graduation_year ? parseInt(data.graduation_year) : null;
+
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
@@ -108,7 +110,7 @@ export default function ProfileSetupForm() {
           username: data.username,
           bio: data.bio,
           university_name: data.university_name,
-          graduation_year: parseInt(data.graduation_year),
+          graduation_year: graduationYear,
           branch: data.branch,
           location: data.location,
           registration_number: data.registration_number,
