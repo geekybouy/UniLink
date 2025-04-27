@@ -9,6 +9,84 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      cvs: {
+        Row: {
+          created_at: string
+          cv_data: Json
+          id: string
+          template_used: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          cv_data: Json
+          id?: string
+          template_used: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          cv_data?: Json
+          id?: string
+          template_used?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          created_at: string
+          created_by: string
+          date: string
+          description: string
+          id: string
+          location: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          date: string
+          description: string
+          id?: string
+          location: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          date?: string
+          description?: string
+          id?: string
+          location?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      posts: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          image_url: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           email: string
@@ -30,6 +108,33 @@ export type Database = {
           id?: never
           password?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          link: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          link?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          link?: string | null
+          title?: string
+          user_id?: string
         }
         Relationships: []
       }

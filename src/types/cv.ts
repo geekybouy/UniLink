@@ -30,6 +30,6 @@ export interface CVData {
   education: Education[];
   workExperience: WorkExperience[];
   projects: Project[];
-  skills: string[];
-  certifications: string[];
+  skills: string[] | string;
+  certifications: string[] | string;
 }
