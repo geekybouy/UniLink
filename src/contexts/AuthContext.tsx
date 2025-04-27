@@ -5,6 +5,23 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+interface ProfileType {
+  id?: number;
+  user_id: string;
+  full_name: string;
+  email: string;
+  password: string;
+  is_profile_complete?: boolean;
+  username?: string;
+  bio?: string;
+  university_name?: string;
+  graduation_year?: number | null;
+  branch?: string;
+  location?: string;
+  registration_number?: string;
+  avatar_url?: string | null;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -60,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .single();
 
       if (error) {
@@ -69,9 +86,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const { error: insertError } = await supabase
             .from('profiles')
             .insert({
-              id: user.id,
+              user_id: user.id,
               full_name: user.user_metadata.full_name || '',
-              username: '',
+              email: user.email || '',
+              password: '',
               is_profile_complete: false
             });
 

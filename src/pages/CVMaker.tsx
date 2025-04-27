@@ -6,6 +6,7 @@ import CVForm from "@/components/cv-maker/CVForm";
 import { CVData } from "@/types/cv";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Json } from "@/integrations/supabase/types";
 
 export default function CVMaker() {
   const [cvData, setCVData] = useState<CVData | null>(null);
@@ -34,7 +35,7 @@ export default function CVMaker() {
         .from('cvs')
         .insert({
           user_id: user.id,
-          cv_data: processedData,
+          cv_data: processedData as unknown as Json,
           template_used: "default" // You can make this dynamic when adding multiple templates
         });
 

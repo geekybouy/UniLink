@@ -1,4 +1,6 @@
 
+import { Json } from "@/integrations/supabase/types";
+
 export interface Education {
   institution: string;
   degree: string;
@@ -32,4 +34,9 @@ export interface CVData {
   projects: Project[];
   skills: string[] | string;
   certifications: string[] | string;
+}
+
+// This type helps ensure our CVData can be stored in Supabase's Json column
+export type SerializableCVData = {
+  [K in keyof CVData]: CVData[K];
 }

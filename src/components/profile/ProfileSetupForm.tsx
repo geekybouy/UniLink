@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -117,7 +116,7 @@ export default function ProfileSetupForm() {
           avatar_url: avatarUrl,
           is_profile_complete: true,
         })
-        .eq('id', user.data.user.id);
+        .eq('user_id', user.data.user.id);
 
       if (updateError) throw updateError;
 
