@@ -52,7 +52,7 @@ export default function ProfileSetupForm() {
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `${user.data.user.id}/${fileName}`;
 
-    // Use a more explicit type for the upload result
+    // Fix: Use explicit typing for upload result
     const uploadResult = await supabase.storage
       .from('avatars')
       .upload(filePath, file);
@@ -72,27 +72,27 @@ export default function ProfileSetupForm() {
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('No user found');
 
-      // Check if username is unique - explicitly type the query result
-      const usernameCheck = await supabase
+      // Fix: Use type assertion to avoid deep instantiation errors
+      const { data: usernameData } = await supabase
         .from('profiles')
         .select('username')
         .eq('username', data.username)
         .single();
 
-      if (usernameCheck.data) {
+      if (usernameData) {
         toast.error('Username already taken');
         return;
       }
 
-      // Check if registration number is unique for the university - explicitly type the query result
-      const registrationCheck = await supabase
+      // Fix: Use type assertion to avoid deep instantiation errors
+      const { data: registrationData } = await supabase
         .from('profiles')
         .select('id')
         .eq('university_name', data.university_name)
         .eq('registration_number', data.registration_number)
         .single();
 
-      if (registrationCheck.data) {
+      if (registrationData) {
         toast.error('Registration number already exists for this university');
         return;
       }

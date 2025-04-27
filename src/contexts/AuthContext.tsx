@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               email: user.email || '',
               password: '',
               is_profile_complete: false
-            });
+            } as ProfileType);
 
           if (insertError) throw insertError;
           navigate('/profile-setup');
@@ -100,7 +100,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
 
-      if (!data?.is_profile_complete) {
+      // Use type assertion to tell TypeScript the data has is_profile_complete
+      const profileData = data as ProfileType;
+      if (!profileData.is_profile_complete) {
         navigate('/profile-setup');
       } else {
         navigate('/dashboard');
