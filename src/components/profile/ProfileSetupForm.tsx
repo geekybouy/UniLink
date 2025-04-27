@@ -35,7 +35,7 @@ export default function ProfileSetupForm() {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
+    setValue,
   } = useForm<ProfileFormData>();
 
   const currentYear = new Date().getFullYear();
@@ -45,12 +45,12 @@ export default function ProfileSetupForm() {
   );
 
   const handleImageUpload = async (file: File) => {
-    const user = supabase.auth.getUser();
-    if (!user) throw new Error('No user found');
+    const user = await supabase.auth.getUser();
+    if (!user.data.user) throw new Error('No user found');
 
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `${(await user).data.user?.id}/${fileName}`;
+    const filePath = `${user.data.user.id}/${fileName}`;
 
     const { error: uploadError, data } = await supabase.storage
       .from('avatars')
@@ -128,6 +128,10 @@ export default function ProfileSetupForm() {
     }
   };
 
+  const handleSelectGraduationYear = (value: string) => {
+    setValue('graduation_year', value);
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="space-y-2">
@@ -183,7 +187,7 @@ export default function ProfileSetupForm() {
 
       <div className="space-y-2">
         <Label htmlFor="graduation_year">Graduation Year *</Label>
-        <Select onValueChange={(value) => register('graduation_year').onChange({ target: { value } })}>
+        <Select onValueChange={handleSelectGraduationYear}>
           <SelectTrigger>
             <SelectValue placeholder="Select year" />
           </SelectTrigger>

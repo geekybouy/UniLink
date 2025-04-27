@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
@@ -56,15 +57,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     try {
-      const { data: profile, error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
-        .select('is_profile_complete')
-        .eq('user_id', user.id)
+        .select('*')
+        .eq('id', user.id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // Profile doesn't exist, create a new one
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              full_name: user.user_metadata.full_name || '',
+              username: '',
+              is_profile_complete: false
+            });
 
-      if (!profile?.is_profile_complete) {
+          if (insertError) throw insertError;
+          navigate('/profile-setup');
+          return;
+        }
+        throw error;
+      }
+
+      if (!data?.is_profile_complete) {
         navigate('/profile-setup');
       } else {
         navigate('/dashboard');
