@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Search, Home, BookOpen, PlusSquare, MessageCircle, User, Bell } from 'lucide-react';
 import { Input } from "@/components/ui/input";
@@ -15,9 +14,15 @@ const Dashboard = () => {
       {/* Navigation Bar */}
       <nav className="fixed top-0 w-full bg-white/95 backdrop-blur-sm shadow-sm z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="w-24" /> {/* Spacer */}
+          <div className="w-24" />
           <h1 className="text-2xl font-playfair text-primary font-bold">UniLink</h1>
           <div className="flex items-center gap-4">
+            <a 
+              href="/cv-maker" 
+              className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              CV Maker
+            </a>
             <button className="text-gray-600 hover:text-primary transition-colors">
               <MessageCircle className="h-6 w-6" />
             </button>

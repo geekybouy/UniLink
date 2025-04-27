@@ -13,6 +13,7 @@ import AlumniProfile from "./pages/AlumniProfile";
 import CompleteProfile from "./pages/CompleteProfile";
 import AuthCallback from "./pages/AuthCallback";
 import ProfileSetup from "./pages/ProfileSetup";
+import CVMaker from "./pages/CVMaker";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/complete-profile" element={<CompleteProfile />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/profile-setup" element={<ProfileSetup />} />
+            <Route path="/cv-maker" element={<CVMaker />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
