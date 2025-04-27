@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import AlumniProfile from "./pages/AlumniProfile";
 import CompleteProfile from "./pages/CompleteProfile";
 import AuthCallback from "./pages/AuthCallback";
+import ProfileSetup from "./pages/ProfileSetup";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/profile" element={<AlumniProfile />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/profile-setup" element={<ProfileSetup />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

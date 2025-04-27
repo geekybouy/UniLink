@@ -58,20 +58,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('is_profile_complete')
         .eq('user_id', user.id)
         .single();
 
       if (error) throw error;
 
-      const requiredFields = ['full_name', 'email'];
-      const isComplete = profile && 
-        requiredFields.every(field => profile[field as keyof typeof profile]);
-
-      if (isComplete) {
-        navigate('/dashboard');
+      if (!profile?.is_profile_complete) {
+        navigate('/profile-setup');
       } else {
-        navigate('/complete-profile');
+        navigate('/dashboard');
       }
     } catch (error) {
       console.error('Error checking profile:', error);
