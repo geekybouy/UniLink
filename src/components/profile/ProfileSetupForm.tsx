@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -51,11 +52,12 @@ export default function ProfileSetupForm() {
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `${user.data.user.id}/${fileName}`;
 
-    const { error: uploadError, data } = await supabase.storage
+    // Use a more explicit type for the upload result
+    const uploadResult = await supabase.storage
       .from('avatars')
       .upload(filePath, file);
-
-    if (uploadError) throw uploadError;
+      
+    if (uploadResult.error) throw uploadResult.error;
 
     const { data: { publicUrl } } = supabase.storage
       .from('avatars')
@@ -70,27 +72,27 @@ export default function ProfileSetupForm() {
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('No user found');
 
-      // Check if username is unique
-      const { data: existingUsername } = await supabase
+      // Check if username is unique - explicitly type the query result
+      const usernameCheck = await supabase
         .from('profiles')
         .select('username')
         .eq('username', data.username)
         .single();
 
-      if (existingUsername) {
+      if (usernameCheck.data) {
         toast.error('Username already taken');
         return;
       }
 
-      // Check if registration number is unique for the university
-      const { data: existingRegistration } = await supabase
+      // Check if registration number is unique for the university - explicitly type the query result
+      const registrationCheck = await supabase
         .from('profiles')
         .select('id')
         .eq('university_name', data.university_name)
         .eq('registration_number', data.registration_number)
         .single();
 
-      if (existingRegistration) {
+      if (registrationCheck.data) {
         toast.error('Registration number already exists for this university');
         return;
       }
