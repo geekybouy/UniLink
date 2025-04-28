@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +15,7 @@ import CompleteProfile from "./pages/CompleteProfile";
 import AuthCallback from "./pages/AuthCallback";
 import ProfileSetup from "./pages/ProfileSetup";
 import CVMaker from "./pages/CVMaker";
+import CredentialWallet from "./pages/CredentialWallet";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +36,7 @@ const App = () => (
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/profile-setup" element={<ProfileSetup />} />
             <Route path="/cv-maker" element={<CVMaker />} />
+            <Route path="/credential-wallet" element={<CredentialWallet />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

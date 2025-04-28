@@ -83,15 +83,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         if (error.code === 'PGRST116') {
           // Profile doesn't exist, create a new one
+          const newProfile: Omit<ProfileType, 'id'> = {
+            user_id: user.id,
+            full_name: user.user_metadata.full_name || '',
+            email: user.email || '',
+            password: '',
+            is_profile_complete: false
+          };
+          
           const { error: insertError } = await supabase
             .from('profiles')
-            .insert({
-              user_id: user.id,
-              full_name: user.user_metadata.full_name || '',
-              email: user.email || '',
-              password: '',
-              is_profile_complete: false
-            } as ProfileType);
+            .insert(newProfile);
 
           if (insertError) throw insertError;
           navigate('/profile-setup');

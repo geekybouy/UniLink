@@ -1,7 +1,6 @@
 
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
-import { Home, BookOpen, PlusSquare, MessageCircle, User } from 'lucide-react';
+import { useLocation, Link } from 'react-router-dom';
+import { Home, BookOpen, PlusSquare, MessageCircle, User, Shield } from 'lucide-react';
 
 const BottomNav = () => {
   const location = useLocation();
@@ -22,10 +21,10 @@ const BottomNav = () => {
             <PlusSquare className="h-6 w-6" />
             <span className="text-xs mt-1">New Post</span>
           </Link>
-          <button className="flex flex-col items-center text-gray-500 hover:text-primary transition-colors">
-            <MessageCircle className="h-6 w-6" />
-            <span className="text-xs mt-1">Chat</span>
-          </button>
+          <Link to="/credential-wallet" className={`flex flex-col items-center ${location.pathname === '/credential-wallet' ? 'text-primary' : 'text-gray-500 hover:text-primary transition-colors'}`}>
+            <Shield className="h-6 w-6" />
+            <span className="text-xs mt-1">Credentials</span>
+          </Link>
           <Link to="/profile" className={`flex flex-col items-center ${location.pathname === '/profile' ? 'text-primary' : 'text-gray-500 hover:text-primary transition-colors'}`}>
             <User className="h-6 w-6" />
             <span className="text-xs mt-1">Profile</span>

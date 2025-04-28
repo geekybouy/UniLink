@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -72,27 +71,25 @@ export default function ProfileSetupForm() {
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('No user found');
 
-      // Fix: Use type assertion to avoid deep instantiation errors
-      const { data: usernameData } = await supabase
+      // Fix: Simplify username check
+      const { count: usernameExists } = await supabase
         .from('profiles')
-        .select('username')
-        .eq('username', data.username)
-        .single();
+        .select('*', { count: 'exact', head: true })
+        .eq('username', data.username);
 
-      if (usernameData) {
+      if (usernameExists && usernameExists > 0) {
         toast.error('Username already taken');
         return;
       }
 
-      // Fix: Use type assertion to avoid deep instantiation errors
-      const { data: registrationData } = await supabase
+      // Fix: Simplify registration check
+      const { count: registrationExists } = await supabase
         .from('profiles')
-        .select('id')
+        .select('*', { count: 'exact', head: true })
         .eq('university_name', data.university_name)
-        .eq('registration_number', data.registration_number)
-        .single();
+        .eq('registration_number', data.registration_number);
 
-      if (registrationData) {
+      if (registrationExists && registrationExists > 0) {
         toast.error('Registration number already exists for this university');
         return;
       }
