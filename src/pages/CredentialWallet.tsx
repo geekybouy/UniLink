@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,7 +14,7 @@ import AddCredentialDialog from '@/components/credentials/AddCredentialDialog';
 import type { Credential } from '@/types/credentials';
 
 const CredentialWallet = () => {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,32 +22,50 @@ const CredentialWallet = () => {
   const [selectedType, setSelectedType] = useState<'academic' | 'certification' | 'experience'>('academic');
 
   useEffect(() => {
-    if (!user) {
+    // Only redirect if authentication is complete (not loading) and user is not logged in
+    if (!authLoading && !user) {
+      console.log('User not authenticated, redirecting to login page');
       navigate('/');
       return;
     }
 
-    const fetchCredentials = async () => {
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('credentials')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('issue_date', { ascending: false });
+    if (user) {
+      fetchCredentials();
+    }
+  }, [user, authLoading, navigate]);
 
-        if (error) throw error;
-        setCredentials(data as Credential[]);
-      } catch (error: any) {
-        console.error('Error fetching credentials:', error);
-        toast.error('Failed to load credentials');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchCredentials = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('credentials')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('issue_date', { ascending: false });
 
-    fetchCredentials();
-  }, [user, navigate]);
+      if (error) throw error;
+      setCredentials(data as Credential[]);
+    } catch (error: any) {
+      console.error('Error fetching credentials:', error);
+      toast.error('Failed to load credentials');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Don't render anything while authentication is being checked
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-lg">Loading...</p>
+      </div>
+    );
+  }
+
+  // If authentication check is complete and no user, don't render (redirect will happen)
+  if (!user) return null;
 
   const filteredCredentials = credentials.filter(
     cred => cred.credential_type === selectedType
