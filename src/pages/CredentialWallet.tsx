@@ -12,19 +12,6 @@ import CredentialItem from '@/components/credentials/CredentialItem';
 import AddCredentialDialog from '@/components/credentials/AddCredentialDialog';
 import type { Credential } from '@/types/credentials';
 
-interface Credential {
-  id: string;
-  user_id: string;
-  title: string;
-  issuer: string;
-  issue_date: string;
-  expiry_date: string | null;
-  description: string;
-  credential_type: 'academic' | 'certification' | 'experience';
-  blockchain_hash: string | null;
-  verification_status: 'pending' | 'verified' | 'expired';
-}
-
 const CredentialWallet = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
