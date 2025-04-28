@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +10,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import CredentialItem from '@/components/credentials/CredentialItem';
 import AddCredentialDialog from '@/components/credentials/AddCredentialDialog';
+import type { Credential } from '@/types/credentials';
 
 interface Credential {
   id: string;
@@ -49,7 +49,7 @@ const CredentialWallet = () => {
           .order('issue_date', { ascending: false });
 
         if (error) throw error;
-        setCredentials(data || []);
+        setCredentials(data as Credential[]);
       } catch (error: any) {
         console.error('Error fetching credentials:', error);
         toast.error('Failed to load credentials');
@@ -91,7 +91,6 @@ const CredentialWallet = () => {
 
   return (
     <div className="min-h-screen bg-background pb-16">
-      {/* Navigation Bar */}
       <nav className="fixed top-0 w-full bg-white/95 backdrop-blur-sm shadow-sm z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="w-24" />
@@ -104,7 +103,6 @@ const CredentialWallet = () => {
         </div>
       </nav>
 
-      {/* Main Content */}
       <main className="container mx-auto px-4 pt-24 pb-8">
         <Card className="mb-6">
           <CardHeader className="pb-2">
@@ -201,7 +199,6 @@ const CredentialWallet = () => {
         </Tabs>
       </main>
 
-      {/* Add Credential Dialog */}
       {showAddCredential && (
         <AddCredentialDialog 
           open={showAddCredential}
@@ -211,7 +208,6 @@ const CredentialWallet = () => {
         />
       )}
 
-      {/* Bottom Navigation */}
       <BottomNav />
     </div>
   );

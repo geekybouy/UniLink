@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -14,19 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-interface Credential {
-  id: string;
-  user_id: string;
-  title: string;
-  issuer: string;
-  issue_date: string;
-  expiry_date: string | null;
-  description: string;
-  credential_type: 'academic' | 'certification' | 'experience';
-  blockchain_hash: string | null;
-  verification_status: 'pending' | 'verified' | 'expired';
-}
+import type { Credential } from '@/types/credentials';
 
 interface AddCredentialDialogProps {
   open: boolean;
@@ -72,10 +59,7 @@ const AddCredentialDialog: React.FC<AddCredentialDialogProps> = ({
     }
   };
 
-  // Simulate creating a blockchain hash for the credential
   const generateBlockchainHash = async () => {
-    // In a real implementation, this would interact with a blockchain like Polygon
-    // For now, we'll simulate it with a random hash
     const randomBytes = new Uint8Array(32);
     window.crypto.getRandomValues(randomBytes);
     return Array.from(randomBytes)
@@ -90,11 +74,8 @@ const AddCredentialDialog: React.FC<AddCredentialDialogProps> = ({
     try {
       setIsSubmitting(true);
       
-      // Simulate blockchain transaction - would be replaced with actual blockchain interaction
-      toast.info('Creating secure credential on blockchain...');
       const blockchain_hash = await generateBlockchainHash();
       
-      // Save to database
       const { data, error } = await supabase
         .from('credentials')
         .insert({
@@ -114,6 +95,8 @@ const AddCredentialDialog: React.FC<AddCredentialDialogProps> = ({
       if (error) throw error;
       
       onAddCredential(data as Credential);
+      onClose();
+      toast.success('Credential added successfully');
     } catch (error: any) {
       console.error('Error adding credential:', error);
       toast.error('Failed to add credential');

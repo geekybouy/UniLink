@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      credentials: {
+        Row: {
+          blockchain_hash: string | null
+          created_at: string
+          credential_type: string
+          description: string | null
+          expiry_date: string | null
+          id: string
+          issue_date: string
+          issuer: string
+          title: string
+          user_id: string
+          verification_status: string
+        }
+        Insert: {
+          blockchain_hash?: string | null
+          created_at?: string
+          credential_type: string
+          description?: string | null
+          expiry_date?: string | null
+          id?: string
+          issue_date: string
+          issuer: string
+          title: string
+          user_id: string
+          verification_status?: string
+        }
+        Update: {
+          blockchain_hash?: string | null
+          created_at?: string
+          credential_type?: string
+          description?: string | null
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string
+          issuer?: string
+          title?: string
+          user_id?: string
+          verification_status?: string
+        }
+        Relationships: []
+      }
       cvs: {
         Row: {
           created_at: string

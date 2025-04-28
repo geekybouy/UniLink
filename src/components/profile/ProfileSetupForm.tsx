@@ -33,8 +33,8 @@ export default function ProfileSetupForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
     setValue,
+    formState: { errors },
   } = useForm<ProfileFormData>();
 
   const currentYear = new Date().getFullYear();
@@ -51,7 +51,6 @@ export default function ProfileSetupForm() {
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `${user.data.user.id}/${fileName}`;
 
-    // Fix: Use explicit typing for upload result
     const uploadResult = await supabase.storage
       .from('avatars')
       .upload(filePath, file);
@@ -71,35 +70,10 @@ export default function ProfileSetupForm() {
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('No user found');
 
-      // Fix: Simplify username check
-      const { count: usernameExists } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('username', data.username);
-
-      if (usernameExists && usernameExists > 0) {
-        toast.error('Username already taken');
-        return;
-      }
-
-      // Fix: Simplify registration check
-      const { count: registrationExists } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('university_name', data.university_name)
-        .eq('registration_number', data.registration_number);
-
-      if (registrationExists && registrationExists > 0) {
-        toast.error('Registration number already exists for this university');
-        return;
-      }
-
       let avatarUrl = null;
       if (data.avatar?.[0]) {
         avatarUrl = await handleImageUpload(data.avatar[0]);
       }
-
-      const graduationYear = data.graduation_year ? parseInt(data.graduation_year) : null;
 
       const { error: updateError } = await supabase
         .from('profiles')
@@ -108,13 +82,13 @@ export default function ProfileSetupForm() {
           username: data.username,
           bio: data.bio,
           university_name: data.university_name,
-          graduation_year: graduationYear,
+          graduation_year: parseInt(data.graduation_year),
           branch: data.branch,
           location: data.location,
           registration_number: data.registration_number,
           avatar_url: avatarUrl,
           is_profile_complete: true,
-        })
+        } as any)
         .eq('user_id', user.data.user.id);
 
       if (updateError) throw updateError;
