@@ -25,10 +25,18 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const { user, isLoading } = useAuth();
   
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
   }
   
   if (!user) {
+    console.log("User not authenticated, redirecting to home");
     return <Navigate to="/" replace />;
   }
   
@@ -36,21 +44,81 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 };
 
 const AppRoutes = () => {
+  const { user } = useAuth();
+  
   return (
     <Routes>
+      {/* Public routes */}
       <Route path="/" element={<Index />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       
       {/* Protected routes */}
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
-      <Route path="/new-post" element={<ProtectedRoute><NewPost /></ProtectedRoute>} />
-      <Route path="/profile" element={<ProtectedRoute><AlumniProfile /></ProtectedRoute>} />
-      <Route path="/complete-profile" element={<ProtectedRoute><CompleteProfile /></ProtectedRoute>} />
-      <Route path="/profile-setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
-      <Route path="/cv-maker" element={<ProtectedRoute><CVMaker /></ProtectedRoute>} />
-      <Route path="/credential-wallet" element={<ProtectedRoute><CredentialWallet /></ProtectedRoute>} />
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/feed" 
+        element={
+          <ProtectedRoute>
+            <Feed />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/new-post" 
+        element={
+          <ProtectedRoute>
+            <NewPost />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/profile" 
+        element={
+          <ProtectedRoute>
+            <AlumniProfile />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/complete-profile" 
+        element={
+          <ProtectedRoute>
+            <CompleteProfile />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/profile-setup" 
+        element={
+          <ProtectedRoute>
+            <ProfileSetup />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/cv-maker" 
+        element={
+          <ProtectedRoute>
+            <CVMaker />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/credential-wallet" 
+        element={
+          <ProtectedRoute>
+            <CredentialWallet />
+          </ProtectedRoute>
+        } 
+      />
       
+      {/* 404 page */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

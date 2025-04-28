@@ -1,7 +1,5 @@
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,28 +9,21 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import CredentialItem from '@/components/credentials/CredentialItem';
 import AddCredentialDialog from '@/components/credentials/AddCredentialDialog';
+import { useAuth } from '@/contexts/AuthContext';
 import type { Credential } from '@/types/credentials';
 
 const CredentialWallet = () => {
-  const { user, isLoading: authLoading } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddCredential, setShowAddCredential] = useState(false);
   const [selectedType, setSelectedType] = useState<'academic' | 'certification' | 'experience'>('academic');
 
   useEffect(() => {
-    // Only redirect if authentication is complete (not loading) and user is not logged in
-    if (!authLoading && !user) {
-      console.log('User not authenticated, redirecting to login page');
-      navigate('/');
-      return;
-    }
-
     if (user) {
       fetchCredentials();
     }
-  }, [user, authLoading, navigate]);
+  }, [user]);
 
   const fetchCredentials = async () => {
     if (!user) return;
@@ -54,18 +45,6 @@ const CredentialWallet = () => {
       setIsLoading(false);
     }
   };
-
-  // Don't render anything while authentication is being checked
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-lg">Loading...</p>
-      </div>
-    );
-  }
-
-  // If authentication check is complete and no user, don't render (redirect will happen)
-  if (!user) return null;
 
   const filteredCredentials = credentials.filter(
     cred => cred.credential_type === selectedType
