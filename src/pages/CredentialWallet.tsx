@@ -4,16 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BottomNav from '@/components/BottomNav';
-import { Shield, BookOpen, Briefcase } from 'lucide-react';
+import { Shield, BookOpen, Briefcase, Share } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import CredentialItem from '@/components/credentials/CredentialItem';
 import AddCredentialDialog from '@/components/credentials/AddCredentialDialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import type { Credential } from '@/types/credentials';
 
 const CredentialWallet = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddCredential, setShowAddCredential] = useState(false);
@@ -61,6 +63,10 @@ const CredentialWallet = () => {
     toast.success('Credential added successfully');
   };
 
+  const handleShare = () => {
+    navigate('/share-credentials');
+  };
+
   const getEmptyMessage = () => {
     switch (selectedType) {
       case 'academic':
@@ -90,11 +96,22 @@ const CredentialWallet = () => {
 
       <main className="container mx-auto px-4 pt-24 pb-8">
         <Card className="mb-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Shield className="h-5 w-5 text-primary" />
-              Blockchain Secured Credentials
-            </CardTitle>
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Shield className="h-5 w-5 text-primary" />
+                Blockchain Secured Credentials
+              </CardTitle>
+            </div>
+            <Button 
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+              onClick={handleShare}
+            >
+              <Share className="h-4 w-4" />
+              Share Credentials
+            </Button>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">

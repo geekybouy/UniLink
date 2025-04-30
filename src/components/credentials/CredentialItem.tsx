@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Shield, ExternalLink } from "lucide-react";
+import { Shield, ExternalLink, Share } from "lucide-react";
 import { format } from 'date-fns';
 
 interface Credential {
@@ -28,9 +28,10 @@ interface Credential {
 
 interface CredentialItemProps {
   credential: Credential;
+  onShare?: (credentialId: string) => void;
 }
 
-const CredentialItem: React.FC<CredentialItemProps> = ({ credential }) => {
+const CredentialItem: React.FC<CredentialItemProps> = ({ credential, onShare }) => {
   const [showDetails, setShowDetails] = useState(false);
 
   const getStatusBadge = () => {
@@ -95,12 +96,25 @@ const CredentialItem: React.FC<CredentialItemProps> = ({ credential }) => {
             <Button variant="ghost" size="sm" onClick={() => setShowDetails(true)}>
               View Details
             </Button>
-            {credential.blockchain_hash && (
-              <Button variant="outline" size="sm" className="flex items-center gap-1">
-                <span className="text-xs">Verify</span>
-                <ExternalLink className="h-3 w-3" />
-              </Button>
-            )}
+            <div className="flex gap-2">
+              {onShare && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => onShare(credential.id)}
+                  className="flex items-center gap-1"
+                >
+                  <Share className="h-3.5 w-3.5" />
+                  <span className="text-xs">Share</span>
+                </Button>
+              )}
+              {credential.blockchain_hash && (
+                <Button variant="outline" size="sm" className="flex items-center gap-1">
+                  <span className="text-xs">Verify</span>
+                  <ExternalLink className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
           </div>
         </CardFooter>
       </Card>
