@@ -71,7 +71,10 @@ const SharedCredentials = () => {
       
       if (credError) throw credError;
       
-      setCredentials(credentialData || []);
+      // Type assertion to ensure compatibility with Credential type
+      if (credentialData) {
+        setCredentials(credentialData as Credential[]);
+      }
     } catch (err: any) {
       console.error('Error fetching shared credentials:', err);
       setError(err.message);

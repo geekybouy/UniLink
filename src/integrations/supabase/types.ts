@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      credential_shares: {
+        Row: {
+          created_at: string
+          credential_ids: string[]
+          expiry_date: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credential_ids: string[]
+          expiry_date?: string | null
+          id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credential_ids?: string[]
+          expiry_date?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       credentials: {
         Row: {
           blockchain_hash: string | null

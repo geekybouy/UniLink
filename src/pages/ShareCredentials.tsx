@@ -49,7 +49,11 @@ const ShareCredentials = () => {
         .order('issue_date', { ascending: false });
 
       if (error) throw error;
-      setCredentials(data || []);
+      
+      if (data) {
+        // Type assertion to ensure compatibility with Credential type
+        setCredentials(data as Credential[]);
+      }
     } catch (error: any) {
       console.error('Error fetching credentials:', error);
       toast.error('Failed to load credentials');

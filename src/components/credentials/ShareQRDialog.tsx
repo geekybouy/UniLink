@@ -25,14 +25,6 @@ const ShareQRDialog = ({ open, onClose, shareUrl }: ShareQRDialogProps) => {
               size={200}
               level="H"
               includeMargin={true}
-              imageSettings={{
-                src: "/placeholder.svg",
-                x: undefined,
-                y: undefined,
-                height: 40,
-                width: 40,
-                excavate: true,
-              }}
             />
           </div>
           
