@@ -8,10 +8,10 @@ import { Navigate } from 'react-router-dom';
 
 const Index = () => {
   const [showAuth, setShowAuth] = useState(false);
-  const { user } = useAuth();
+  const { user, firebaseUser, isLoading } = useAuth();
 
   // Redirect authenticated users to dashboard
-  if (user) {
+  if (!isLoading && (user || firebaseUser)) {
     return <Navigate to="/dashboard" replace />;
   }
 

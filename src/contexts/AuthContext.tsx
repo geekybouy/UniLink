@@ -4,6 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  onAuthStateChanged,
+  signOut as firebaseSignOut,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { auth } from '@/integrations/firebase/config';
 
 interface ProfileType {
   id?: number;
@@ -24,6 +32,7 @@ interface ProfileType {
 
 interface AuthContextType {
   user: User | null;
+  firebaseUser: FirebaseUser | null;
   session: Session | null;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
@@ -36,39 +45,125 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Listen for Firebase auth state changes
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth event:', event);
-        setSession(session);
-        setUser(session?.user ?? null);
-        setIsLoading(false);
-
-        if (event === 'SIGNED_IN') {
-          setTimeout(() => {
-            checkProfileCompletion(session?.user);
-          }, 0);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('Firebase auth state changed:', user ? user.email : 'logged out');
+      setFirebaseUser(user);
+      
+      if (user) {
+        setIsLoading(true);
+        try {
+          // Get the ID token from Firebase
+          const idToken = await user.getIdToken();
+          
+          // Sign in to Supabase with the Firebase ID token
+          const { data, error } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: idToken,
+            nonce: 'NONCE', // You would generate a proper nonce in production
+          });
+          
+          if (error) throw error;
+          
+          setSession(data.session);
+          setUser(data.session?.user ?? null);
+          
+          // Check if user exists in the users table and create if not
+          await checkOrCreateUserRecord(user, data.session?.user);
+        } catch (error) {
+          console.error('Error syncing Firebase auth with Supabase:', error);
+          toast.error('Authentication error');
+        } finally {
+          setIsLoading(false);
         }
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-      if (session?.user) {
-        setTimeout(() => {
-          checkProfileCompletion(session.user);
-        }, 0);
+      } else {
+        // User is signed out of Firebase, sign out of Supabase too
+        supabase.auth.signOut().catch(console.error);
+        setUser(null);
+        setSession(null);
+        setIsLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Also check Supabase session on load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (!firebaseUser) {
+        setIsLoading(false);
+      }
+    }).catch(error => {
+      console.error('Error getting Supabase session:', error);
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
   }, [navigate]);
+
+  // Check if user exists in the users table and create if not
+  const checkOrCreateUserRecord = async (
+    firebaseUser: FirebaseUser, 
+    supabaseUser: User | null | undefined
+  ) => {
+    if (!firebaseUser || !supabaseUser) return;
+
+    try {
+      // Check if user exists in the users table
+      const { data: existingUser, error: checkError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', supabaseUser.id)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      // If user doesn't exist, create a record
+      if (!existingUser) {
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert({
+            id: supabaseUser.id,
+            email: firebaseUser.email || '',
+            full_name: firebaseUser.displayName || '',
+            avatar_url: firebaseUser.photoURL || null,
+            provider: 'google'
+          });
+
+        if (insertError) throw insertError;
+        
+        // Also create a profile record if needed
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: supabaseUser.id,
+            email: firebaseUser.email || '',
+            full_name: firebaseUser.displayName || '',
+            password: '' // Required field based on schema
+          });
+
+        if (profileError) {
+          console.warn('Could not create profile record:', profileError);
+        }
+      }
+
+      // Check if profile is complete
+      setTimeout(() => {
+        checkProfileCompletion(supabaseUser);
+      }, 0);
+
+    } catch (error) {
+      console.error('Error checking or creating user record:', error);
+      toast.error('Failed to sync user data');
+    }
+  };
 
   const checkProfileCompletion = async (user: User | null | undefined) => {
     if (!user) return;
@@ -83,66 +178,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         if (error.code === 'PGRST116') {
           // Profile doesn't exist, create a new one
-          const newProfile: Omit<ProfileType, 'id'> = {
-            user_id: user.id,
-            full_name: user.user_metadata.full_name || '',
-            email: user.email || '',
-            password: '',
-            is_profile_complete: false
-          };
-          
-          const { error: insertError } = await supabase
-            .from('profiles')
-            .insert(newProfile);
-
-          if (insertError) throw insertError;
           navigate('/profile-setup');
           return;
         }
         throw error;
       }
 
-      // Use type assertion to tell TypeScript the data has is_profile_complete
-      const profileData = data as ProfileType;
-      if (!profileData.is_profile_complete) {
-        navigate('/profile-setup');
+      // Check if is_profile_complete exists on the profiles table
+      if ('is_profile_complete' in data) {
+        const profileData = data as ProfileType;
+        if (!profileData.is_profile_complete) {
+          navigate('/profile-setup');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
+        // If is_profile_complete doesn't exist, just navigate to dashboard
         navigate('/dashboard');
       }
     } catch (error) {
       console.error('Error checking profile:', error);
       toast.error('Error checking profile status');
+      // Still navigate to dashboard as fallback
+      navigate('/dashboard');
     }
   };
 
   const signInWithGoogle = async () => {
     try {
-      console.log('Starting Google sign-in process');
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            prompt: 'select_account',
-          }
-        }
-      });
-      
-      if (error) {
-        console.error('Google sign-in error:', error);
-        throw error;
-      }
-      
-      if (!data.url) {
-        console.error('No redirect URL returned from Supabase');
-        throw new Error('Authentication failed. No redirect URL provided.');
-      }
-      
-      console.log('Redirecting to Google auth URL:', data.url);
-      window.location.href = data.url;
+      setIsLoading(true);
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      toast.success('Signed in successfully');
+      // The Firebase onAuthStateChanged listener will handle the rest
     } catch (error: any) {
       console.error('Error signing in with Google:', error);
       toast.error('Failed to sign in with Google: ' + (error.message || 'Unknown error'));
+      setIsLoading(false);
     }
   };
 
@@ -180,12 +252,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      setIsLoading(true);
+      await firebaseSignOut(auth);
+      await supabase.auth.signOut();
       navigate('/');
+      toast.success('Signed out successfully');
     } catch (error) {
       console.error('Error signing out:', error);
       toast.error('Failed to sign out');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -193,6 +269,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider 
       value={{ 
         user, 
+        firebaseUser,
         session, 
         signInWithGoogle, 
         signInWithEmail, 
