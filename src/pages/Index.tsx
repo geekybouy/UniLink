@@ -36,9 +36,6 @@ const Index = () => {
               >
                 Get Started
               </Button>
-              <p className="text-sm text-gray-600 bg-white/80 px-4 py-2 rounded-full">
-                Test account: testuser@example.com / Test@1234
-              </p>
             </div>
           </div>
         ) : (
