@@ -106,7 +106,7 @@ const CredentialWallet = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-16">
+    <div className="flex flex-col min-h-screen w-full bg-background pb-16 overflow-x-hidden">
       <nav className="fixed top-0 w-full bg-white/95 backdrop-blur-sm shadow-sm z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="w-24" />
@@ -119,8 +119,8 @@ const CredentialWallet = () => {
         </div>
       </nav>
 
-      <main className="container mx-auto px-4 pt-24 pb-8">
-        <Card className="mb-6">
+      <main className="container mx-auto px-4 pt-24 pb-8 w-full max-w-4xl">
+        <Card className="mb-6 w-full">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <div>
               <CardTitle className="text-lg flex items-center gap-2">

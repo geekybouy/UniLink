@@ -89,11 +89,19 @@
  
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border box-border;
   }
+  
+  html, body {
+    @apply overflow-x-hidden w-full max-w-full;
+  }
+  
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
   }
   
   /* Responsive typography */
@@ -112,6 +120,37 @@
   p {
     @apply text-sm md:text-base;
   }
+  
+  /* Container styles */
+  .container {
+    @apply px-4 sm:px-6 lg:px-8 mx-auto;
+    max-width: 100%;
+    width: 100%;
+  }
+  
+  @media (min-width: 640px) {
+    .container {
+      max-width: 640px;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .container {
+      max-width: 768px;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .container {
+      max-width: 1024px;
+    }
+  }
+  
+  @media (min-width: 1280px) {
+    .container {
+      max-width: 1280px;
+    }
+  }
 }
 
 /* Mobile optimizations */
@@ -127,4 +166,23 @@
   .tap-highlight-transparent {
     -webkit-tap-highlight-color: transparent;
   }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Let's override App.css defaults that might be causing problems */
+#root {
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  text-align: left;
+  overflow-x: hidden;
 }
