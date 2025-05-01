@@ -1,265 +1,159 @@
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Session, User } from '@supabase/supabase-js';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { 
-  GoogleAuthProvider, 
-  signInWithPopup, 
-  onAuthStateChanged,
-  signOut as firebaseSignOut,
-  User as FirebaseUser
-} from 'firebase/auth';
-import { auth } from '@/integrations/firebase/config';
-
-// Define types for our authentication context
-interface UserRole {
-  id: string;
-  user_id: string;
-  role: 'admin' | 'moderator' | 'student' | 'alumni';
-  created_at: string;
-}
+import { useNavigate } from 'react-router-dom';
+import { Session, User } from '@supabase/supabase-js';
 
 interface UserProfile {
   id: string;
-  user_id: string;
+  userId: string;
+  fullName: string;
   email: string;
-  full_name: string;
-  username?: string;
-  bio?: string;
-  university_name?: string;
-  graduation_year?: number;
-  branch?: string;
-  location?: string;
-  registration_number?: string;
-  avatar_url?: string;
-  is_profile_complete: boolean;
+  username: string | null;
+  bio: string | null;
+  avatarUrl: string | null;
+  phone: string | null;
+  university: string | null;
+  graduationYear: number | null;
+  branch: string | null;
+  location: string | null;
+  registrationNumber: string | null;
 }
 
 interface AuthContextType {
   user: User | null;
-  firebaseUser: FirebaseUser | null;
   session: Session | null;
-  profile: UserProfile | null;
-  roles: UserRole[];
   isLoading: boolean;
-  hasRole: (role: 'admin' | 'moderator' | 'student' | 'alumni') => boolean;
-  signInWithGoogle: () => Promise<void>;
-  signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (email: string, password: string, fullName: string) => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  updatePassword: (password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ error: any | null }>;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any | null, data: any | null }>;
   signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
+  passwordReset: (email: string) => Promise<{ error: any | null }>;
+  updatePassword: (password: string) => Promise<{ error: any | null }>;
+  userProfile: UserProfile | null;
+  refreshUserProfile: () => Promise<void>;
+  hasRole: (role: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [roles, setRoles] = useState<UserRole[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  const navigate = useNavigate();
-  const location = useLocation();
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
-  // Function to fetch user profile
-  const fetchUserProfile = async (userId: string) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Fetch user profile when user changes
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile();
+      fetchUserRoles();
+    } else {
+      setUserProfile(null);
+      setUserRoles([]);
+    }
+  }, [user]);
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user.id)
         .single();
-      
+
       if (error) throw error;
-      
+
       if (data) {
-        setProfile(data as UserProfile);
+        // Convert the profile data to our UserProfile format
+        const profile: UserProfile = {
+          id: data.id.toString(),
+          userId: data.user_id,
+          fullName: data.full_name,
+          email: data.email,
+          username: data.username,
+          bio: data.bio,
+          avatarUrl: data.avatar_url,
+          phone: data.phone,
+          university: data.university_name,
+          graduationYear: data.graduation_year,
+          branch: data.branch,
+          location: data.location,
+          registrationNumber: data.registration_number
+        };
+        
+        setUserProfile(profile);
       }
-    } catch (error: any) {
-      console.error('Error fetching user profile:', error.message);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
     }
   };
 
-  // Function to fetch user roles
-  const fetchUserRoles = async (userId: string) => {
+  const fetchUserRoles = async () => {
+    if (!user) return;
+
     try {
       const { data, error } = await supabase
         .from('user_roles')
-        .select('*')
-        .eq('user_id', userId);
-      
+        .select('role')
+        .eq('user_id', user.id);
+
       if (error) throw error;
-      
+
       if (data) {
-        setRoles(data as UserRole[]);
+        setUserRoles(data.map(r => r.role));
       }
-    } catch (error: any) {
-      console.error('Error fetching user roles:', error.message);
+    } catch (error) {
+      console.error('Error fetching user roles:', error);
     }
   };
 
-  // Handle Firebase auth state changes
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log('Firebase auth state changed:', firebaseUser ? firebaseUser.email : 'logged out');
-      setFirebaseUser(firebaseUser);
-      
-      if (firebaseUser) {
-        setIsLoading(true);
-        try {
-          // Get the ID token from Firebase
-          const idToken = await firebaseUser.getIdToken();
-          
-          // Sign in to Supabase with the Firebase ID token
-          const { data, error } = await supabase.auth.signInWithIdToken({
-            provider: 'google',
-            token: idToken,
-            nonce: 'NONCE', // You would generate a proper nonce in production
-          });
-          
-          if (error) throw error;
-          
-          setSession(data.session);
-          setUser(data.session?.user ?? null);
-        } catch (error) {
-          console.error('Error syncing Firebase auth with Supabase:', error);
-          toast.error('Authentication error');
-        } finally {
-          setIsLoading(false);
-        }
-      } else {
-        // User is logged out of Firebase
-        setIsLoading(false);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  // Handle Supabase auth state changes
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        console.log('Supabase auth state changed:', event);
-        
-        // Update session and user state
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-
-        // If user logged in, fetch profile and roles
-        if (currentSession?.user) {
-          setTimeout(() => {
-            fetchUserProfile(currentSession.user.id);
-            fetchUserRoles(currentSession.user.id);
-          }, 0);
-
-          // Check if we need to redirect to profile setup
-          if (event === 'SIGNED_IN') {
-            setTimeout(async () => {
-              try {
-                const { data, error } = await supabase
-                  .from('profiles')
-                  .select('is_profile_complete')
-                  .eq('user_id', currentSession.user.id)
-                  .single();
-                
-                if (!error && data && !data.is_profile_complete) {
-                  navigate('/profile-setup');
-                } else if (
-                  location.pathname === '/auth' || 
-                  location.pathname === '/' ||
-                  location.pathname === '/auth/login' || 
-                  location.pathname === '/auth/signup'
-                ) {
-                  navigate('/dashboard');
-                }
-              } catch (err) {
-                console.error('Error checking profile completion:', err);
-              }
-            }, 0);
-          }
-        } else if (event === 'SIGNED_OUT') {
-          setProfile(null);
-          setRoles([]);
-          
-          // Redirect to home page on sign out
-          if (location.pathname !== '/') {
-            navigate('/');
-          }
-        }
-      }
-    );
-
-    // Check for existing session on load
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      
-      if (currentSession?.user) {
-        fetchUserProfile(currentSession.user.id);
-        fetchUserRoles(currentSession.user.id);
-      }
-      
-      setIsLoading(false);
-    }).catch(error => {
-      console.error('Error getting Supabase session:', error);
-      setIsLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [location.pathname, navigate]);
-
-  // Function to check if user has a specific role
-  const hasRole = (roleToCheck: 'admin' | 'moderator' | 'student' | 'alumni') => {
-    return roles.some(role => role.role === roleToCheck);
+  const refreshUserProfile = async () => {
+    await fetchUserProfile();
   };
 
-  // Sign in with Google using Firebase
-  const signInWithGoogle = async () => {
+  const signIn = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      toast.success('Signed in successfully');
-      // The Firebase onAuthStateChanged listener will handle the rest
-    } catch (error: any) {
-      console.error('Error signing in with Google:', error);
-      toast.error('Failed to sign in with Google: ' + (error.message || 'Unknown error'));
-      setIsLoading(false);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      return { error };
+    } catch (error) {
+      return { error };
     }
   };
 
-  // Sign in with email and password
-  const signInWithEmail = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) throw error;
-      toast.success('Signed in successfully');
-    } catch (error: any) {
-      toast.error('Failed to sign in: ' + error.message);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Sign up with email and password
-  const signUpWithEmail = async (email: string, password: string, fullName: string) => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -268,103 +162,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           },
         },
       });
-      if (error) throw error;
-      toast.success('Account created! Please check your email to verify your account.');
-    } catch (error: any) {
-      toast.error('Failed to sign up: ' + error.message);
-      throw error;
-    } finally {
-      setIsLoading(false);
+
+      return { data, error };
+    } catch (error) {
+      return { data: null, error };
     }
   };
 
-  // Reset password
-  const resetPassword = async (email: string) => {
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/auth/login');
+  };
+
+  const passwordReset = async (email: string) => {
     try {
-      setIsLoading(true);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/auth/reset-password',
+        redirectTo: `${window.location.origin}/auth/reset-password`,
       });
-      if (error) throw error;
-      toast.success('Password reset email sent. Check your inbox.');
-    } catch (error: any) {
-      toast.error('Failed to send reset email: ' + error.message);
-      throw error;
-    } finally {
-      setIsLoading(false);
+      return { error };
+    } catch (error) {
+      return { error };
     }
   };
 
-  // Update password
   const updatePassword = async (password: string) => {
     try {
-      setIsLoading(true);
       const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
-      toast.success('Password updated successfully');
-    } catch (error: any) {
-      toast.error('Failed to update password: ' + error.message);
-      throw error;
-    } finally {
-      setIsLoading(false);
+      return { error };
+    } catch (error) {
+      return { error };
     }
   };
 
-  // Sign out from both Firebase and Supabase
-  const signOut = async () => {
-    try {
-      setIsLoading(true);
-      if (firebaseUser) {
-        await firebaseSignOut(auth);
-      }
-      await supabase.auth.signOut();
-      toast.success('Signed out successfully');
-    } catch (error: any) {
-      console.error('Error signing out:', error);
-      toast.error('Failed to sign out: ' + error.message);
-    } finally {
-      setIsLoading(false);
-    }
+  const hasRole = (role: string): boolean => {
+    return userRoles.includes(role);
   };
 
-  // Function to manually refresh profile data
-  const refreshProfile = async () => {
-    if (user) {
-      await Promise.all([
-        fetchUserProfile(user.id),
-        fetchUserRoles(user.id)
-      ]);
-    }
+  const value = {
+    user,
+    session,
+    isLoading,
+    signIn,
+    signUp,
+    signOut,
+    passwordReset,
+    updatePassword,
+    userProfile,
+    refreshUserProfile,
+    hasRole,
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        firebaseUser,
-        session,
-        profile,
-        roles,
-        isLoading,
-        hasRole,
-        signInWithGoogle,
-        signInWithEmail,
-        signUpWithEmail,
-        resetPassword,
-        updatePassword,
-        signOut,
-        refreshProfile
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-}
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

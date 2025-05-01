@@ -22,7 +22,7 @@ const AuthLayout = () => {
         
         {isLoading ? (
           <div className="flex flex-col items-center justify-center p-8">
-            <Spinner size="lg" />
+            <Spinner />
             <p className="mt-4 text-muted-foreground">Loading authentication...</p>
           </div>
         ) : (

@@ -13,6 +13,7 @@ import NewPost from "@/pages/NewPost";
 import AlumniProfile from "@/pages/AlumniProfile";
 import ShareCredentials from "@/pages/ShareCredentials";
 import SharedCredentials from "@/pages/SharedCredentials";
+import ProfilePage from "@/pages/ProfilePage";
 
 // Auth pages
 import AuthLayout from "@/pages/auth/AuthLayout";
@@ -93,7 +94,12 @@ function App() {
           } />
           <Route path="/alumni/:id" element={
             <ProtectedRoute>
-              <AlumniProfile />
+              <ProfilePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile/:id" element={
+            <ProtectedRoute>
+              <ProfilePage />
             </ProtectedRoute>
           } />
           
