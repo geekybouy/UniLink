@@ -4,20 +4,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const AuthStatus = () => {
-  const { user, firebaseUser, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   
   if (isLoading) {
     return <Skeleton className="h-10 w-10 rounded-full" />;
   }
   
-  if (!user && !firebaseUser) {
+  if (!user) {
     return <div className="text-sm text-gray-500">Not signed in</div>;
   }
   
-  // Prefer Firebase user data as it has more info like photo URL
-  const displayName = firebaseUser?.displayName || user?.user_metadata?.full_name || 'User';
-  const email = firebaseUser?.email || user?.email || '';
-  const photoURL = firebaseUser?.photoURL || user?.user_metadata?.avatar_url;
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  const email = user?.email || '';
+  const photoURL = user?.user_metadata?.avatar_url;
   const firstLetter = displayName.charAt(0).toUpperCase();
   
   return (

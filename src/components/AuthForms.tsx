@@ -13,11 +13,7 @@ const AuthForms = () => {
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
-      toast({
-        title: "Login successful",
-        description: "You've been signed in with Google",
-      });
-      navigate('/dashboard');
+      // The toast will be shown after redirect back from Google
     } catch (error: any) {
       toast({
         title: "Authentication failed",

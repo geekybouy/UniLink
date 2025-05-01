@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const ResetPasswordPage: React.FC = () => {
   const [password, setPassword] = useState('');
@@ -16,17 +17,21 @@ const ResetPasswordPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  const oobCode = searchParams.get('oobCode');
-
+  
+  // Check if URL has hash parameters from Supabase
   useEffect(() => {
-    if (!oobCode) {
-      setError("Invalid password reset link. Please request a new one.");
-    }
-  }, [oobCode]);
+    const handleHashParams = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      
+      if (!hashParams.get('access_token')) {
+        setError("Invalid or expired password reset link. Please request a new one.");
+      }
+    };
+    
+    handleHashParams();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,22 +50,24 @@ const ResetPasswordPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // In a real app, you would call Firebase's confirmPasswordReset method here
-      // await confirmPasswordReset(auth, oobCode, password);
+      const { error } = await supabase.auth.updateUser({ 
+        password: password 
+      });
       
-      // Simulated success for demo purposes
+      if (error) {
+        throw error;
+      }
+      
+      setIsSuccess(true);
+      toast({
+        title: "Password reset successful",
+        description: "Your password has been reset. You can now log in with your new password.",
+      });
+      
+      // Redirect to login after 3 seconds
       setTimeout(() => {
-        setIsSuccess(true);
-        toast({
-          title: "Password reset successful",
-          description: "Your password has been reset. You can now log in with your new password.",
-        });
-        
-        // Redirect to login after 3 seconds
-        setTimeout(() => {
-          navigate('/auth/login');
-        }, 3000);
-      }, 1500);
+        navigate('/auth/login');
+      }, 3000);
     } catch (err: any) {
       setError(err.message || "Failed to reset password. Please try again.");
     } finally {
@@ -115,7 +122,6 @@ const ResetPasswordPage: React.FC = () => {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       minLength={6}
-                      disabled={isSubmitting || !oobCode}
                     />
                   </div>
                   <div className="grid gap-2">
@@ -126,13 +132,12 @@ const ResetPasswordPage: React.FC = () => {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
-                      disabled={isSubmitting || !oobCode}
                     />
                   </div>
                   <Button 
                     type="submit" 
                     className="w-full" 
-                    disabled={isSubmitting || !oobCode}
+                    disabled={isSubmitting}
                   >
                     {isSubmitting ? (
                       <>

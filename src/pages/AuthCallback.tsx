@@ -7,14 +7,15 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
-  const { user, firebaseUser, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    // Both authentication systems are handled in AuthContext
+    // Authentication is handled in AuthContext
     // This component is just for showing loading state and redirecting
     if (!isLoading) {
-      if (user || firebaseUser) {
+      if (user) {
         console.log('Authentication successful, redirecting to dashboard');
+        toast.success('Successfully signed in!');
         navigate('/dashboard');
       } else {
         console.error('Authentication failed, no user found');
@@ -22,7 +23,7 @@ const AuthCallback = () => {
         navigate('/');
       }
     }
-  }, [user, firebaseUser, isLoading, navigate]);
+  }, [user, isLoading, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

@@ -1,165 +1,181 @@
-
 import React, { useState } from 'react';
-import { 
-  Card, 
-  CardContent, 
+import {
+  Card,
+  CardContent,
+  CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Shield, ExternalLink, Share } from "lucide-react";
-import { format } from 'date-fns';
-
-interface Credential {
-  id: string;
-  user_id: string;
-  title: string;
-  issuer: string;
-  issue_date: string;
-  expiry_date: string | null;
-  description: string;
-  credential_type: 'academic' | 'certification' | 'experience';
-  blockchain_hash: string | null;
-  verification_status: 'pending' | 'verified' | 'expired';
-}
+  CardTitle,
+} from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
+import { CheckCircle, Clock, XCircle } from 'lucide-react';
 
 interface CredentialItemProps {
-  credential: Credential;
-  onShare?: (credentialId: string) => void;
+  credential: any;
+  onDelete: (id: string) => void;
+  onShare: (id: string) => void;
 }
 
-const CredentialItem: React.FC<CredentialItemProps> = ({ credential, onShare }) => {
-  const [showDetails, setShowDetails] = useState(false);
+const CredentialItem = ({ credential, onDelete, onShare }: CredentialItemProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedCredential, setEditedCredential] = useState({ ...credential });
 
-  const getStatusBadge = () => {
-    switch (credential.verification_status) {
-      case 'verified':
-        return <Badge variant="success" className="bg-green-500">Verified</Badge>;
-      case 'pending':
-        return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-700 border-yellow-500">Pending</Badge>;
-      case 'expired':
-        return <Badge variant="destructive">Expired</Badge>;
-      default:
-        return null;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setEditedCredential(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = () => {
+    // Implement save logic here (e.g., API call)
+    console.log('Saving credential:', editedCredential);
+    setIsEditing(false);
+  };
+
+  const handleDeleteClick = () => {
+    onDelete(credential.id);
+  };
+
+  const handleShareClick = () => {
+    onShare(credential.id);
+  };
+
+  // Get verification status display properties
+  const getVerificationStatus = () => {
+    if (credential.verification_status === 'verified') {
+      return {
+        variant: 'success' as const, // Type assertion for TypeScript
+        text: 'Verified',
+        icon: <CheckCircle className="h-3 w-3 mr-1" />
+      };
+    } else if (credential.verification_status === 'pending') {
+      return {
+        variant: 'secondary' as const, // Type assertion for TypeScript
+        text: 'Pending',
+        icon: <Clock className="h-3 w-3 mr-1" />
+      };
+    } else {
+      return {
+        variant: 'destructive' as const, // Type assertion for TypeScript
+        text: 'Rejected',
+        icon: <XCircle className="h-3 w-3 mr-1" />
+      };
     }
   };
 
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'MMM d, yyyy');
-    } catch (e) {
-      return dateString;
-    }
-  };
-
-  const getCredentialIcon = () => {
-    switch (credential.credential_type) {
-      case 'academic':
-        return <div className="bg-blue-100 p-2 rounded-full"><Shield className="h-5 w-5 text-blue-600" /></div>;
-      case 'certification':
-        return <div className="bg-purple-100 p-2 rounded-full"><Shield className="h-5 w-5 text-purple-600" /></div>;
-      case 'experience':
-        return <div className="bg-green-100 p-2 rounded-full"><Shield className="h-5 w-5 text-green-600" /></div>;
-      default:
-        return null;
-    }
-  };
+  const status = getVerificationStatus();
 
   return (
-    <>
-      <Card className="hover:shadow-md transition-shadow">
-        <CardHeader className="pb-2">
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-3">
-              {getCredentialIcon()}
-              <div>
-                <CardTitle className="text-base">{credential.title}</CardTitle>
-                <p className="text-sm text-muted-foreground">{credential.issuer}</p>
-              </div>
-            </div>
-            {getStatusBadge()}
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>{credential.title}</CardTitle>
+        <CardDescription>{credential.description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-4">
+          <div className="flex items-center space-x-4">
+            <p className="text-sm font-medium leading-none">Issuer:</p>
+            <p className="text-sm text-muted-foreground">{credential.issuer}</p>
           </div>
-        </CardHeader>
-        <CardContent className="pb-2">
-          <p className="text-sm">
-            <span className="text-muted-foreground">Issued:</span> {formatDate(credential.issue_date)}
-            {credential.expiry_date && (
-              <> · <span className="text-muted-foreground">Expires:</span> {formatDate(credential.expiry_date)}</>
-            )}
-          </p>
-        </CardContent>
-        <CardFooter className="pt-0">
-          <div className="flex justify-between w-full">
-            <Button variant="ghost" size="sm" onClick={() => setShowDetails(true)}>
-              View Details
-            </Button>
-            <div className="flex gap-2">
-              {onShare && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => onShare(credential.id)}
-                  className="flex items-center gap-1"
-                >
-                  <Share className="h-3.5 w-3.5" />
-                  <span className="text-xs">Share</span>
-                </Button>
-              )}
-              {credential.blockchain_hash && (
-                <Button variant="outline" size="sm" className="flex items-center gap-1">
-                  <span className="text-xs">Verify</span>
-                  <ExternalLink className="h-3 w-3" />
-                </Button>
-              )}
-            </div>
+          <div className="flex items-center space-x-4">
+            <p className="text-sm font-medium leading-none">Issue Date:</p>
+            <p className="text-sm text-muted-foreground">{credential.issue_date}</p>
           </div>
-        </CardFooter>
-      </Card>
-
-      <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{credential.title}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <h4 className="text-sm font-semibold mb-1">Issuer</h4>
-              <p>{credential.issuer}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold mb-1">Description</h4>
-              <p className="text-sm">{credential.description}</p>
-            </div>
-            <div className="flex gap-x-6">
-              <div>
-                <h4 className="text-sm font-semibold mb-1">Issue Date</h4>
-                <p>{formatDate(credential.issue_date)}</p>
-              </div>
-              {credential.expiry_date && (
-                <div>
-                  <h4 className="text-sm font-semibold mb-1">Expiry Date</h4>
-                  <p>{formatDate(credential.expiry_date)}</p>
+          <div className="flex items-center space-x-4">
+            <p className="text-sm font-medium leading-none">Credential ID:</p>
+            <p className="text-sm text-muted-foreground">{credential.credential_id}</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <p className="text-sm font-medium leading-none">Verification Status:</p>
+            <Badge variant={status.variant}>
+              {status.icon}
+              {status.text}
+            </Badge>
+          </div>
+        </div>
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <Button variant="outline" onClick={handleShareClick}>Share</Button>
+        <div className="space-x-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="secondary">Edit</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Edit Credential</DialogTitle>
+                <DialogDescription>
+                  Make changes to your credential here. Click save when you're done.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    name="title"
+                    value={editedCredential.title}
+                    onChange={handleInputChange}
+                  />
                 </div>
-              )}
-            </div>
-            {credential.blockchain_hash && (
-              <div>
-                <h4 className="text-sm font-semibold mb-1">Blockchain Verification</h4>
-                <p className="text-xs font-mono break-all bg-gray-100 p-2 rounded">
-                  {credential.blockchain_hash}
-                </p>
-                <Button variant="outline" size="sm" className="mt-2">
-                  Verify on Blockchain
-                </Button>
+                <div className="grid gap-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    value={editedCredential.description}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="issuer">Issuer</Label>
+                  <Input
+                    id="issuer"
+                    name="issuer"
+                    value={editedCredential.issuer}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="issue_date">Issue Date</Label>
+                  <Input
+                    id="issue_date"
+                    name="issue_date"
+                    type="date"
+                    value={editedCredential.issue_date}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="credential_id">Credential ID</Label>
+                  <Input
+                    id="credential_id"
+                    name="credential_id"
+                    value={editedCredential.credential_id}
+                    onChange={handleInputChange}
+                  />
+                </div>
               </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+              <DialogFooter>
+                <Button type="submit" onClick={handleSave}>Save changes</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Button variant="destructive" onClick={handleDeleteClick}>Delete</Button>
+        </div>
+      </CardFooter>
+    </Card>
   );
 };
 
