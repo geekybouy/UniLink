@@ -13,7 +13,20 @@ import NewPost from "@/pages/NewPost";
 import AlumniProfile from "@/pages/AlumniProfile";
 import ShareCredentials from "@/pages/ShareCredentials";
 import SharedCredentials from "@/pages/SharedCredentials";
+
+// Auth pages
+import AuthLayout from "@/pages/auth/AuthLayout";
+import LoginPage from "@/pages/auth/LoginPage";
+import SignupPage from "@/pages/auth/SignupPage";
+import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
+import VerifyEmailPage from "@/pages/auth/VerifyEmailPage";
+
+// Auth context and protected route
 import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+
+// UI components
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "sonner";
 import "@/App.css";
@@ -23,20 +36,72 @@ function App() {
     <Router>
       <AuthProvider>
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/cv-maker" element={<CVMaker />} />
-          <Route path="/credentials" element={<CredentialWallet />} />
-          <Route path="/share-credentials" element={<ShareCredentials />} />
-          <Route path="/shared/:shareId" element={<SharedCredentials />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/complete-profile" element={<CompleteProfile />} />
-          <Route path="/profile-setup" element={<ProfileSetup />} />
-          <Route path="/feed" element={<Feed />} />
-          <Route path="/new-post" element={<NewPost />} />
-          <Route path="/alumni/:id" element={<AlumniProfile />} />
+          <Route path="/shared/:shareId" element={<SharedCredentials />} />
+
+          {/* Authentication routes */}
+          <Route path="/auth" element={<AuthLayout />}>
+            <Route path="login" element={<LoginPage />} />
+            <Route path="signup" element={<SignupPage />} />
+            <Route path="forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="reset-password" element={<ResetPasswordPage />} />
+            <Route path="verify-email" element={<VerifyEmailPage />} />
+          </Route>
+
+          {/* Protected routes */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/cv-maker" element={
+            <ProtectedRoute>
+              <CVMaker />
+            </ProtectedRoute>
+          } />
+          <Route path="/credentials" element={
+            <ProtectedRoute>
+              <CredentialWallet />
+            </ProtectedRoute>
+          } />
+          <Route path="/share-credentials" element={
+            <ProtectedRoute>
+              <ShareCredentials />
+            </ProtectedRoute>
+          } />
+          <Route path="/complete-profile" element={
+            <ProtectedRoute>
+              <CompleteProfile />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile-setup" element={
+            <ProtectedRoute>
+              <ProfileSetup />
+            </ProtectedRoute>
+          } />
+          <Route path="/feed" element={
+            <ProtectedRoute>
+              <Feed />
+            </ProtectedRoute>
+          } />
+          <Route path="/new-post" element={
+            <ProtectedRoute>
+              <NewPost />
+            </ProtectedRoute>
+          } />
+          <Route path="/alumni/:id" element={
+            <ProtectedRoute>
+              <AlumniProfile />
+            </ProtectedRoute>
+          } />
+          
+          {/* 404 route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        
+        {/* Toast notifications */}
         <SonnerToaster position="top-center" richColors />
         <Toaster />
       </AuthProvider>
