@@ -141,7 +141,8 @@ export const ProfileProvider: React.FC<{children: React.ReactNode}> = ({ childre
         username: profileData.username || '',
         bio: profileData.bio || '',
         avatarUrl: profileData.avatar_url,
-        phone: profileData.phone || null,
+        // Add null check for phone field since it's missing in the database schema
+        phone: null, // Since phone doesn't exist in the profiles table, initialize as null
         university: profileData.university_name || null,
         graduationYear: profileData.graduation_year || null,
         branch: profileData.branch || null,
@@ -245,7 +246,8 @@ export const ProfileProvider: React.FC<{children: React.ReactNode}> = ({ childre
         email: data.email,
         username: data.username,
         bio: data.bio,
-        phone: data.phone,
+        // Phone field is not in the database schema, so don't include it
+        // phone: data.phone,
         university_name: data.university,
         graduation_year: data.graduationYear,
         branch: data.branch,
