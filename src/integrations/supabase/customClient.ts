@@ -44,5 +44,12 @@ export const typedSupabaseClient = {
     select: () => customSupabase.from('work_experience').select('*'),
     update: (id: string, data: any) => customSupabase.from('work_experience').update(data).eq('id', id),
     delete: (id: string) => customSupabase.from('work_experience').delete().eq('id', id)
+  },
+  // Profiles table with additional methods
+  profiles: {
+    insert: (data: any) => customSupabase.from('profiles').insert(data),
+    select: () => customSupabase.from('profiles').select('*'),
+    update: (userId: string, data: any) => customSupabase.from('profiles').update(data).eq('user_id', userId),
+    getByUserId: (userId: string) => customSupabase.from('profiles').select('*').eq('user_id', userId).single()
   }
 };

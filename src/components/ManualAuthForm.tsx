@@ -1,109 +1,124 @@
 
-import { useState } from 'react';
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useAuth } from '@/contexts/AuthContext';
-import { Spinner } from '@/components/ui/spinner';
-import { toast } from 'sonner';
-
-interface AuthFormData {
-  email: string;
-  password: string;
-  fullName?: string;
-}
+import { useNavigate } from 'react-router-dom';
+import { Spinner } from "@/components/ui/spinner";
+import { useToast } from "@/hooks/use-toast";
 
 interface ManualAuthFormProps {
   isLogin: boolean;
+  className?: string;
 }
 
-const ManualAuthForm = ({ isLogin }: ManualAuthFormProps) => {
-  const [formData, setFormData] = useState<AuthFormData>({
-    email: '',
-    password: '',
-    fullName: '',
-  });
-  const [isLoading, setIsLoading] = useState(false);
+const ManualAuthForm: React.FC<ManualAuthFormProps> = ({ isLogin, className }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
   const { signInWithEmail, signUpWithEmail } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
+    setLoading(true);
+    setError(null);
+    
     try {
       if (isLogin) {
-        await signInWithEmail(formData.email, formData.password);
+        await signInWithEmail(email, password);
+        toast({
+          title: "Login successful",
+          description: "Welcome back to UniLink!",
+        });
+        navigate('/dashboard');
       } else {
-        if (!formData.fullName) {
-          toast.error('Please enter your full name');
-          return;
-        }
-        await signUpWithEmail(formData.email, formData.password, formData.fullName);
+        await signUpWithEmail(email, password, fullName);
+        toast({
+          title: "Account created",
+          description: "Your account has been successfully created. Please complete your profile.",
+        });
+        navigate('/profile-setup');
       }
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (err: any) {
+      console.error('Authentication error:', err);
+      setError(err.message || 'Authentication failed. Please try again.');
+      toast({
+        title: "Authentication failed",
+        description: err.message || 'Please check your credentials and try again.',
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {!isLogin && (
+    <form onSubmit={handleSubmit} className={className}>
+      <div className="space-y-4">
+        {!isLogin && (
+          <div className="space-y-2">
+            <Label htmlFor="fullName">Full Name</Label>
+            <Input 
+              id="fullName"
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+              placeholder="John Doe"
+            />
+          </div>
+        )}
+        
         <div className="space-y-2">
-          <Label htmlFor="fullName">Full Name</Label>
-          <Input
-            id="fullName"
-            name="fullName"
-            type="text"
-            placeholder="John Doe"
-            value={formData.fullName}
-            onChange={handleChange}
-            required={!isLogin}
-            className="w-full"
+          <Label htmlFor="email">Email</Label>
+          <Input 
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            placeholder="your@email.com"
           />
         </div>
-      )}
-      <div className="space-y-2">
-        <Label htmlFor="email">Email Address</Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          placeholder="you@example.com"
-          value={formData.email}
-          onChange={handleChange}
-          required
-          className="w-full"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          placeholder="••••••••"
-          value={formData.password}
-          onChange={handleChange}
-          required
-          className="w-full"
-        />
-      </div>
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? (
-          <Spinner />
-        ) : (
-          isLogin ? 'Sign in' : 'Sign up'
+        
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input 
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            placeholder="••••••••"
+            minLength={6}
+          />
+        </div>
+        
+        {error && (
+          <p className="text-sm text-red-500">{error}</p>
         )}
-      </Button>
+        
+        <Button 
+          type="submit" 
+          className="w-full"
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <Spinner size="sm" className="mr-2" /> 
+              {isLogin ? 'Logging in...' : 'Creating account...'}
+            </>
+          ) : (
+            isLogin ? 'Log in' : 'Create account'
+          )}
+        </Button>
+      </div>
     </form>
   );
 };
