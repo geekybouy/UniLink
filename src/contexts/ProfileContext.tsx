@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { typedSupabaseClient } from '@/integrations/supabase/customClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserProfile, ProfileFormData } from '@/types/profile';
 import { toast } from 'sonner';
@@ -49,34 +50,30 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if (profileError) throw profileError;
 
-      // Fetch education data
-      const { data: educationData, error: educationError } = await supabase
-        .from('education')
-        .select('*')
+      // Fetch education data using our typed client
+      const { data: educationData, error: educationError } = await typedSupabaseClient.education
+        .select()
         .eq('user_id', user.id);
 
       if (educationError) throw educationError;
 
-      // Fetch work experience data
-      const { data: workData, error: workError } = await supabase
-        .from('work_experience')
-        .select('*')
+      // Fetch work experience data using our typed client
+      const { data: workData, error: workError } = await typedSupabaseClient.workExperience
+        .select()
         .eq('user_id', user.id);
 
       if (workError) throw workError;
 
-      // Fetch skills data
-      const { data: skillsData, error: skillsError } = await supabase
-        .from('skills')
-        .select('*')
+      // Fetch skills data using our typed client
+      const { data: skillsData, error: skillsError } = await typedSupabaseClient.skills
+        .select()
         .eq('user_id', user.id);
 
       if (skillsError) throw skillsError;
 
-      // Fetch social links data
-      const { data: socialData, error: socialError } = await supabase
-        .from('social_links')
-        .select('*')
+      // Fetch social links data using our typed client
+      const { data: socialData, error: socialError } = await typedSupabaseClient.socialLinks
+        .select()
         .eq('user_id', user.id);
 
       if (socialError) throw socialError;
@@ -103,10 +100,34 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         branch: profileData.branch,
         location: profileData.location,
         registrationNumber: profileData.registration_number,
-        education: educationData || [],
-        workExperience: workData || [],
-        skills: skillsData || [],
-        socialLinks: socialData || [],
+        education: educationData?.map(edu => ({
+          id: edu.id,
+          university: edu.university,
+          degree: edu.degree,
+          field: edu.field,
+          startYear: edu.start_year,
+          endYear: edu.end_year,
+          isCurrentlyStudying: edu.is_currently_studying || false
+        })) || [],
+        workExperience: workData?.map(work => ({
+          id: work.id,
+          company: work.company,
+          position: work.position,
+          location: work.location || '',
+          startDate: work.start_date,
+          endDate: work.end_date,
+          isCurrentlyWorking: work.is_currently_working || false,
+          description: work.description || ''
+        })) || [],
+        skills: skillsData?.map(skill => ({
+          id: skill.id,
+          name: skill.name
+        })) || [],
+        socialLinks: socialData?.map(link => ({
+          id: link.id,
+          platform: link.platform as any,
+          url: link.url
+        })) || [],
         isProfileComplete: profileData.is_profile_complete || false,
         privacySettings: privacyData || {
           email: 'private',

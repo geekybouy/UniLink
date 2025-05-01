@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,7 @@ import { Plus, Trash, School } from 'lucide-react';
 import { toast } from 'sonner';
 import { useProfile } from '@/contexts/ProfileContext';
 import { Education } from '@/types/profile';
-import { supabase } from '@/integrations/supabase/client';
+import { typedSupabaseClient } from '@/integrations/supabase/customClient';
 import { v4 as uuidv4 } from 'uuid';
 
 interface EducationFormData {
@@ -79,17 +78,15 @@ const EducationStep = () => {
       };
       
       // Add to database
-      const { error } = await supabase
-        .from('education')
-        .insert({
-          user_id: profile.userId,
-          university: newEducation.university,
-          degree: newEducation.degree,
-          field: newEducation.field,
-          start_year: newEducation.startYear,
-          end_year: newEducation.endYear,
-          is_currently_studying: newEducation.isCurrentlyStudying
-        });
+      const { error } = await typedSupabaseClient.education.insert({
+        user_id: profile.userId,
+        university: newEducation.university,
+        degree: newEducation.degree,
+        field: newEducation.field,
+        start_year: newEducation.startYear,
+        end_year: newEducation.endYear,
+        is_currently_studying: newEducation.isCurrentlyStudying
+      });
       
       if (error) throw error;
       
@@ -114,10 +111,7 @@ const EducationStep = () => {
       if (!profile) return;
       
       // Delete from database
-      const { error } = await supabase
-        .from('education')
-        .delete()
-        .eq('id', id);
+      const { error } = await typedSupabaseClient.education.delete(id);
         
       if (error) throw error;
       

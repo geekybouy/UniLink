@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import { Pencil, Trash, Linkedin, Github, Twitter, Link as LinkIcon } from 'luci
 import { toast } from 'sonner';
 import { useProfile } from '@/contexts/ProfileContext';
 import { SocialLink } from '@/types/profile';
-import { supabase } from '@/integrations/supabase/client';
+import { typedSupabaseClient } from '@/integrations/supabase/customClient';
 import { v4 as uuidv4 } from 'uuid';
 
 interface SocialLinkFormData {
@@ -71,13 +70,10 @@ const SocialLinksStep = () => {
       
       if (editingLink) {
         // Update existing link
-        const { error } = await supabase
-          .from('social_links')
-          .update({
-            platform: data.platform,
-            url: url
-          })
-          .eq('id', editingLink.id);
+        const { error } = await typedSupabaseClient.socialLinks.update(editingLink.id, {
+          platform: data.platform,
+          url: url
+        });
           
         if (error) throw error;
         
@@ -93,19 +89,17 @@ const SocialLinksStep = () => {
         // Add new link
         const linkId = uuidv4();
         
-        const { error } = await supabase
-          .from('social_links')
-          .insert({
-            id: linkId,
-            user_id: profile.userId,
-            platform: data.platform,
-            url: url
-          });
+        const { error } = await typedSupabaseClient.socialLinks.insert({
+          id: linkId,
+          user_id: profile.userId,
+          platform: data.platform,
+          url: url
+        });
           
         if (error) throw error;
         
         // Update local state
-        setSocialLinks([...socialLinks, { platform: data.platform, url: url }]);
+        setSocialLinks([...socialLinks, { id: linkId, platform: data.platform, url: url }]);
         
         toast.success('Social link added');
       }
@@ -136,10 +130,7 @@ const SocialLinksStep = () => {
       if (!profile) return;
       
       // Delete from database
-      const { error } = await supabase
-        .from('social_links')
-        .delete()
-        .eq('id', link.id);
+      const { error } = await typedSupabaseClient.socialLinks.delete(link.id);
         
       if (error) throw error;
       

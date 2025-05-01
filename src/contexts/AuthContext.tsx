@@ -3,6 +3,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, User as FirebaseUser } from 'firebase/auth';
+import { toast } from 'sonner';
 
 interface UserProfile {
   id: string;
@@ -22,6 +24,7 @@ interface UserProfile {
 
 interface AuthContextType {
   user: User | null;
+  firebaseUser: FirebaseUser | null;
   session: Session | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any | null }>;
@@ -32,6 +35,9 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   refreshUserProfile: () => Promise<void>;
   hasRole: (role: string) => boolean;
+  signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, fullName: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,6 +52,7 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -69,6 +76,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return () => subscription.unsubscribe();
+  }, []);
+
+  // Firebase auth listener
+  useEffect(() => {
+    try {
+      const auth = getAuth();
+      const unsubscribe = auth.onAuthStateChanged((user) => {
+        setFirebaseUser(user);
+      });
+      
+      return () => unsubscribe();
+    } catch (error) {
+      // Firebase might not be initialized
+      console.log('Firebase auth not available or not initialized');
+    }
   }, []);
 
   // Fetch user profile when user changes
@@ -198,8 +220,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return userRoles.includes(role);
   };
 
+  // New methods for authentication
+  const signInWithGoogle = async () => {
+    try {
+      // Try Supabase Google Auth first
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+      
+      if (error) {
+        // Fallback to Firebase if Supabase fails
+        const auth = getAuth();
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+      }
+    } catch (error: any) {
+      toast.error(`Failed to sign in with Google: ${error.message}`);
+      console.error('Google sign-in error:', error);
+    }
+  };
+
+  const signInWithEmail = async (email: string, password: string) => {
+    try {
+      const { error } = await signIn(email, password);
+      if (error) throw error;
+    } catch (error: any) {
+      toast.error(error.message);
+      throw error;
+    }
+  };
+
+  const signUpWithEmail = async (email: string, password: string, fullName: string) => {
+    try {
+      const { error } = await signUp(email, password, fullName);
+      if (error) throw error;
+      toast.success("Signup successful! Check your email to verify your account.");
+    } catch (error: any) {
+      toast.error(error.message);
+      throw error;
+    }
+  };
+
   const value = {
     user,
+    firebaseUser,
     session,
     isLoading,
     signIn,
@@ -210,6 +277,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userProfile,
     refreshUserProfile,
     hasRole,
+    signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

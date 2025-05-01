@@ -26,6 +26,7 @@ export interface Skill {
 }
 
 export interface SocialLink {
+  id: string;
   platform: 'linkedin' | 'github' | 'twitter' | 'website' | 'other';
   url: string;
 }

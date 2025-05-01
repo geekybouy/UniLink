@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,7 @@ import { Plus, Trash, Briefcase } from 'lucide-react';
 import { toast } from 'sonner';
 import { useProfile } from '@/contexts/ProfileContext';
 import { WorkExperience } from '@/types/profile';
-import { supabase } from '@/integrations/supabase/client';
+import { typedSupabaseClient } from '@/integrations/supabase/customClient';
 import { v4 as uuidv4 } from 'uuid';
 
 interface WorkExperienceFormData {
@@ -71,18 +70,16 @@ const WorkExperienceStep = () => {
       };
       
       // Add to database
-      const { error } = await supabase
-        .from('work_experience')
-        .insert({
-          user_id: profile.userId,
-          company: newWork.company,
-          position: newWork.position,
-          location: newWork.location,
-          start_date: newWork.startDate,
-          end_date: newWork.endDate,
-          is_currently_working: newWork.isCurrentlyWorking,
-          description: newWork.description
-        });
+      const { error } = await typedSupabaseClient.workExperience.insert({
+        user_id: profile.userId,
+        company: newWork.company,
+        position: newWork.position,
+        location: newWork.location,
+        start_date: newWork.startDate,
+        end_date: newWork.endDate,
+        is_currently_working: newWork.isCurrentlyWorking,
+        description: newWork.description
+      });
       
       if (error) throw error;
       
@@ -107,10 +104,7 @@ const WorkExperienceStep = () => {
       if (!profile) return;
       
       // Delete from database
-      const { error } = await supabase
-        .from('work_experience')
-        .delete()
-        .eq('id', id);
+      const { error } = await typedSupabaseClient.workExperience.delete(id);
         
       if (error) throw error;
       

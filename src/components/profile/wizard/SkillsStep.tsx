@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +7,7 @@ import { Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useProfile } from '@/contexts/ProfileContext';
 import { Skill } from '@/types/profile';
-import { supabase } from '@/integrations/supabase/client';
+import { typedSupabaseClient } from '@/integrations/supabase/customClient';
 import { v4 as uuidv4 } from 'uuid';
 
 const SkillsStep = () => {
@@ -41,13 +40,11 @@ const SkillsStep = () => {
       const skillId = uuidv4();
       
       // Add to database
-      const { error } = await supabase
-        .from('skills')
-        .insert({
-          id: skillId,
-          user_id: profile.userId,
-          name: newSkill.trim()
-        });
+      const { error } = await typedSupabaseClient.skills.insert({
+        id: skillId,
+        user_id: profile.userId,
+        name: newSkill.trim()
+      });
       
       if (error) throw error;
       
@@ -70,10 +67,7 @@ const SkillsStep = () => {
       if (!profile) return;
       
       // Delete from database
-      const { error } = await supabase
-        .from('skills')
-        .delete()
-        .eq('id', id);
+      const { error } = await typedSupabaseClient.skills.delete(id);
         
       if (error) throw error;
       

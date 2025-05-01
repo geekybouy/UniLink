@@ -44,8 +44,8 @@ const PersonalInfoStep = () => {
       
       await updateProfile(data);
       
-      if (data.avatarFile && data.avatarFile.length > 0) {
-        await uploadAvatar(data.avatarFile[0]);
+      if (data.avatarFile && data.avatarFile instanceof File) {
+        await uploadAvatar(data.avatarFile);
       }
       
       toast.success('Personal information updated successfully');
