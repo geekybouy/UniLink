@@ -67,6 +67,31 @@ const CredentialWallet = () => {
     navigate('/share-credentials');
   };
 
+  // Add these handlers for the CredentialItem props
+  const handleDeleteCredential = async (id: string) => {
+    try {
+      // Delete from database
+      const { error } = await supabase
+        .from('credentials')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      // Update local state
+      setCredentials(credentials.filter(cred => cred.id !== id));
+      toast.success('Credential deleted successfully');
+    } catch (error: any) {
+      console.error('Error deleting credential:', error);
+      toast.error('Failed to delete credential');
+    }
+  };
+
+  const handleShareCredential = (id: string) => {
+    // Navigate to share page with credential ID
+    navigate(`/share-credentials?id=${id}`);
+  };
+
   const getEmptyMessage = () => {
     switch (selectedType) {
       case 'academic':
@@ -141,7 +166,12 @@ const CredentialWallet = () => {
               <div className="flex justify-center py-8">Loading...</div>
             ) : filteredCredentials.length > 0 ? (
               filteredCredentials.map(credential => (
-                <CredentialItem key={credential.id} credential={credential} />
+                <CredentialItem 
+                  key={credential.id} 
+                  credential={credential} 
+                  onDelete={handleDeleteCredential}
+                  onShare={handleShareCredential}
+                />
               ))
             ) : (
               <div className="text-center py-8">
@@ -162,7 +192,12 @@ const CredentialWallet = () => {
               <div className="flex justify-center py-8">Loading...</div>
             ) : filteredCredentials.length > 0 ? (
               filteredCredentials.map(credential => (
-                <CredentialItem key={credential.id} credential={credential} />
+                <CredentialItem 
+                  key={credential.id} 
+                  credential={credential} 
+                  onDelete={handleDeleteCredential}
+                  onShare={handleShareCredential}
+                />
               ))
             ) : (
               <div className="text-center py-8">
@@ -183,7 +218,12 @@ const CredentialWallet = () => {
               <div className="flex justify-center py-8">Loading...</div>
             ) : filteredCredentials.length > 0 ? (
               filteredCredentials.map(credential => (
-                <CredentialItem key={credential.id} credential={credential} />
+                <CredentialItem 
+                  key={credential.id} 
+                  credential={credential} 
+                  onDelete={handleDeleteCredential}
+                  onShare={handleShareCredential}
+                />
               ))
             ) : (
               <div className="text-center py-8">

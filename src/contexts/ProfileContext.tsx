@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { customSupabase } from '../integrations/supabase/customClient';
@@ -16,7 +15,9 @@ interface ProfileContextType {
   isLoading: boolean;
   error: string | null;
   fetchProfile: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
+  uploadAvatar: (file: File) => Promise<string>;
   updateProfileImage: (file: File) => Promise<string>;
   addEducation: (education: Omit<Education, 'id'>) => Promise<void>;
   updateEducation: (id: string, education: Partial<Education>) => Promise<void>;
@@ -30,6 +31,7 @@ interface ProfileContextType {
   updateSocialLink: (id: string, socialLink: Partial<SocialLink>) => Promise<void>;
   deleteSocialLink: (id: string) => Promise<void>;
   updatePrivacySettings: (settings: Partial<PrivacySettings>) => Promise<void>;
+  getProfileCompletion: () => number;
 }
 
 const ProfileContext = createContext<ProfileContextType>({
@@ -37,7 +39,9 @@ const ProfileContext = createContext<ProfileContextType>({
   isLoading: true,
   error: null,
   fetchProfile: async () => {},
+  refreshProfile: async () => {},
   updateProfile: async () => {},
+  uploadAvatar: async () => "",
   updateProfileImage: async () => "",
   addEducation: async () => {},
   updateEducation: async () => {},
@@ -51,6 +55,7 @@ const ProfileContext = createContext<ProfileContextType>({
   updateSocialLink: async () => {},
   deleteSocialLink: async () => {},
   updatePrivacySettings: async () => {},
+  getProfileCompletion: () => 0,
 });
 
 export const useProfile = () => useContext(ProfileContext);
@@ -60,6 +65,10 @@ export const ProfileProvider: React.FC<{children: React.ReactNode}> = ({ childre
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  const refreshProfile = async () => {
+    await fetchProfile();
+  };
 
   const fetchProfile = async () => {
     if (!userId) {
@@ -179,6 +188,48 @@ export const ProfileProvider: React.FC<{children: React.ReactNode}> = ({ childre
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const uploadAvatar = async (file: File): Promise<string> => {
+    return updateProfileImage(file);
+  };
+
+  const getProfileCompletion = (): number => {
+    if (!profile) return 0;
+    
+    let completedFields = 0;
+    let totalFields = 0;
+    
+    // Basic info
+    if (profile.fullName) completedFields++;
+    if (profile.email) completedFields++;
+    if (profile.username) completedFields++;
+    totalFields += 3;
+    
+    // Optional fields
+    if (profile.bio && profile.bio.length > 0) completedFields++;
+    if (profile.avatarUrl) completedFields++;
+    if (profile.phone) completedFields++;
+    if (profile.location) completedFields++;
+    totalFields += 4;
+    
+    // Education
+    if (profile.education.length > 0) completedFields++;
+    totalFields += 1;
+    
+    // Work experience
+    if (profile.workExperience.length > 0) completedFields++;
+    totalFields += 1;
+    
+    // Skills
+    if (profile.skills.length > 0) completedFields++;
+    totalFields += 1;
+    
+    // Social links
+    if (profile.socialLinks.length > 0) completedFields++;
+    totalFields += 1;
+    
+    return Math.round((completedFields / totalFields) * 100);
   };
 
   const updateProfile = async (data: Partial<UserProfile>) => {
@@ -743,7 +794,9 @@ export const ProfileProvider: React.FC<{children: React.ReactNode}> = ({ childre
     isLoading,
     error,
     fetchProfile,
+    refreshProfile,
     updateProfile,
+    uploadAvatar,
     updateProfileImage,
     addEducation,
     updateEducation,
@@ -757,6 +810,7 @@ export const ProfileProvider: React.FC<{children: React.ReactNode}> = ({ childre
     updateSocialLink,
     deleteSocialLink,
     updatePrivacySettings,
+    getProfileCompletion,
   };
 
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;
