@@ -7,7 +7,7 @@ const BottomNav = () => {
   const location = useLocation();
 
   return (
-    <nav className="fixed bottom-0 w-full bg-white border-t border-gray-200 z-50">
+    <nav className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 z-50">
       <div className="max-w-screen-xl mx-auto px-2">
         <div className="flex justify-around py-2">
           <Link 

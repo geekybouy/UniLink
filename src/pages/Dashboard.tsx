@@ -41,7 +41,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation Bar */}
-      <nav className="fixed top-0 w-full bg-white/95 backdrop-blur-sm shadow-sm z-50">
+      <nav className="fixed top-0 left-0 w-full bg-white/95 backdrop-blur-sm shadow-sm z-50">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           {isMobile ? (
             <Sheet>

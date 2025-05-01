@@ -21,7 +21,7 @@ const AuthLayout = () => {
   // If authentication is still loading and this is NOT the callback page, show loading screen
   if (isLoading && !location.pathname.includes('/auth/callback')) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-b from-secondary/50 to-background flex flex-col items-center justify-center p-4 overflow-hidden">
+      <div className="min-h-screen w-full max-w-full bg-gradient-to-b from-secondary/50 to-background flex flex-col items-center justify-center p-4 overflow-hidden">
         <div className="w-full max-w-md flex flex-col items-center px-4">
           <h1 className="text-4xl font-playfair text-primary text-center mb-8">
             UniLink
@@ -43,7 +43,7 @@ const AuthLayout = () => {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-secondary/50 to-background flex flex-col items-center justify-center overflow-x-hidden">
+    <div className="min-h-screen w-full max-w-full bg-gradient-to-b from-secondary/50 to-background flex flex-col items-center justify-center overflow-hidden">
       <div className="w-full max-w-md px-4 py-8">
         <h1 className="text-4xl font-playfair text-primary text-center mb-8">
           UniLink

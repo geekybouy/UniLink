@@ -62,6 +62,12 @@ function App() {
               <CVMaker />
             </ProtectedRoute>
           } />
+          <Route path="/credential-wallet" element={
+            <ProtectedRoute>
+              <CredentialWallet />
+            </ProtectedRoute>
+          } />
+          {/* Fix for the /credentials route - redirect to /credential-wallet */}
           <Route path="/credentials" element={
             <ProtectedRoute>
               <CredentialWallet />
@@ -93,6 +99,11 @@ function App() {
             </ProtectedRoute>
           } />
           <Route path="/alumni/:id" element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
             <ProtectedRoute>
               <ProfilePage />
             </ProtectedRoute>

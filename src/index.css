@@ -94,6 +94,8 @@
   
   html, body {
     @apply overflow-x-hidden w-full max-w-full;
+    margin: 0;
+    padding: 0;
   }
   
   body {
@@ -177,11 +179,11 @@
   }
 }
 
-/* Let's override App.css defaults that might be causing problems */
+/* Override App.css defaults */
 #root {
   max-width: 100%;
   width: 100%;
-  margin: 0 auto;
+  margin: 0;
   padding: 0;
   text-align: left;
   overflow-x: hidden;
