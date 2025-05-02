@@ -2,6 +2,7 @@
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { Home, BookOpen, Shield, User, Plus, Users } from 'lucide-react';
+import Network from './connection/ConnectionIcon';
 
 const BottomNav = () => {
   const location = useLocation();
@@ -27,11 +28,11 @@ const BottomNav = () => {
           </Link>
           
           <Link 
-            to="/credential-wallet" 
-            className={`flex flex-col items-center px-1 py-1 ${location.pathname === '/credential-wallet' ? 'text-primary' : 'text-gray-500 hover:text-primary transition-colors'}`}
+            to="/network" 
+            className={`flex flex-col items-center px-1 py-1 ${location.pathname === '/network' ? 'text-primary' : 'text-gray-500 hover:text-primary transition-colors'}`}
           >
-            <Shield className="h-5 w-5" />
-            <span className="text-xs mt-1">Credentials</span>
+            <Network className="h-5 w-5" />
+            <span className="text-xs mt-1">Network</span>
           </Link>
           
           <Link 
@@ -45,11 +46,11 @@ const BottomNav = () => {
           </Link>
           
           <Link 
-            to="/cv-maker" 
-            className={`flex flex-col items-center px-1 py-1 ${location.pathname === '/cv-maker' ? 'text-primary' : 'text-gray-500 hover:text-primary transition-colors'}`}
+            to="/credential-wallet" 
+            className={`flex flex-col items-center px-1 py-1 ${location.pathname === '/credential-wallet' ? 'text-primary' : 'text-gray-500 hover:text-primary transition-colors'}`}
           >
-            <BookOpen className="h-5 w-5" />
-            <span className="text-xs mt-1">CV</span>
+            <Shield className="h-5 w-5" />
+            <span className="text-xs mt-1">Credentials</span>
           </Link>
           
           <Link 

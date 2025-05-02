@@ -1,18 +1,36 @@
 
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Search, Bell, User, UserPlus, Users, BookOpen, Shield } from 'lucide-react';
+import { Menu, Search, User, UserPlus, Users, BookOpen, Shield, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
+import NotificationsDropdown from '@/components/notifications/NotificationsDropdown';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { profile } = useProfile();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <nav className="fixed top-0 left-0 w-full bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm z-50">
@@ -36,6 +54,12 @@ const Header = () => {
                     <Users className="h-4 w-4" /> Alumni Directory
                   </Link>
                   <Link 
+                    to="/network" 
+                    className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors"
+                  >
+                    <UserPlus className="h-4 w-4" /> My Network
+                  </Link>
+                  <Link 
                     to="/credential-wallet" 
                     className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors"
                   >
@@ -52,6 +76,12 @@ const Header = () => {
                     className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors"
                   >
                     <User className="h-4 w-4" /> My Profile
+                  </Link>
+                  <Link 
+                    to="/privacy-settings" 
+                    className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors"
+                  >
+                    <UserCog className="h-4 w-4" /> Privacy Settings
                   </Link>
                 </div>
               </div>
@@ -76,6 +106,12 @@ const Header = () => {
             className={`text-sm font-medium ${location.pathname === '/alumni-directory' ? 'text-primary' : 'text-gray-600 hover:text-primary'} transition-colors`}
           >
             Alumni Directory
+          </Link>
+          <Link 
+            to="/network" 
+            className={`text-sm font-medium ${location.pathname === '/network' ? 'text-primary' : 'text-gray-600 hover:text-primary'} transition-colors`}
+          >
+            My Network
           </Link>
           <Link 
             to="/credential-wallet" 
@@ -109,18 +145,46 @@ const Header = () => {
             </Button>
           )}
           
-          <Button variant="ghost" size="sm">
-            <Bell className="h-5 w-5" />
-          </Button>
+          <NotificationsDropdown />
           
-          <Link to="/profile">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={profile?.avatarUrl || ''} />
-              <AvatarFallback>
-                {user?.email?.charAt(0).toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Avatar className="h-8 w-8 cursor-pointer">
+                <AvatarImage src={profile?.avatarUrl || ''} />
+                <AvatarFallback>
+                  {user?.email?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="w-full cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/network" className="w-full cursor-pointer">
+                    <Users className="mr-2 h-4 w-4" />
+                    My Network
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/privacy-settings" className="w-full cursor-pointer">
+                    <UserCog className="mr-2 h-4 w-4" />
+                    Privacy Settings
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut} className="text-red-500 focus:text-red-500">
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </nav>

@@ -3,17 +3,17 @@ import { UserProfile } from '@/types/profile';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, UserPlus, ExternalLink } from 'lucide-react';
+import { MessageSquare, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import ConnectionButton from '@/components/connection/ConnectionButton';
 
 type AlumniGridProps = {
   alumni: UserProfile[];
-  onConnect: (profileId: string) => void;
   onMessage: (profileId: string) => void;
   onViewProfile: (profileId: string) => void;
 };
 
-const AlumniGrid = ({ alumni, onConnect, onMessage, onViewProfile }: AlumniGridProps) => {
+const AlumniGrid = ({ alumni, onMessage, onViewProfile }: AlumniGridProps) => {
   const getInitials = (name: string): string => {
     return name
       .split(' ')
@@ -81,15 +81,10 @@ const AlumniGrid = ({ alumni, onConnect, onMessage, onViewProfile }: AlumniGridP
               </div>
 
               <div className="flex gap-2 mt-4">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <ConnectionButton 
+                  userId={alumnus.userId}
                   className="flex-1"
-                  onClick={() => onConnect(alumnus.userId)}
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Connect
-                </Button>
+                />
                 <Button 
                   variant="outline" 
                   size="sm" 

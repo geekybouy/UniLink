@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      connections: {
+        Row: {
+          created_at: string
+          id: string
+          receiver_id: string
+          sender_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          receiver_id: string
+          sender_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          receiver_id?: string
+          sender_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credential_shares: {
         Row: {
           created_at: string
@@ -162,6 +189,39 @@ export type Database = {
           id?: string
           location?: string
           name?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          content: string
+          created_at: string
+          from_user_id: string | null
+          id: string
+          is_read: boolean
+          metadata: Json | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          from_user_id?: string | null
+          id?: string
+          is_read?: boolean
+          metadata?: Json | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          from_user_id?: string | null
+          id?: string
+          is_read?: boolean
+          metadata?: Json | null
+          type?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -352,6 +412,27 @@ export type Database = {
           id?: string
           platform?: string
           url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_privacy: {
+        Row: {
+          allow_connection_requests: boolean
+          connection_visibility: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allow_connection_requests?: boolean
+          connection_visibility?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allow_connection_requests?: boolean
+          connection_visibility?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
