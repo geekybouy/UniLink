@@ -194,14 +194,17 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           branch: string | null
+          current_company: string | null
           email: string
           full_name: string
           graduation_year: number | null
           id: number
           is_profile_complete: boolean | null
+          job_title: string | null
           location: string | null
           password: string
           registration_number: string | null
+          skills: string[] | null
           university_name: string | null
           user_id: string | null
           username: string | null
@@ -210,14 +213,17 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           branch?: string | null
+          current_company?: string | null
           email: string
           full_name: string
           graduation_year?: number | null
           id?: never
           is_profile_complete?: boolean | null
+          job_title?: string | null
           location?: string | null
           password: string
           registration_number?: string | null
+          skills?: string[] | null
           university_name?: string | null
           user_id?: string | null
           username?: string | null
@@ -226,14 +232,17 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           branch?: string | null
+          current_company?: string | null
           email?: string
           full_name?: string
           graduation_year?: number | null
           id?: never
           is_profile_complete?: boolean | null
+          job_title?: string | null
           location?: string | null
           password?: string
           registration_number?: string | null
+          skills?: string[] | null
           university_name?: string | null
           user_id?: string | null
           username?: string | null

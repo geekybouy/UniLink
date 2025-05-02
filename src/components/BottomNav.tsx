@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { Home, BookOpen, Shield, User, Plus } from 'lucide-react';
+import { Home, BookOpen, Shield, User, Plus, Users } from 'lucide-react';
 
 const BottomNav = () => {
   const location = useLocation();
@@ -16,6 +16,14 @@ const BottomNav = () => {
           >
             <Home className="h-5 w-5" />
             <span className="text-xs mt-1">Home</span>
+          </Link>
+          
+          <Link 
+            to="/alumni-directory" 
+            className={`flex flex-col items-center px-1 py-1 ${location.pathname === '/alumni-directory' ? 'text-primary' : 'text-gray-500 hover:text-primary transition-colors'}`}
+          >
+            <Users className="h-5 w-5" />
+            <span className="text-xs mt-1">Alumni</span>
           </Link>
           
           <Link 
