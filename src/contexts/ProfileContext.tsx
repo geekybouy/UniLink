@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { typedSupabaseClient } from '@/integrations/supabase/customClient';
 import { UserProfile, ProfileFormData, Skill, Education, WorkExperience, SocialLink } from '@/types/profile';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -49,6 +48,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             full_name: user.user_metadata?.full_name || '',
             email: user.email || '',
             username: '',
+            password: '', // Required field in the database
             is_profile_complete: false
           });
           
@@ -62,22 +62,36 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           
         if (newProfileData) {
           const emptyProfile: UserProfile = {
-            id: newProfileData.id,
-            userId: newProfileData.user_id,
+            id: newProfileData.id.toString(), // Convert number to string
+            userId: newProfileData.user_id || '',
             username: newProfileData.username || '',
             fullName: newProfileData.full_name || '',
             email: newProfileData.email || '',
             bio: newProfileData.bio || '',
             avatarUrl: newProfileData.avatar_url || null,
-            phone: newProfileData.phone || '',
-            university: newProfileData.university || '',
+            phone: null, // Not in database, set as null
+            university: newProfileData.university_name || null, // Map to university_name
             graduationYear: newProfileData.graduation_year || null,
             skills: [],
             education: [],
             workExperience: [],
             socialLinks: [],
             location: newProfileData.location || '',
-            isProfileComplete: false
+            isProfileComplete: false,
+            privacySettings: {
+              email: 'public',
+              phone: 'public',
+              education: 'public',
+              workExperience: 'public',
+              skills: 'public',
+              socialLinks: 'public'
+            },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            branch: newProfileData.branch || null,
+            registrationNumber: newProfileData.registration_number || null,
+            job_title: newProfileData.job_title || null,
+            current_company: newProfileData.current_company || null
           };
           
           setProfile(emptyProfile);
@@ -87,34 +101,60 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       
       if (profileData) {
         // Fetch skills
-        const { data: skillsData } = await typedSupabaseClient.skills.getByUserId(user.id);
+        const { data: skillsData } = await supabase
+          .from('skills')
+          .select('*')
+          .eq('user_id', user.id);
         
         // Fetch education
-        const { data: educationData } = await typedSupabaseClient.education.getByUserId(user.id);
+        const { data: educationData } = await supabase
+          .from('education')
+          .select('*')
+          .eq('user_id', user.id);
         
         // Fetch work experience
-        const { data: workData } = await typedSupabaseClient.workExperience.getByUserId(user.id);
+        const { data: workData } = await supabase
+          .from('work_experience')
+          .select('*')
+          .eq('user_id', user.id);
         
         // Fetch social links
-        const { data: socialData } = await typedSupabaseClient.socialLinks.getByUserId(user.id);
+        const { data: socialData } = await supabase
+          .from('social_links')
+          .select('*')
+          .eq('user_id', user.id);
         
         const userProfile: UserProfile = {
-          id: profileData.id,
-          userId: profileData.user_id,
+          id: profileData.id.toString(), // Convert number to string
+          userId: profileData.user_id || '',
           username: profileData.username || '',
           fullName: profileData.full_name || '',
           email: profileData.email || '',
           bio: profileData.bio || '',
           avatarUrl: profileData.avatar_url || null,
-          phone: profileData.phone || '',
-          university: profileData.university || '',
+          phone: null, // Not in database schema
+          university: profileData.university_name || null, // Map to university_name
           graduationYear: profileData.graduation_year || null,
           location: profileData.location || '',
           isProfileComplete: profileData.is_profile_complete || false,
           skills: skillsData || [],
           education: educationData || [],
           workExperience: workData || [],
-          socialLinks: socialData || []
+          socialLinks: socialData || [],
+          privacySettings: {
+            email: 'public',
+            phone: 'public',
+            education: 'public',
+            workExperience: 'public',
+            skills: 'public',
+            socialLinks: 'public'
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          branch: profileData.branch || null,
+          registrationNumber: profileData.registration_number || null,
+          job_title: profileData.job_title || null,
+          current_company: profileData.current_company || null
         };
         
         setProfile(userProfile);
@@ -149,10 +189,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (data.username !== undefined) updateData.username = data.username;
       if (data.email !== undefined) updateData.email = data.email;
       if (data.bio !== undefined) updateData.bio = data.bio;
-      if (data.phone !== undefined) updateData.phone = data.phone;
-      if (data.university !== undefined) updateData.university = data.university;
-      if (data.graduationYear !== undefined) updateData.graduation_year = data.graduationYear;
       if (data.location !== undefined) updateData.location = data.location;
+      if (data.university !== undefined) updateData.university_name = data.university; // Map to university_name
+      if (data.graduationYear !== undefined) updateData.graduation_year = data.graduationYear;
+      if (data.branch !== undefined) updateData.branch = data.branch;
+      if (data.registrationNumber !== undefined) updateData.registration_number = data.registrationNumber;
       
       // Update profile in database
       const { error } = await supabase
@@ -238,7 +279,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     let completedFields = 0;
 
     // Basic info
-    const basicFields = ['fullName', 'username', 'email', 'bio', 'avatarUrl', 'phone', 'university', 'graduationYear', 'location'];
+    const basicFields = ['fullName', 'username', 'email', 'bio', 'avatarUrl', 'location'];
     totalFields += basicFields.length;
     
     basicFields.forEach(field => {

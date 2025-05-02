@@ -22,28 +22,32 @@ export const typedSupabaseClient = {
     insert: (data: any) => customSupabase.from('education').insert(data),
     select: () => customSupabase.from('education').select('*'),
     update: (id: string, data: any) => customSupabase.from('education').update(data).eq('id', id),
-    delete: (id: string) => customSupabase.from('education').delete().eq('id', id)
+    delete: (id: string) => customSupabase.from('education').delete().eq('id', id),
+    getByUserId: (userId: string) => customSupabase.from('education').select('*').eq('user_id', userId)
   },
   // Skills table
   skills: {
     insert: (data: any) => customSupabase.from('skills').insert(data),
     select: () => customSupabase.from('skills').select('*'),
     update: (id: string, data: any) => customSupabase.from('skills').update(data).eq('id', id),
-    delete: (id: string) => customSupabase.from('skills').delete().eq('id', id)
+    delete: (id: string) => customSupabase.from('skills').delete().eq('id', id),
+    getByUserId: (userId: string) => customSupabase.from('skills').select('*').eq('user_id', userId)
   },
   // Social links table
   socialLinks: {
     insert: (data: any) => customSupabase.from('social_links').insert(data),
     select: () => customSupabase.from('social_links').select('*'),
     update: (id: string, data: any) => customSupabase.from('social_links').update(data).eq('id', id),
-    delete: (id: string) => customSupabase.from('social_links').delete().eq('id', id)
+    delete: (id: string) => customSupabase.from('social_links').delete().eq('id', id),
+    getByUserId: (userId: string) => customSupabase.from('social_links').select('*').eq('user_id', userId)
   },
   // Work experience table
   workExperience: {
     insert: (data: any) => customSupabase.from('work_experience').insert(data),
     select: () => customSupabase.from('work_experience').select('*'),
     update: (id: string, data: any) => customSupabase.from('work_experience').update(data).eq('id', id),
-    delete: (id: string) => customSupabase.from('work_experience').delete().eq('id', id)
+    delete: (id: string) => customSupabase.from('work_experience').delete().eq('id', id),
+    getByUserId: (userId: string) => customSupabase.from('work_experience').select('*').eq('user_id', userId)
   },
   // Profiles table with additional methods
   profiles: {
