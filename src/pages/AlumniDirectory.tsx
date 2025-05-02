@@ -7,7 +7,7 @@ import AlumniSearchFilters from '@/components/alumni/AlumniSearchFilters';
 import AlumniGrid from '@/components/alumni/AlumniGrid';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { UserProfile } from '@/types/profile';
+import { UserProfile, Skill } from '@/types/profile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import Pagination from '@/components/alumni/Pagination';
@@ -131,7 +131,10 @@ const AlumniDirectory = () => {
         }
         
         if (filters.graduationYear) {
-          query = query.eq('graduation_year', filters.graduationYear);
+          const yearNumber = parseInt(filters.graduationYear);
+          if (!isNaN(yearNumber)) {
+            query = query.eq('graduation_year', yearNumber);
+          }
         }
         
         if (filters.course) {
@@ -182,7 +185,44 @@ const AlumniDirectory = () => {
         
         if (error) throw error;
         
-        setAlumni(data as UserProfile[]);
+        // Transform the Supabase data structure to match our UserProfile type
+        const transformedAlumni: UserProfile[] = data?.map(profile => ({
+          id: profile.id.toString(),
+          userId: profile.user_id || profile.id.toString(),
+          fullName: profile.full_name,
+          email: profile.email,
+          username: profile.username || '',
+          bio: profile.bio || '',
+          avatarUrl: profile.avatar_url,
+          phone: null,  // Not present in profiles table
+          university: profile.university_name,
+          graduationYear: profile.graduation_year,
+          branch: profile.branch,
+          location: profile.location,
+          registrationNumber: profile.registration_number,
+          education: [], // We're not fetching these in this query
+          workExperience: [],
+          skills: profile.skills ? profile.skills.map((skill: string, index: number) => ({
+            id: `${profile.id}_skill_${index}`,
+            name: skill
+          })) : [],
+          socialLinks: [],
+          isProfileComplete: profile.is_profile_complete || false,
+          privacySettings: {
+            email: 'public',
+            phone: 'public',
+            education: 'public',
+            workExperience: 'public',
+            skills: 'public',
+            socialLinks: 'public'
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          job_title: profile.job_title,
+          current_company: profile.current_company
+        })) || [];
+        
+        setAlumni(transformedAlumni);
         setTotalAlumni(count || 0);
       } catch (error) {
         console.error("Error fetching alumni:", error);
@@ -330,6 +370,46 @@ const AlumniDirectory = () => {
       </div>
     </MainLayout>
   );
+};
+
+// Add the missing handler functions
+const handleFilterChange = (newFilters: Partial<AlumniFilters>) => {
+  setFilters(prevFilters => ({
+    ...prevFilters,
+    ...newFilters
+  }));
+  // Reset to first page when filters change
+  setPage(1);
+};
+
+const handleSortChange = (option: SortOption) => {
+  setSortBy(option);
+};
+
+const handlePageChange = (newPage: number) => {
+  setPage(newPage);
+  // Scroll to top when page changes
+  window.scrollTo(0, 0);
+};
+
+const handleConnect = (profileId: string) => {
+  // In a real app, this would send a connection request
+  toast({
+    title: "Connection request sent",
+    description: "Your connection request has been sent.",
+  });
+};
+
+const handleMessage = (profileId: string) => {
+  // In a real app, this would open a messaging interface
+  toast({
+    title: "Message feature",
+    description: "Messaging functionality coming soon!",
+  });
+};
+
+const handleViewProfile = (profileId: string) => {
+  navigate(`/profile/${profileId}`);
 };
 
 export default AlumniDirectory;

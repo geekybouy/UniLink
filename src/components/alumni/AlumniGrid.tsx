@@ -68,7 +68,7 @@ const AlumniGrid = ({ alumni, onConnect, onMessage, onViewProfile }: AlumniGridP
                   <div className="flex flex-wrap gap-1 mt-2">
                     {alumnus.skills.slice(0, 3).map((skill, index) => (
                       <Badge key={index} variant="secondary" className="text-xs">
-                        {skill}
+                        {skill.name}
                       </Badge>
                     ))}
                     {alumnus.skills.length > 3 && (

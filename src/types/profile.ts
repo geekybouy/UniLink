@@ -62,6 +62,9 @@ export interface UserProfile {
   privacySettings: PrivacySettings;
   createdAt: string;
   updatedAt: string;
+  // Add the missing properties
+  job_title?: string | null;
+  current_company?: string | null;
 }
 
 export interface ProfileFormData {
