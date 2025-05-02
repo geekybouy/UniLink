@@ -5,6 +5,7 @@ import { UserProfile, ProfileFormData, Skill, Education, WorkExperience, SocialL
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
+import { typedSupabaseClient } from '@/integrations/supabase/customClient';
 
 interface ProfileContextType {
   profile: UserProfile | null;
@@ -101,28 +102,50 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       
       if (profileData) {
         // Fetch skills
-        const { data: skillsData } = await supabase
-          .from('skills')
-          .select('*')
-          .eq('user_id', user.id);
+        const { data: skillsData } = await typedSupabaseClient.skills
+          .getByUserId(user.id);
         
         // Fetch education
-        const { data: educationData } = await supabase
-          .from('education')
-          .select('*')
-          .eq('user_id', user.id);
+        const { data: educationData } = await typedSupabaseClient.education
+          .getByUserId(user.id);
         
         // Fetch work experience
-        const { data: workData } = await supabase
-          .from('work_experience')
-          .select('*')
-          .eq('user_id', user.id);
+        const { data: workData } = await typedSupabaseClient.workExperience
+          .getByUserId(user.id);
         
         // Fetch social links
-        const { data: socialData } = await supabase
-          .from('social_links')
-          .select('*')
-          .eq('user_id', user.id);
+        const { data: socialData } = await typedSupabaseClient.socialLinks
+          .getByUserId(user.id);
+        
+        // Map education data to match our Education type
+        const mappedEducation: Education[] = educationData ? educationData.map((edu: any) => ({
+          id: edu.id,
+          university: edu.university,
+          degree: edu.degree,
+          field: edu.field,
+          startYear: edu.start_year,
+          endYear: edu.end_year,
+          isCurrentlyStudying: edu.is_currently_studying
+        })) : [];
+        
+        // Map work experience data to match our WorkExperience type
+        const mappedWorkExperience: WorkExperience[] = workData ? workData.map((work: any) => ({
+          id: work.id,
+          company: work.company,
+          position: work.position,
+          location: work.location || '',
+          startDate: work.start_date,
+          endDate: work.end_date,
+          isCurrentlyWorking: work.is_currently_working,
+          description: work.description || ''
+        })) : [];
+        
+        // Map social links data to match our SocialLink type with proper platform type casting
+        const mappedSocialLinks: SocialLink[] = socialData ? socialData.map((link: any) => ({
+          id: link.id,
+          platform: link.platform as "linkedin" | "github" | "twitter" | "website" | "other",
+          url: link.url
+        })) : [];
         
         const userProfile: UserProfile = {
           id: profileData.id.toString(), // Convert number to string
@@ -138,9 +161,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           location: profileData.location || '',
           isProfileComplete: profileData.is_profile_complete || false,
           skills: skillsData || [],
-          education: educationData || [],
-          workExperience: workData || [],
-          socialLinks: socialData || [],
+          education: mappedEducation,
+          workExperience: mappedWorkExperience,
+          socialLinks: mappedSocialLinks,
           privacySettings: {
             email: 'public',
             phone: 'public',
