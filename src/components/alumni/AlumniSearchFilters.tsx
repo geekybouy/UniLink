@@ -166,8 +166,8 @@ const AlumniSearchFilters = ({
       <div className={`grid grid-cols-1 sm:grid-cols-5 gap-2 ${showMobileFilters ? 'block' : 'hidden sm:grid'}`}>
         {/* Year Filter */}
         <Select 
-          value={filters.graduationYear || ""}
-          onValueChange={(value) => onFilterChange({ graduationYear: value || null })}
+          value={filters.graduationYear || "all_years"}
+          onValueChange={(value) => onFilterChange({ graduationYear: value === "all_years" ? null : value })}
         >
           <SelectTrigger>
             <SelectValue placeholder="Batch Year" />
@@ -175,7 +175,7 @@ const AlumniSearchFilters = ({
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Batch Year</SelectLabel>
-              <SelectItem value="">All Years</SelectItem>
+              <SelectItem value="all_years">All Years</SelectItem>
               {availableFilters.years.map((year) => (
                 <SelectItem key={year} value={year.toString()}>
                   {year}
@@ -187,8 +187,8 @@ const AlumniSearchFilters = ({
         
         {/* Course Filter */}
         <Select
-          value={filters.course || ""}
-          onValueChange={(value) => onFilterChange({ course: value || null })}
+          value={filters.course || "all_courses"}
+          onValueChange={(value) => onFilterChange({ course: value === "all_courses" ? null : value })}
         >
           <SelectTrigger>
             <SelectValue placeholder="Course" />
@@ -196,7 +196,7 @@ const AlumniSearchFilters = ({
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Course</SelectLabel>
-              <SelectItem value="">All Courses</SelectItem>
+              <SelectItem value="all_courses">All Courses</SelectItem>
               {availableFilters.courses.map((course) => (
                 <SelectItem key={course} value={course}>
                   {course}
@@ -208,8 +208,8 @@ const AlumniSearchFilters = ({
         
         {/* Company Filter */}
         <Select
-          value={filters.company || ""}
-          onValueChange={(value) => onFilterChange({ company: value || null })}
+          value={filters.company || "all_companies"}
+          onValueChange={(value) => onFilterChange({ company: value === "all_companies" ? null : value })}
         >
           <SelectTrigger>
             <SelectValue placeholder="Company" />
@@ -217,7 +217,7 @@ const AlumniSearchFilters = ({
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Company</SelectLabel>
-              <SelectItem value="">All Companies</SelectItem>
+              <SelectItem value="all_companies">All Companies</SelectItem>
               {availableFilters.companies.map((company) => (
                 <SelectItem key={company} value={company}>
                   {company}
@@ -229,8 +229,8 @@ const AlumniSearchFilters = ({
         
         {/* Location Filter */}
         <Select
-          value={filters.location || ""}
-          onValueChange={(value) => onFilterChange({ location: value || null })}
+          value={filters.location || "all_locations"}
+          onValueChange={(value) => onFilterChange({ location: value === "all_locations" ? null : value })}
         >
           <SelectTrigger>
             <SelectValue placeholder="Location" />
@@ -238,7 +238,7 @@ const AlumniSearchFilters = ({
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Location</SelectLabel>
-              <SelectItem value="">All Locations</SelectItem>
+              <SelectItem value="all_locations">All Locations</SelectItem>
               {availableFilters.locations.map((location) => (
                 <SelectItem key={location} value={location}>
                   {location}
@@ -250,8 +250,8 @@ const AlumniSearchFilters = ({
         
         {/* Skills Filter */}
         <Select
-          value={filters.skill || ""}
-          onValueChange={(value) => onFilterChange({ skill: value || null })}
+          value={filters.skill || "all_skills"}
+          onValueChange={(value) => onFilterChange({ skill: value === "all_skills" ? null : value })}
         >
           <SelectTrigger>
             <SelectValue placeholder="Skill" />
@@ -259,7 +259,7 @@ const AlumniSearchFilters = ({
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Skill</SelectLabel>
-              <SelectItem value="">All Skills</SelectItem>
+              <SelectItem value="all_skills">All Skills</SelectItem>
               {availableFilters.skills.map((skill) => (
                 <SelectItem key={skill} value={skill}>
                   {skill}

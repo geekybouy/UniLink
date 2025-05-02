@@ -372,44 +372,4 @@ const AlumniDirectory = () => {
   );
 };
 
-// Add the missing handler functions
-const handleFilterChange = (newFilters: Partial<AlumniFilters>) => {
-  setFilters(prevFilters => ({
-    ...prevFilters,
-    ...newFilters
-  }));
-  // Reset to first page when filters change
-  setPage(1);
-};
-
-const handleSortChange = (option: SortOption) => {
-  setSortBy(option);
-};
-
-const handlePageChange = (newPage: number) => {
-  setPage(newPage);
-  // Scroll to top when page changes
-  window.scrollTo(0, 0);
-};
-
-const handleConnect = (profileId: string) => {
-  // In a real app, this would send a connection request
-  toast({
-    title: "Connection request sent",
-    description: "Your connection request has been sent.",
-  });
-};
-
-const handleMessage = (profileId: string) => {
-  // In a real app, this would open a messaging interface
-  toast({
-    title: "Message feature",
-    description: "Messaging functionality coming soon!",
-  });
-};
-
-const handleViewProfile = (profileId: string) => {
-  navigate(`/profile/${profileId}`);
-};
-
 export default AlumniDirectory;
