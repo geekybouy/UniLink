@@ -104,11 +104,18 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
       
       if (connectionsError) throw connectionsError;
-      setConnections(connectionsData || []);
+      
+      // Cast the data to ensure it matches the Connection type
+      const typedConnections: Connection[] = connectionsData?.map(conn => ({
+        ...conn,
+        status: conn.status as ConnectionStatus
+      })) || [];
+      
+      setConnections(typedConnections);
       
       // Get unique user IDs from connections
       const userIds = new Set<string>();
-      connectionsData?.forEach(conn => {
+      typedConnections.forEach(conn => {
         const otherId = conn.sender_id === user.id ? conn.receiver_id : conn.sender_id;
         userIds.add(otherId);
       });
@@ -125,7 +132,7 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
         const usersMap: Record<string, ConnectionUser> = {};
         profilesData?.forEach(profile => {
           usersMap[profile.user_id] = {
-            id: profile.id,
+            id: profile.id.toString(),
             user_id: profile.user_id,
             fullName: profile.full_name,
             avatarUrl: profile.avatar_url,

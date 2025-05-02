@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/layouts/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -22,8 +21,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Shield, Eye, EyeOff, Users } from 'lucide-react';
 
+type ConnectionVisibility = 'public' | 'connections' | 'private';
+
 interface PrivacySettings {
-  connection_visibility: 'public' | 'connections' | 'private';
+  connection_visibility: ConnectionVisibility;
   allow_connection_requests: boolean;
 }
 
@@ -77,7 +78,7 @@ const PrivacySettingsPage = () => {
       
       if (data) {
         setSettings({
-          connection_visibility: data.connection_visibility,
+          connection_visibility: data.connection_visibility as ConnectionVisibility,
           allow_connection_requests: data.allow_connection_requests
         });
       }

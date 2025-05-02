@@ -3,11 +3,22 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 
+// Define user role type
+export type UserRole = 'student' | 'alumni' | 'admin' | 'faculty';
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  
+  // Add missing properties to fix TypeScript errors
+  isLoading: boolean;
+  signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, fullName: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  hasRole: (role: UserRole) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,11 +54,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  // Implement the missing methods
+  const signInWithGoogle = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`
+      }
+    });
+  };
+
+  const signInWithEmail = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  };
+
+  const signUpWithEmail = async (email: string, password: string, fullName: string) => {
+    const { error } = await supabase.auth.signUp({ 
+      email, 
+      password, 
+      options: {
+        data: { full_name: fullName }
+      }
+    });
+    if (error) throw error;
+  };
+
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/reset-password`,
+    });
+    if (error) throw error;
+  };
+
+  // Function to check if a user has a specific role
+  const hasRole = (role: UserRole): boolean => {
+    // This is a placeholder - in a real implementation, you would check against user roles
+    // stored in your database or user metadata
+    return true; // Implement proper role checking logic later
+  };
+
   const value = {
     user,
     session,
     loading,
-    signOut
+    signOut,
+    isLoading: loading, // Alias loading as isLoading for consistency
+    signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
+    resetPassword,
+    hasRole
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

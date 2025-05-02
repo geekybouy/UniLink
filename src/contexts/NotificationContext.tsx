@@ -65,7 +65,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         .limit(50);
       
       if (error) throw error;
-      setNotifications(data || []);
+      
+      // Convert the JSON metadata to proper type
+      const typedNotifications: Notification[] = data?.map(notification => ({
+        ...notification,
+        metadata: typeof notification.metadata === 'string' 
+          ? JSON.parse(notification.metadata) 
+          : notification.metadata as Record<string, any>
+      })) || [];
+      
+      setNotifications(typedNotifications);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
