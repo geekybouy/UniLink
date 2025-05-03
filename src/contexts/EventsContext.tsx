@@ -185,16 +185,18 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
       // Create a temporary local variable to make TypeScript happy
       const creatorData = data.creator;
       
-      // Fix the null checks - make sure we check if creatorData exists before accessing properties
-      if (creatorData !== null && 
-          typeof creatorData === 'object' && 
-          !('error' in creatorData)) {
-        // Now use property existence checks with the non-null creatorData
-        if ('full_name' in creatorData && creatorData.full_name) {
+      // Enhanced null checks with more specific property access
+      if (creatorData !== null && typeof creatorData === 'object') {
+        // Now use property existence checks with type guards
+        if ('full_name' in creatorData && 
+            creatorData.full_name !== null && 
+            typeof creatorData.full_name === 'string') {
           creator.full_name = creatorData.full_name;
         }
+        
         if ('avatar_url' in creatorData) {
-          creator.avatar_url = creatorData.avatar_url;
+          // avatar_url can be undefined or string
+          creator.avatar_url = creatorData.avatar_url as string | undefined;
         }
       }
 
@@ -522,7 +524,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
         const user = {
           full_name: 'Unknown User',
           avatar_url: undefined as string | undefined,
-          email: 'No email'
+          email: 'No email' as string
         };
         
         // Only try to access properties if userData is an object
@@ -531,7 +533,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
             user.full_name = userData.full_name;
           }
           if ('avatar_url' in userData) {
-            user.avatar_url = userData.avatar_url;
+            user.avatar_url = userData.avatar_url as string | undefined;
           }
           if ('email' in userData && typeof userData.email === 'string') {
             user.email = userData.email;
