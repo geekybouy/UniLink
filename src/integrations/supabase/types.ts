@@ -36,6 +36,45 @@ export type Database = {
         }
         Relationships: []
       }
+      conversations: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_message_id: string | null
+          last_message_text: string | null
+          last_message_time: string | null
+          participant1_id: string
+          participant1_unread_count: number | null
+          participant2_id: string
+          participant2_unread_count: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_message_id?: string | null
+          last_message_text?: string | null
+          last_message_time?: string | null
+          participant1_id: string
+          participant1_unread_count?: number | null
+          participant2_id: string
+          participant2_unread_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_message_id?: string | null
+          last_message_text?: string | null
+          last_message_time?: string | null
+          participant1_id?: string
+          participant1_unread_count?: number | null
+          participant2_id?: string
+          participant2_unread_count?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       credential_shares: {
         Row: {
           created_at: string
@@ -189,6 +228,45 @@ export type Database = {
           id?: string
           location?: string
           name?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          attachment_url: string | null
+          content: string
+          conversation_id: string | null
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          recipient_id: string
+          sender_id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          attachment_url?: string | null
+          content: string
+          conversation_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          recipient_id: string
+          sender_id: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          attachment_url?: string | null
+          content?: string
+          conversation_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          recipient_id?: string
+          sender_id?: string
+          status?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -412,6 +490,24 @@ export type Database = {
           id?: string
           platform?: string
           url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_presence: {
+        Row: {
+          last_seen_at: string | null
+          online_status: boolean | null
+          user_id: string
+        }
+        Insert: {
+          last_seen_at?: string | null
+          online_status?: boolean | null
+          user_id: string
+        }
+        Update: {
+          last_seen_at?: string | null
+          online_status?: boolean | null
           user_id?: string
         }
         Relationships: []

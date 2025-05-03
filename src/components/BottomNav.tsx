@@ -1,68 +1,80 @@
 
-import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { Home, BookOpen, Shield, User, Plus, Users } from 'lucide-react';
-import Network from './connection/ConnectionIcon';
+import { Home, Users, BookOpen, MessageCircle, Shield } from 'lucide-react';
+import { MessagingBadge } from './messaging/MessagingBadge';
 
 const BottomNav = () => {
   const location = useLocation();
+  
+  const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 z-50">
-      <div className="max-w-screen-xl mx-auto px-2">
-        <div className="flex justify-around py-2">
-          <Link 
-            to="/dashboard" 
-            className={`flex flex-col items-center px-1 py-1 ${location.pathname === '/dashboard' ? 'text-primary' : 'text-gray-500 hover:text-primary transition-colors'}`}
-          >
-            <Home className="h-5 w-5" />
-            <span className="text-xs mt-1">Home</span>
-          </Link>
-          
-          <Link 
-            to="/alumni-directory" 
-            className={`flex flex-col items-center px-1 py-1 ${location.pathname === '/alumni-directory' ? 'text-primary' : 'text-gray-500 hover:text-primary transition-colors'}`}
-          >
-            <Users className="h-5 w-5" />
-            <span className="text-xs mt-1">Alumni</span>
-          </Link>
-          
-          <Link 
-            to="/network" 
-            className={`flex flex-col items-center px-1 py-1 ${location.pathname === '/network' ? 'text-primary' : 'text-gray-500 hover:text-primary transition-colors'}`}
-          >
-            <Network className="h-5 w-5" />
-            <span className="text-xs mt-1">Network</span>
-          </Link>
-          
-          <Link 
-            to="/new-post" 
-            className={`flex flex-col items-center px-1 py-1 ${location.pathname === '/new-post' ? 'text-primary' : 'text-gray-500 hover:text-primary transition-colors'}`}
-          >
-            <div className="bg-primary rounded-full p-2 -mt-6 shadow-md">
-              <Plus className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xs mt-4">Post</span>
-          </Link>
-          
-          <Link 
-            to="/credential-wallet" 
-            className={`flex flex-col items-center px-1 py-1 ${location.pathname === '/credential-wallet' ? 'text-primary' : 'text-gray-500 hover:text-primary transition-colors'}`}
-          >
-            <Shield className="h-5 w-5" />
-            <span className="text-xs mt-1">Credentials</span>
-          </Link>
-          
-          <Link 
-            to="/profile" 
-            className={`flex flex-col items-center px-1 py-1 ${location.pathname === '/profile' ? 'text-primary' : 'text-gray-500 hover:text-primary transition-colors'}`}
-          >
-            <User className="h-5 w-5" />
-            <span className="text-xs mt-1">Profile</span>
-          </Link>
-        </div>
+    <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 h-16 md:hidden z-50">
+      <div className="flex justify-around items-center h-full px-4">
+        <Link
+          to="/dashboard"
+          className={`flex flex-col items-center justify-center space-y-1 ${
+            isActive('/dashboard')
+              ? 'text-primary'
+              : 'text-gray-500 hover:text-primary'
+          }`}
+        >
+          <Home className="h-5 w-5" />
+          <span className="text-xs">Home</span>
+        </Link>
+
+        <Link
+          to="/alumni-directory"
+          className={`flex flex-col items-center justify-center space-y-1 ${
+            isActive('/alumni-directory')
+              ? 'text-primary'
+              : 'text-gray-500 hover:text-primary'
+          }`}
+        >
+          <Users className="h-5 w-5" />
+          <span className="text-xs">Alumni</span>
+        </Link>
+
+        <Link
+          to="/messages"
+          className={`flex flex-col items-center justify-center space-y-1 relative ${
+            isActive('/messages')
+              ? 'text-primary'
+              : 'text-gray-500 hover:text-primary'
+          }`}
+        >
+          <div className="relative">
+            <MessageCircle className="h-5 w-5" />
+            <MessagingBadge />
+          </div>
+          <span className="text-xs">Messages</span>
+        </Link>
+
+        <Link
+          to="/cv-maker"
+          className={`flex flex-col items-center justify-center space-y-1 ${
+            isActive('/cv-maker')
+              ? 'text-primary'
+              : 'text-gray-500 hover:text-primary'
+          }`}
+        >
+          <BookOpen className="h-5 w-5" />
+          <span className="text-xs">CV</span>
+        </Link>
+
+        <Link
+          to="/credential-wallet"
+          className={`flex flex-col items-center justify-center space-y-1 ${
+            isActive('/credential-wallet') || isActive('/credentials')
+              ? 'text-primary'
+              : 'text-gray-500 hover:text-primary'
+          }`}
+        >
+          <Shield className="h-5 w-5" />
+          <span className="text-xs">Credentials</span>
+        </Link>
       </div>
-    </nav>
+    </div>
   );
 };
 

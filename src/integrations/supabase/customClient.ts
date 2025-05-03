@@ -55,5 +55,73 @@ export const typedSupabaseClient = {
     select: () => customSupabase.from('profiles').select('*'),
     update: (userId: string, data: any) => customSupabase.from('profiles').update(data).eq('user_id', userId),
     getByUserId: (userId: string) => customSupabase.from('profiles').select('*').eq('user_id', userId).single()
+  },
+  // Messages table
+  messages: {
+    insert: (data: any) => customSupabase.from('messages').insert(data),
+    select: () => customSupabase.from('messages').select('*'),
+    getByConversationId: (conversationId: string, limit = 20, offset = 0) => {
+      return customSupabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+    },
+    markAsRead: (messageId: string) => {
+      return customSupabase
+        .from('messages')
+        .update({ is_read: true, status: 'read' })
+        .eq('id', messageId);
+    },
+    markAllAsReadInConversation: (conversationId: string, userId: string) => {
+      return customSupabase
+        .from('messages')
+        .update({ is_read: true, status: 'read' })
+        .eq('conversation_id', conversationId)
+        .eq('recipient_id', userId)
+        .eq('is_read', false);
+    }
+  },
+  // Conversations table
+  conversations: {
+    insert: (data: any) => customSupabase.from('conversations').insert(data),
+    select: () => customSupabase.from('conversations').select('*'),
+    getByUserId: (userId: string) => {
+      return customSupabase
+        .from('conversations')
+        .select('*')
+        .or(`participant1_id.eq.${userId},participant2_id.eq.${userId}`)
+        .order('updated_at', { ascending: false });
+    },
+    getByParticipants: (userId1: string, userId2: string) => {
+      return customSupabase
+        .from('conversations')
+        .select('*')
+        .or(`and(participant1_id.eq.${userId1},participant2_id.eq.${userId2}),and(participant1_id.eq.${userId2},participant2_id.eq.${userId1})`)
+        .single();
+    }
+  },
+  // User presence
+  userPresence: {
+    update: (userId: string, status: boolean) => {
+      return customSupabase
+        .from('user_presence')
+        .upsert(
+          {
+            user_id: userId,
+            online_status: status,
+            last_seen_at: new Date().toISOString()
+          },
+          { onConflict: 'user_id' }
+        );
+    },
+    getOnlineStatus: (userId: string) => {
+      return customSupabase
+        .from('user_presence')
+        .select('online_status')
+        .eq('user_id', userId)
+        .single();
+    }
   }
 };

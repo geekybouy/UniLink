@@ -1,12 +1,14 @@
 
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Search, User, UserPlus, Users, BookOpen, Shield, UserCog } from 'lucide-react';
+import { Menu, Search, User, UserPlus, Users, BookOpen, Shield, UserCog, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useMessaging } from '@/contexts/MessagingContext';
+import { MessagingBadge } from '@/components/messaging/MessagingBadge';
 import NotificationsDropdown from '@/components/notifications/NotificationsDropdown';
 import {
   DropdownMenu,
@@ -22,6 +24,7 @@ const Header = () => {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
+  const { totalUnreadMessages } = useMessaging();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -58,6 +61,17 @@ const Header = () => {
                     className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors"
                   >
                     <UserPlus className="h-4 w-4" /> My Network
+                  </Link>
+                  <Link 
+                    to="/messages" 
+                    className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors"
+                  >
+                    <MessageCircle className="h-4 w-4" /> Messages
+                    {totalUnreadMessages > 0 && (
+                      <span className="ml-1 bg-primary text-white px-1.5 rounded-full text-xs">
+                        {totalUnreadMessages > 99 ? '99+' : totalUnreadMessages}
+                      </span>
+                    )}
                   </Link>
                   <Link 
                     to="/credential-wallet" 
@@ -114,6 +128,12 @@ const Header = () => {
             My Network
           </Link>
           <Link 
+            to="/messages" 
+            className={`text-sm font-medium ${location.pathname === '/messages' ? 'text-primary' : 'text-gray-600 hover:text-primary'} transition-colors`}
+          >
+            Messages
+          </Link>
+          <Link 
             to="/credential-wallet" 
             className={`text-sm font-medium ${location.pathname === '/credential-wallet' ? 'text-primary' : 'text-gray-600 hover:text-primary'} transition-colors`}
           >
@@ -145,6 +165,13 @@ const Header = () => {
             </Button>
           )}
           
+          <Link to="/messages" className="relative">
+            <Button variant="ghost" size="sm" className="relative">
+              <MessageCircle className="h-5 w-5" />
+              <MessagingBadge />
+            </Button>
+          </Link>
+          
           <NotificationsDropdown />
           
           <DropdownMenu>
@@ -170,6 +197,17 @@ const Header = () => {
                   <Link to="/network" className="w-full cursor-pointer">
                     <Users className="mr-2 h-4 w-4" />
                     My Network
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/messages" className="w-full cursor-pointer">
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Messages
+                    {totalUnreadMessages > 0 && (
+                      <span className="ml-auto bg-primary text-white px-1.5 rounded-full text-xs">
+                        {totalUnreadMessages > 99 ? '99+' : totalUnreadMessages}
+                      </span>
+                    )}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
