@@ -3,6 +3,7 @@ import React from 'react';
 import { EventCard } from './EventCard';
 import { Event } from '@/types/events';
 import { useEvents } from '@/contexts/EventsContext';
+import { Calendar } from 'lucide-react';
 
 interface EventGridProps {
   events: Event[];
@@ -42,6 +43,3 @@ export const EventGrid: React.FC<EventGridProps> = ({
     </div>
   );
 };
-
-// Import the Calendar icon at the top
-import { Calendar } from 'lucide-react';

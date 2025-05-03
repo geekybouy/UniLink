@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/layouts/MainLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,6 +13,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card"
 import {
   Accordion,
@@ -33,14 +35,14 @@ import { UpcomingEvents } from '@/components/dashboard/UpcomingEvents';
 
 function Dashboard() {
   const { user } = useAuth();
-  const { profile, fetchProfile } = useProfile();
+  const { profile, loadProfile } = useProfile();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadProfile = async () => {
+    const loadProfileData = async () => {
       setIsLoading(true);
       try {
-        await fetchProfile();
+        await loadProfile();
       } catch (error) {
         console.error("Error fetching profile:", error);
       } finally {
@@ -48,8 +50,8 @@ function Dashboard() {
       }
     };
 
-    loadProfile();
-  }, [fetchProfile]);
+    loadProfileData();
+  }, [loadProfile]);
 
   return (
     <MainLayout>
