@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -181,17 +182,19 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
         avatar_url: undefined as string | undefined
       };
       
-      // Fixed null check and additional safety checks
-      if (data.creator && 
-          typeof data.creator === 'object' && 
-          !('error' in data.creator) && 
-          data.creator !== null) {
-        // Safely access properties only if they exist
-        if ('full_name' in data.creator) {
-          creator.full_name = data.creator.full_name || 'Unknown';
+      // Create a temporary local variable to make TypeScript happy
+      const creatorData = data.creator;
+      
+      // Fix the null checks - make sure we check if creatorData exists before accessing properties
+      if (creatorData !== null && 
+          typeof creatorData === 'object' && 
+          !('error' in creatorData)) {
+        // Now use property existence checks with the non-null creatorData
+        if ('full_name' in creatorData && creatorData.full_name) {
+          creator.full_name = creatorData.full_name;
         }
-        if ('avatar_url' in data.creator) {
-          creator.avatar_url = data.creator.avatar_url;
+        if ('avatar_url' in creatorData) {
+          creator.avatar_url = creatorData.avatar_url;
         }
       }
 
@@ -512,20 +515,32 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
 
       // Handle potential missing data and type issues
       return data.map(attendee => {
-        // Ensure user data exists and has needed properties
+        // Ensure user data exists
         const userData = attendee.user || {};
         
-        // Fixed object type checking and property access
+        // Create a properly typed user object with safe property access
+        const user = {
+          full_name: 'Unknown User',
+          avatar_url: undefined as string | undefined,
+          email: 'No email'
+        };
+        
+        // Only try to access properties if userData is an object
+        if (typeof userData === 'object' && userData !== null) {
+          if ('full_name' in userData && typeof userData.full_name === 'string') {
+            user.full_name = userData.full_name;
+          }
+          if ('avatar_url' in userData) {
+            user.avatar_url = userData.avatar_url;
+          }
+          if ('email' in userData && typeof userData.email === 'string') {
+            user.email = userData.email;
+          }
+        }
+        
         return {
           ...attendee,
-          user: {
-            full_name: typeof userData === 'object' && 'full_name' in userData ? 
-              userData.full_name || 'Unknown User' : 'Unknown User',
-            avatar_url: typeof userData === 'object' && 'avatar_url' in userData ? 
-              userData.avatar_url : undefined,
-            email: typeof userData === 'object' && 'email' in userData ? 
-              userData.email || 'No email' : 'No email'
-          }
+          user
         } as EventAttendee;
       });
     } catch (error) {
