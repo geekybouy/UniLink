@@ -181,12 +181,18 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
         avatar_url: undefined as string | undefined
       };
       
-      // Fixed the null check and added check for error property
-      if (data.creator && typeof data.creator === 'object' && !('error' in data.creator)) {
-        creator = {
-          full_name: data.creator.full_name || 'Unknown',
-          avatar_url: data.creator.avatar_url
-        };
+      // Fixed null check and additional safety checks
+      if (data.creator && 
+          typeof data.creator === 'object' && 
+          !('error' in data.creator) && 
+          data.creator !== null) {
+        // Safely access properties only if they exist
+        if ('full_name' in data.creator) {
+          creator.full_name = data.creator.full_name || 'Unknown';
+        }
+        if ('avatar_url' in data.creator) {
+          creator.avatar_url = data.creator.avatar_url;
+        }
       }
 
       const eventWithTypes: Event = {
