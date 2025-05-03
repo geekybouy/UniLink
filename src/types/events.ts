@@ -10,7 +10,8 @@ export type EventCategory =
   | 'networking'
   | 'career_fair'
   | 'social'
-  | 'other';
+  | 'other'
+  | undefined;
 
 export type EventStatus = 'upcoming' | 'ongoing' | 'past' | 'canceled';
 

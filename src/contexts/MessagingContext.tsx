@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
@@ -6,6 +5,8 @@ import { toast } from 'sonner';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 // Define types for our messaging system
+export type MessageStatus = 'sent' | 'delivered' | 'read';
+
 export type Message = {
   id: string;
   sender_id: string;
@@ -13,7 +14,7 @@ export type Message = {
   conversation_id: string;
   content: string;
   attachment_url: string | null;
-  status: 'sent' | 'delivered' | 'read';
+  status: MessageStatus;
   is_read: boolean;
   created_at: string;
   updated_at: string;
@@ -381,7 +382,13 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
       // Check if we have more messages to load
       setHasMoreMessages(data.length === PAGE_SIZE);
       
-      const sortedMessages = [...data].reverse();
+      // Cast the data to the correct type
+      const typedMessages = data.map(msg => ({
+        ...msg,
+        status: (msg.status as MessageStatus) || 'sent'
+      }));
+      
+      const sortedMessages = [...typedMessages].reverse();
       setMessages(page === 0 ? sortedMessages : [...messages, ...sortedMessages]);
       setMessagesPage(page);
     } catch (error) {
@@ -424,12 +431,14 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
 
       // Update local messages if we're in this conversation
       if (currentConversation === conversationId) {
-        setMessages(prev => [...prev, message]);
+        const typedMessage: Message = {
+          ...message,
+          status: (message.status as MessageStatus) || 'sent'
+        };
+        setMessages(prev => [...prev, typedMessage]);
       }
-
-      // Update conversation in realtime happens through subscription
       
-      return message;
+      // Update conversation in realtime happens through subscription
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message');

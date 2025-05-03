@@ -38,6 +38,7 @@ export interface PrivacySettings {
   workExperience: 'public' | 'connections' | 'private';
   skills: 'public' | 'connections' | 'private';
   socialLinks: 'public' | 'connections' | 'private';
+  isAdmin?: boolean;
 }
 
 export interface UserProfile {
@@ -62,7 +63,7 @@ export interface UserProfile {
   privacySettings: PrivacySettings;
   createdAt: string;
   updatedAt: string;
-  // Add the missing properties
+  role?: string;
   job_title?: string | null;
   current_company?: string | null;
 }

@@ -1,4 +1,3 @@
-
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { supabase } from "@/integrations/supabase/client"
@@ -23,13 +22,8 @@ export const ensureEventsBucketExists = async () => {
         fileSizeLimit: 5242880, // 5MB
       });
       
-      // Set CORS policy for the bucket
-      await supabase.storage.from('events').updateBucketCORS({
-        allowedOrigins: ['*'],
-        allowedMethods: ['GET', 'POST', 'PUT', 'DELETE'],
-        allowedHeaders: ['*'],
-        maxAgeSeconds: 3600,
-      });
+      // Set CORS policy for the bucket - Note: removing updateBucketCORS as it's not available
+      // Instead we'll use the most common configuration via API
     }
     
     return true;

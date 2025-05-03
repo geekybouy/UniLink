@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/layouts/MainLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,9 +32,9 @@ import {
 } from "@/components/ui/table"
 import { UpcomingEvents } from '@/components/dashboard/UpcomingEvents';
 
-function Dashboard() {
+const Dashboard: React.FC = () => {
   const { user } = useAuth();
-  const { profile, loadProfile } = useProfile();
+  const { profile, loadProfile, loading } = useProfile();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

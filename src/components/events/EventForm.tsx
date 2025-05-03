@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -121,7 +120,16 @@ export const EventForm: React.FC<EventFormProps> = ({
 
   const handleSubmit = (values: EventFormValues) => {
     const formData: EventFormData = {
-      ...values,
+      name: values.name,
+      description: values.description,
+      date: values.date,
+      end_date: values.end_date,
+      location: values.location,
+      category: values.category as EventCategory | undefined,
+      is_virtual: values.is_virtual,
+      virtual_link: values.virtual_link,
+      max_attendees: values.max_attendees,
+      is_public: values.is_public,
       event_image_file: imageFile,
     };
     onSubmit(formData);

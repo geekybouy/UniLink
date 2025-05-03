@@ -1,8 +1,7 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Event, EventFormData, EventAttendee, EventPhoto, AttendeeStatus } from '@/types/events';
+import { Event, EventFormData, EventAttendee, EventPhoto, AttendeeStatus, EventCategory } from '@/types/events';
 import { useAuth } from './AuthContext';
 import { useProfile } from './ProfileContext';
 
@@ -38,6 +37,59 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     fetchEvents();
   }, [user]);
 
+  // Fix the transformEvents function to ensure types match
+  const transformEvents = async (events: any[]): Promise<Event[]> => {
+    return Promise.all(
+      events.map(async (event) => {
+        // Check if the user is registered for this event
+        let isRegistered = false;
+        if (user) {
+          const { data: attendeeData } = await supabase
+            .from('event_attendees')
+            .select('*')
+            .eq('event_id', event.id)
+            .eq('user_id', user.id)
+            .eq('status', 'registered')
+            .maybeSingle();
+          isRegistered = !!attendeeData;
+        }
+
+        // Get attendees count
+        const { count } = await supabase
+          .from('event_attendees')
+          .select('*', { count: 'exact', head: true })
+          .eq('event_id', event.id)
+          .eq('status', 'registered');
+
+        // Determine status based on date
+        let status = event.status;
+        const now = new Date();
+        const eventDate = new Date(event.date);
+        const endDate = event.end_date ? new Date(event.end_date) : new Date(eventDate.getTime() + (3 * 60 * 60 * 1000));
+        
+        if (now < eventDate) {
+          status = 'upcoming';
+        } else if (now > endDate) {
+          status = 'past';
+        } else {
+          status = 'ongoing';
+        }
+
+        // Cast the category to the correct type
+        const transformedEvent: Event = {
+          ...event,
+          category: event.category as EventCategory,
+          attendees_count: count || 0,
+          is_user_registered: isRegistered,
+          status: status as EventStatus
+        };
+
+        return transformedEvent;
+      })
+    );
+  };
+
+  // Update the fetchEvents function
   const fetchEvents = async () => {
     try {
       setLoading(true);
@@ -52,51 +104,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
 
       // Transform dates and add computed properties
-      const eventsWithComputedProps = await Promise.all(
-        data.map(async (event) => {
-          // Check if the user is registered for this event
-          let isRegistered = false;
-          if (user) {
-            const { data: attendeeData } = await supabase
-              .from('event_attendees')
-              .select('*')
-              .eq('event_id', event.id)
-              .eq('user_id', user.id)
-              .eq('status', 'registered')
-              .maybeSingle();
-            isRegistered = !!attendeeData;
-          }
-
-          // Get attendees count
-          const { count } = await supabase
-            .from('event_attendees')
-            .select('*', { count: 'exact', head: true })
-            .eq('event_id', event.id)
-            .eq('status', 'registered');
-
-          // Determine status based on date
-          let status = event.status;
-          const now = new Date();
-          const eventDate = new Date(event.date);
-          const endDate = event.end_date ? new Date(event.end_date) : new Date(eventDate.getTime() + (3 * 60 * 60 * 1000)); // Default 3 hours if no end date
-          
-          if (now < eventDate) {
-            status = 'upcoming';
-          } else if (now > endDate) {
-            status = 'past';
-          } else {
-            status = 'ongoing';
-          }
-
-          return {
-            ...event,
-            attendees_count: count || 0,
-            is_user_registered: isRegistered,
-            status
-          };
-        })
-      );
-
+      const eventsWithComputedProps = await transformEvents(data);
       setEvents(eventsWithComputedProps);
     } catch (error) {
       console.error('Error fetching events:', error);
@@ -226,7 +234,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
       if (eventCheckError) throw eventCheckError;
       
       if (eventCheck.created_by !== user.id) {
-        const isAdmin = profile?.privacySettings?.isAdmin || false;
+        const isAdmin = profile?.role === 'admin';
         if (!isAdmin) {
           toast.error('You are not authorized to update this event');
           return null;
@@ -294,7 +302,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
       if (eventCheckError) throw eventCheckError;
       
       if (eventCheck.created_by !== user.id) {
-        const isAdmin = profile?.privacySettings?.isAdmin || false;
+        const isAdmin = profile?.role === 'admin';
         if (!isAdmin) {
           toast.error('You are not authorized to delete this event');
           return false;
@@ -431,19 +439,20 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
         .from('event_attendees')
         .select(`
           *,
-          user:profiles!event_attendees_user_id_fkey(full_name, avatar_url, email)
+          user:profiles!inner(full_name, avatar_url, email)
         `)
         .eq('event_id', eventId)
         .eq('status', 'registered');
 
       if (error) throw error;
 
+      // Handle potential missing data
       return data.map(attendee => ({
         ...attendee,
         user: {
-          full_name: attendee.user.full_name,
-          avatar_url: attendee.user.avatar_url,
-          email: attendee.user.email
+          full_name: attendee.user?.full_name || 'Unknown User',
+          avatar_url: attendee.user?.avatar_url || null,
+          email: attendee.user?.email || 'No email'
         }
       }));
     } catch (error) {
@@ -572,7 +581,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
 
       // Check if user is authorized (uploader or admin)
       if (photo.uploaded_by !== user.id) {
-        const isAdmin = profile?.privacySettings?.isAdmin || false;
+        const isAdmin = profile?.role === 'admin';
         if (!isAdmin) {
           // Check if user is the event creator
           const { data: event, error: eventError } = await supabase

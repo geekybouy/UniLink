@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -39,7 +38,11 @@ export const MessageHeader = ({ participantId, onBack }: MessageHeaderProps) => 
           
         if (error) throw error;
         
-        setParticipant(data);
+        // Ensure id is a string
+        setParticipant({
+          ...data,
+          id: data.id.toString()
+        });
       } catch (error) {
         console.error('Error fetching participant:', error);
       } finally {
