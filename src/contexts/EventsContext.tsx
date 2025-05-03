@@ -75,14 +75,18 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
           status = 'ongoing';
         }
 
-        // Handle potentially undefined creator data
-        const creator = event.creator ? {
-          full_name: event.creator.full_name || 'Unknown',
-          avatar_url: event.creator.avatar_url || undefined
-        } : {
+        // Handle potentially undefined creator data - safely check for creator structure
+        let creator = {
           full_name: 'Unknown',
-          avatar_url: undefined
+          avatar_url: undefined as string | undefined
         };
+        
+        if (event.creator && typeof event.creator === 'object' && !event.creator.error) {
+          creator = {
+            full_name: event.creator.full_name || 'Unknown',
+            avatar_url: event.creator.avatar_url
+          };
+        }
 
         // Cast the category to the correct type
         const transformedEvent: Event = {
@@ -171,14 +175,18 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
         status = 'ongoing';
       }
 
-      // Handle potentially undefined creator data
-      const creator = data.creator ? {
-        full_name: data.creator.full_name || 'Unknown',
-        avatar_url: data.creator.avatar_url || undefined
-      } : {
+      // Handle potentially undefined creator data - safely check for creator structure
+      let creator = {
         full_name: 'Unknown',
-        avatar_url: undefined
+        avatar_url: undefined as string | undefined
       };
+      
+      if (data.creator && typeof data.creator === 'object' && !data.creator.error) {
+        creator = {
+          full_name: data.creator.full_name || 'Unknown',
+          avatar_url: data.creator.avatar_url
+        };
+      }
 
       const eventWithTypes: Event = {
         ...data,
@@ -253,7 +261,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateEvent = async (id: string, eventData: EventFormData) => {
+  const updateEvent = async (id: string, eventData: EventFormData): Promise<Event | null> => {
     if (!user) {
       toast.error('You must be logged in to update an event');
       return null;
@@ -311,9 +319,22 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
+      // Create a properly typed Event object from the response
+      const updatedEvent: Event = {
+        ...data,
+        category: data.category as EventCategory,
+        attendees_count: 0, // We'll fetch this separately if needed
+        is_user_registered: false, // We'll determine this separately if needed
+        status: data.status as EventStatus,
+        creator: {
+          full_name: profile?.fullName || 'Unknown',
+          avatar_url: profile?.avatarUrl
+        }
+      };
+
       toast.success('Event updated successfully');
       await fetchEvents();
-      return data;
+      return updatedEvent;
     } catch (error) {
       console.error('Error updating event:', error);
       toast.error('Failed to update event');
@@ -490,9 +511,9 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
         return {
           ...attendee,
           user: {
-            full_name: userData.full_name || 'Unknown User',
-            avatar_url: userData.avatar_url || undefined,
-            email: userData.email || 'No email'
+            full_name: typeof userData === 'object' ? (userData.full_name || 'Unknown User') : 'Unknown User',
+            avatar_url: typeof userData === 'object' ? userData.avatar_url : undefined,
+            email: typeof userData === 'object' ? (userData.email || 'No email') : 'No email'
           }
         } as EventAttendee;
       });
@@ -700,10 +721,15 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
       
-      return data.map(event => ({
-        ...event,
-        is_user_registered: true
-      }));
+      // Transform to proper Event type array
+      const transformedEvents = await transformEvents(data);
+      
+      // Set all as registered since these are the user's events
+      transformedEvents.forEach(event => {
+        event.is_user_registered = true;
+      });
+      
+      return transformedEvents;
     } catch (error) {
       console.error('Error fetching user events:', error);
       toast.error('Failed to load your events');
