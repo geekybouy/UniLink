@@ -81,7 +81,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
           avatar_url: undefined as string | undefined
         };
         
-        if (event.creator && typeof event.creator === 'object' && !event.creator.error) {
+        if (event.creator && typeof event.creator === 'object' && !('error' in event.creator)) {
           creator = {
             full_name: event.creator.full_name || 'Unknown',
             avatar_url: event.creator.avatar_url
@@ -181,7 +181,8 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
         avatar_url: undefined as string | undefined
       };
       
-      if (data.creator && typeof data.creator === 'object' && !data.creator.error) {
+      // Fixed the null check and added check for error property
+      if (data.creator && typeof data.creator === 'object' && !('error' in data.creator)) {
         creator = {
           full_name: data.creator.full_name || 'Unknown',
           avatar_url: data.creator.avatar_url
@@ -508,12 +509,16 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
         // Ensure user data exists and has needed properties
         const userData = attendee.user || {};
         
+        // Fixed object type checking and property access
         return {
           ...attendee,
           user: {
-            full_name: typeof userData === 'object' ? (userData.full_name || 'Unknown User') : 'Unknown User',
-            avatar_url: typeof userData === 'object' ? userData.avatar_url : undefined,
-            email: typeof userData === 'object' ? (userData.email || 'No email') : 'No email'
+            full_name: typeof userData === 'object' && 'full_name' in userData ? 
+              userData.full_name || 'Unknown User' : 'Unknown User',
+            avatar_url: typeof userData === 'object' && 'avatar_url' in userData ? 
+              userData.avatar_url : undefined,
+            email: typeof userData === 'object' && 'email' in userData ? 
+              userData.email || 'No email' : 'No email'
           }
         } as EventAttendee;
       });
