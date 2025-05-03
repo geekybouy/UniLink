@@ -75,13 +75,23 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
           status = 'ongoing';
         }
 
+        // Handle potentially undefined creator data
+        const creator = event.creator ? {
+          full_name: event.creator.full_name || 'Unknown',
+          avatar_url: event.creator.avatar_url || undefined
+        } : {
+          full_name: 'Unknown',
+          avatar_url: undefined
+        };
+
         // Cast the category to the correct type
         const transformedEvent: Event = {
           ...event,
           category: event.category as EventCategory,
           attendees_count: count || 0,
           is_user_registered: isRegistered,
-          status: status
+          status: status,
+          creator
         };
 
         return transformedEvent;
@@ -161,13 +171,25 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
         status = 'ongoing';
       }
 
-      return {
+      // Handle potentially undefined creator data
+      const creator = data.creator ? {
+        full_name: data.creator.full_name || 'Unknown',
+        avatar_url: data.creator.avatar_url || undefined
+      } : {
+        full_name: 'Unknown',
+        avatar_url: undefined
+      };
+
+      const eventWithTypes: Event = {
         ...data,
         category: data.category as EventCategory,
         attendees_count: count || 0,
         is_user_registered: isRegistered,
-        status
-      } as Event;
+        status,
+        creator
+      };
+
+      return eventWithTypes;
     } catch (error) {
       console.error('Error fetching event:', error);
       toast.error('Failed to load event details');
@@ -175,7 +197,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const createEvent = async (eventData: EventFormData) => {
+  const createEvent = async (eventData: EventFormData): Promise<Event | null> => {
     if (!user) {
       toast.error('You must be logged in to create an event');
       return null;
@@ -208,9 +230,22 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
+      // Add the necessary properties to make it a valid Event object
+      const createdEvent: Event = {
+        ...data,
+        category: data.category as EventCategory,
+        attendees_count: 0,
+        is_user_registered: false,
+        status: 'upcoming' as EventStatus,
+        creator: {
+          full_name: profile?.fullName || 'Unknown',
+          avatar_url: profile?.avatarUrl
+        }
+      };
+
       toast.success('Event created successfully');
       await fetchEvents();
-      return data;
+      return createdEvent;
     } catch (error) {
       console.error('Error creating event:', error);
       toast.error('Failed to create event');
@@ -447,15 +482,20 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      // Handle potential missing data
-      return data.map(attendee => ({
-        ...attendee,
-        user: {
-          full_name: attendee.user?.full_name || 'Unknown User',
-          avatar_url: attendee.user?.avatar_url || null,
-          email: attendee.user?.email || 'No email'
-        }
-      })) as EventAttendee[];
+      // Handle potential missing data and type issues
+      return data.map(attendee => {
+        // Ensure user data exists and has needed properties
+        const userData = attendee.user || {};
+        
+        return {
+          ...attendee,
+          user: {
+            full_name: userData.full_name || 'Unknown User',
+            avatar_url: userData.avatar_url || undefined,
+            email: userData.email || 'No email'
+          }
+        } as EventAttendee;
+      });
     } catch (error) {
       console.error('Error fetching attendees:', error);
       toast.error('Failed to load attendees');
@@ -680,7 +720,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     event => event.status === 'past'
   );
 
-  const value = {
+  const value: EventsContextType = {
     events,
     loading,
     upcomingEvents,
