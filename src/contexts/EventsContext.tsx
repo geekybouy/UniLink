@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Event, EventFormData, EventAttendee, EventPhoto, AttendeeStatus, EventCategory } from '@/types/events';
+import { Event, EventFormData, EventAttendee, EventPhoto, AttendeeStatus, EventCategory, EventStatus } from '@/types/events';
 import { useAuth } from './AuthContext';
 import { useProfile } from './ProfileContext';
 
@@ -62,7 +62,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
           .eq('status', 'registered');
 
         // Determine status based on date
-        let status = event.status;
+        let status: EventStatus = event.status as EventStatus;
         const now = new Date();
         const eventDate = new Date(event.date);
         const endDate = event.end_date ? new Date(event.end_date) : new Date(eventDate.getTime() + (3 * 60 * 60 * 1000));
@@ -81,7 +81,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
           category: event.category as EventCategory,
           attendees_count: count || 0,
           is_user_registered: isRegistered,
-          status: status as EventStatus
+          status: status
         };
 
         return transformedEvent;
@@ -114,7 +114,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const fetchEventById = async (id: string) => {
+  const fetchEventById = async (id: string): Promise<Event | null> => {
     try {
       const { data, error } = await supabase
         .from('events')
@@ -148,7 +148,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
         .eq('status', 'registered');
 
       // Determine status based on date
-      let status = data.status;
+      let status: EventStatus = data.status as EventStatus;
       const now = new Date();
       const eventDate = new Date(data.date);
       const endDate = data.end_date ? new Date(data.end_date) : new Date(eventDate.getTime() + (3 * 60 * 60 * 1000)); // Default 3 hours if no end date
@@ -163,10 +163,11 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
 
       return {
         ...data,
+        category: data.category as EventCategory,
         attendees_count: count || 0,
         is_user_registered: isRegistered,
         status
-      };
+      } as Event;
     } catch (error) {
       console.error('Error fetching event:', error);
       toast.error('Failed to load event details');
@@ -433,7 +434,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
     return !!event?.is_user_registered;
   };
 
-  const getEventAttendees = async (eventId: string) => {
+  const getEventAttendees = async (eventId: string): Promise<EventAttendee[]> => {
     try {
       const { data, error } = await supabase
         .from('event_attendees')
@@ -454,7 +455,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
           avatar_url: attendee.user?.avatar_url || null,
           email: attendee.user?.email || 'No email'
         }
-      }));
+      })) as EventAttendee[];
     } catch (error) {
       console.error('Error fetching attendees:', error);
       toast.error('Failed to load attendees');

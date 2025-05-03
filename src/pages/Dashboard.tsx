@@ -34,14 +34,14 @@ import { UpcomingEvents } from '@/components/dashboard/UpcomingEvents';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
-  const { profile, loadProfile, loading } = useProfile();
+  const { profile, refreshProfile, loading } = useProfile();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadProfileData = async () => {
       setIsLoading(true);
       try {
-        await loadProfile();
+        await refreshProfile();
       } catch (error) {
         console.error("Error fetching profile:", error);
       } finally {
@@ -50,7 +50,7 @@ const Dashboard: React.FC = () => {
     };
 
     loadProfileData();
-  }, [loadProfile]);
+  }, [refreshProfile]);
 
   return (
     <MainLayout>

@@ -31,7 +31,7 @@ import { Switch } from '@/components/ui/switch';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Calendar as CalendarIcon, Clock } from 'lucide-react';
-import { EventFormData } from '@/types/events';
+import { EventFormData, EventCategory } from '@/types/events';
 
 const eventCategories = [
   { label: 'Webinar', value: 'webinar' },
