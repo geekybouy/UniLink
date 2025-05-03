@@ -1,6 +1,6 @@
 
 import { useLocation, Link } from 'react-router-dom';
-import { Home, Users, BookOpen, MessageCircle, Shield } from 'lucide-react';
+import { Home, Users, BookOpen, MessageCircle, Shield, Calendar } from 'lucide-react';
 import { MessagingBadge } from './messaging/MessagingBadge';
 
 const BottomNav = () => {
@@ -36,6 +36,18 @@ const BottomNav = () => {
         </Link>
 
         <Link
+          to="/events"
+          className={`flex flex-col items-center justify-center space-y-1 ${
+            location.pathname.includes('/events')
+              ? 'text-primary'
+              : 'text-gray-500 hover:text-primary'
+          }`}
+        >
+          <Calendar className="h-5 w-5" />
+          <span className="text-xs">Events</span>
+        </Link>
+
+        <Link
           to="/messages"
           className={`flex flex-col items-center justify-center space-y-1 relative ${
             isActive('/messages')
@@ -48,18 +60,6 @@ const BottomNav = () => {
             <MessagingBadge />
           </div>
           <span className="text-xs">Messages</span>
-        </Link>
-
-        <Link
-          to="/cv-maker"
-          className={`flex flex-col items-center justify-center space-y-1 ${
-            isActive('/cv-maker')
-              ? 'text-primary'
-              : 'text-gray-500 hover:text-primary'
-          }`}
-        >
-          <BookOpen className="h-5 w-5" />
-          <span className="text-xs">CV</span>
         </Link>
 
         <Link

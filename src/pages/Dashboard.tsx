@@ -1,137 +1,158 @@
-
-import React, { useState } from 'react';
-import { Search, Home, BookOpen, PlusSquare, User, Bell, Shield, Menu, X, Users } from 'lucide-react';
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import BottomNav from '../components/BottomNav';
-import AlumniGrid from '../components/AlumniGrid';
+import React, { useEffect, useState } from 'react';
+import MainLayout from '@/layouts/MainLayout';
+import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/contexts/ProfileContext';
 import { Link } from 'react-router-dom';
-import { useIsMobile } from '../hooks/use-mobile';
-import { Badge } from "@/components/ui/badge";
-import Header from '@/components/Header';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { getInitials } from '@/lib/utils';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { UpcomingEvents } from '@/components/dashboard/UpcomingEvents';
 
-const Dashboard = () => {
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
-  const isMobile = useIsMobile();
-  const [activeFilters, setActiveFilters] = useState({
-    year: null,
-    location: null,
-    course: null
-  });
-  const [showFilters, setShowFilters] = useState(!isMobile);
+function Dashboard() {
+  const { user } = useAuth();
+  const { profile, fetchProfile } = useProfile();
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleFilterChange = (type, value) => {
-    setActiveFilters(prev => ({
-      ...prev,
-      [type]: value
-    }));
-  };
+  useEffect(() => {
+    const loadProfile = async () => {
+      setIsLoading(true);
+      try {
+        await fetchProfile();
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const clearFilters = () => {
-    setActiveFilters({
-      year: null,
-      location: null,
-      course: null
-    });
-  };
+    loadProfile();
+  }, [fetchProfile]);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navigation Bar */}
-      <Header />
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 pt-20 pb-20 md:pb-4">
-        {/* Feature Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Blockchain Credential Wallet</h3>
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2 md:line-clamp-none">
-                    Store your academic and professional credentials securely using blockchain technology
-                  </p>
-                  <Button asChild>
-                    <Link to="/credential-wallet">
-                      <Shield className="mr-2 h-4 w-4" /> Access Your Credentials
-                    </Link>
-                  </Button>
+    <MainLayout>
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Welcome!</CardTitle>
+              <CardDescription>
+                {isLoading
+                  ? "Loading profile..."
+                  : `Here's a snapshot of your account.`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-4 w-1/2 bg-muted rounded-md mb-2"></div>
+                  <div className="h-3 w-1/4 bg-muted rounded-md"></div>
                 </div>
-                <div className="bg-primary/20 p-3 rounded-full hidden sm:block">
-                  <Shield className="h-8 w-8 text-primary" />
+              ) : user && profile ? (
+                <div className="flex items-center space-x-4">
+                  <Avatar>
+                    <AvatarImage src={profile.avatarUrl || undefined} />
+                    <AvatarFallback>{getInitials(profile.fullName)}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h2 className="text-lg font-semibold">{profile.fullName}</h2>
+                    <p className="text-sm text-muted-foreground">{profile.email}</p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <p className="text-muted-foreground">
+                  Failed to load profile information.
+                </p>
+              )}
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Create Professional CV</h3>
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2 md:line-clamp-none">
-                    Build and download professional CVs with our easy-to-use template
+          <div className="grid gap-6 md:grid-cols-2">
+            <div>
+              <UpcomingEvents />
+            </div>
+            <div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>My Connections</CardTitle>
+                  <CardDescription>
+                    See who you're connected to and manage your network.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">
+                    You have {Math.floor(Math.random() * 50)} connections.
                   </p>
-                  <Button asChild variant="outline" className="border-blue-500/50 text-blue-600">
-                    <Link to="/cv-maker">
-                      <BookOpen className="mr-2 h-4 w-4" /> Create CV
-                    </Link>
+                </CardContent>
+                <CardFooter>
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to="/network">View My Network</Link>
                   </Button>
-                </div>
-                <div className="bg-blue-500/20 p-3 rounded-full hidden sm:block">
-                  <BookOpen className="h-8 w-8 text-blue-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Alumni Directory</h3>
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2 md:line-clamp-none">
-                    Connect with alumni from your university around the world
-                  </p>
-                  <Button asChild variant="outline" className="border-purple-500/50 text-purple-600">
-                    <Link to="/alumni-directory">
-                      <Users className="mr-2 h-4 w-4" /> Explore Directory
-                    </Link>
-                  </Button>
-                </div>
-                <div className="bg-purple-500/20 p-3 rounded-full hidden sm:block">
-                  <Users className="h-8 w-8 text-purple-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Alumni Highlights */}
-        <div className="space-y-4 mb-6 md:mb-8">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Featured Alumni</h2>
-            <Button variant="link" asChild>
-              <Link to="/alumni-directory">View all</Link>
-            </Button>
+                </CardFooter>
+              </Card>
+            </div>
           </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Account Settings</CardTitle>
+              <CardDescription>
+                Manage your profile, privacy, and notification settings.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible>
+                <AccordionItem value="profile">
+                  <AccordionTrigger>Profile Settings</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-sm text-muted-foreground">
+                      Update your profile information, bio, and avatar.
+                    </p>
+                    <Button asChild variant="secondary" className="mt-2">
+                      <Link to="/profile">Edit Profile</Link>
+                    </Button>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="privacy">
+                  <AccordionTrigger>Privacy Settings</AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-sm text-muted-foreground">
+                      Control who can see your information and activity.
+                    </p>
+                    <Button asChild variant="secondary" className="mt-2">
+                      <Link to="/privacy-settings">Manage Privacy</Link>
+                    </Button>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </CardContent>
+          </Card>
         </div>
-
-        {/* Alumni Grid */}
-        <AlumniGrid />
-      </main>
-
-      {/* Bottom Navigation - Only show on mobile */}
-      <div className="md:hidden">
-        <BottomNav />
       </div>
-    </div>
+    </MainLayout>
   );
-};
+}
 
 export default Dashboard;

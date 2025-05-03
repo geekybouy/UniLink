@@ -201,33 +201,130 @@ export type Database = {
         }
         Relationships: []
       }
+      event_attendees: {
+        Row: {
+          created_at: string | null
+          event_id: string | null
+          id: string
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_attendees_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_photos: {
+        Row: {
+          caption: string | null
+          created_at: string | null
+          event_id: string | null
+          id: string
+          photo_url: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          photo_url: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          photo_url?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_photos_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
+          archive_url: string | null
+          calendar_link: string | null
+          category: string | null
           created_at: string
           created_by: string
           date: string
           description: string
+          end_date: string | null
+          event_image_url: string | null
           id: string
+          is_public: boolean | null
+          is_virtual: boolean | null
           location: string
+          max_attendees: number | null
           name: string
+          status: string | null
+          virtual_link: string | null
         }
         Insert: {
+          archive_url?: string | null
+          calendar_link?: string | null
+          category?: string | null
           created_at?: string
           created_by: string
           date: string
           description: string
+          end_date?: string | null
+          event_image_url?: string | null
           id?: string
+          is_public?: boolean | null
+          is_virtual?: boolean | null
           location: string
+          max_attendees?: number | null
           name: string
+          status?: string | null
+          virtual_link?: string | null
         }
         Update: {
+          archive_url?: string | null
+          calendar_link?: string | null
+          category?: string | null
           created_at?: string
           created_by?: string
           date?: string
           description?: string
+          end_date?: string | null
+          event_image_url?: string | null
           id?: string
+          is_public?: boolean | null
+          is_virtual?: boolean | null
           location?: string
+          max_attendees?: number | null
           name?: string
+          status?: string | null
+          virtual_link?: string | null
         }
         Relationships: []
       }
@@ -630,6 +727,10 @@ export type Database = {
           user_id: string
           role: Database["public"]["Enums"]["user_role"]
         }
+        Returns: boolean
+      }
+      is_event_full: {
+        Args: { event_id: string }
         Returns: boolean
       }
     }
