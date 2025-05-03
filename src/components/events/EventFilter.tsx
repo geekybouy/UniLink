@@ -26,7 +26,7 @@ export interface EventFilters {
 }
 
 const EVENT_CATEGORIES = [
-  { label: 'All Categories', value: '' },
+  { label: 'All Categories', value: 'all' }, // Changed from empty string to 'all'
   { label: 'Webinar', value: 'webinar' },
   { label: 'Meetup', value: 'meetup' },
   { label: 'Reunion', value: 'reunion' },
@@ -78,8 +78,8 @@ export const EventFilter: React.FC<EventFilterProps> = ({ onFilterChange }) => {
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="w-full sm:w-1/3">
           <Select 
-            value={filters.category || ''} 
-            onValueChange={(value) => handleFilterChange('category', value || null)}
+            value={filters.category || 'all'} // Changed from empty string to 'all'
+            onValueChange={(value) => handleFilterChange('category', value === 'all' ? null : value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Category" />

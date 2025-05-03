@@ -40,7 +40,7 @@ function EventsPage() {
       );
     }
 
-    // Apply category filter
+    // Apply category filter (now expecting null instead of empty string for 'all')
     if (filters.category) {
       baseEvents = baseEvents.filter(
         (event) => event.category === filters.category
