@@ -1,92 +1,92 @@
 
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Index from "@/pages/Index";
-import Dashboard from "@/pages/Dashboard";
-import NotFound from "@/pages/NotFound";
-import CVMaker from "@/pages/CVMaker";
-import CredentialWallet from "@/pages/CredentialWallet";
-import AuthCallback from "@/pages/AuthCallback";
-import CompleteProfile from "@/pages/CompleteProfile";
-import ProfileSetup from "@/pages/ProfileSetup";
-import Feed from "@/pages/Feed";
-import NewPost from "@/pages/NewPost";
-import AlumniProfile from "@/pages/AlumniProfile";
-import ShareCredentials from "@/pages/ShareCredentials";
-import SharedCredentials from "@/pages/SharedCredentials";
-import ProfilePage from "@/pages/ProfilePage";
-import AlumniDirectory from "@/pages/AlumniDirectory";
-import MyNetwork from "@/pages/MyNetwork";
-import PrivacySettings from "@/pages/PrivacySettings";
-import MessagingPage from "@/pages/MessagingPage";
-import EventsPage from "@/pages/EventsPage";
-import EventDetailPage from "@/pages/EventDetailPage";
-import CreateEventPage from "@/pages/CreateEventPage";
-import EditEventPage from "@/pages/EditEventPage";
-import MorePage from "@/pages/MorePage";
-
-// Job board pages
-import JobsListingPage from "@/pages/JobsListingPage";
-import JobDetailPage from "@/pages/JobDetailPage";
-import PostJobPage from "@/pages/PostJobPage";
-import EditJobPage from "@/pages/EditJobPage";
-import MyApplicationsPage from "@/pages/MyApplicationsPage";
-
-// Auth pages
-import AuthLayout from "@/pages/auth/AuthLayout";
-import LoginPage from "@/pages/auth/LoginPage";
-import SignupPage from "@/pages/auth/SignupPage";
-import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
-import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
-import VerifyEmailPage from "@/pages/auth/VerifyEmailPage";
-
-// Knowledge Hub Pages
-import KnowledgeHub from "@/pages/KnowledgeHub";
-import KnowledgePostDetail from "@/pages/KnowledgePostDetail";
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Index from './pages/Index';
+import Feed from './pages/Feed';
+import Dashboard from './pages/Dashboard';
+import CredentialWallet from './pages/CredentialWallet';
+import ShareCredentials from './pages/ShareCredentials';
+import SharedCredentials from './pages/SharedCredentials';
+import AlumniDirectory from './pages/AlumniDirectory';
+import AlumniProfile from './pages/AlumniProfile';
+import EventsPage from './pages/EventsPage';
+import EventDetailPage from './pages/EventDetailPage';
+import CreateEventPage from './pages/CreateEventPage';
+import EditEventPage from './pages/EditEventPage';
+import ProfilePage from './pages/ProfilePage';
+import ProfileSetup from './pages/ProfileSetup';
+import CompleteProfile from './pages/CompleteProfile';
+import KnowledgeHub from './pages/KnowledgeHub';
+import KnowledgePostDetail from './pages/KnowledgePostDetail';
+import NewPost from './pages/NewPost';
+import JobsListingPage from './pages/JobsListingPage';
+import JobDetailPage from './pages/JobDetailPage';
+import PostJobPage from './pages/PostJobPage';
+import EditJobPage from './pages/EditJobPage';
+import MyApplicationsPage from './pages/MyApplicationsPage';
+import CVMaker from './pages/CVMaker';
+import MyNetwork from './pages/MyNetwork';
+import MessagingPage from './pages/MessagingPage';
+import PrivacySettings from './pages/PrivacySettings';
+import NotFound from './pages/NotFound';
+import MorePage from './pages/MorePage';
 
 // Admin pages
-import AdminLayout from "@/layouts/AdminLayout";
-import AdminDashboard from "@/pages/admin/AdminDashboard";
-import UserManagement from "@/pages/admin/UserManagement";
-import ContentModeration from "@/pages/admin/ContentModeration";
-import RoleManagement from "@/pages/admin/RoleManagement";
-import AuditLogs from "@/pages/admin/AuditLogs";
-import Announcements from "@/pages/admin/Announcements";
-import Settings from "@/pages/admin/Settings";
+import AdminDashboard from './pages/admin/AdminDashboard';
+import UserManagement from './pages/admin/UserManagement';
+import ContentModeration from './pages/admin/ContentModeration';
+import RoleManagement from './pages/admin/RoleManagement';
+import Announcements from './pages/admin/Announcements';
+import AuditLogs from './pages/admin/AuditLogs';
+import Settings from './pages/admin/Settings';
 
-// Auth context and protected route
-import { AuthProvider } from "@/contexts/AuthContext";
-import { ProfileProvider } from "@/contexts/ProfileContext";
-import { ConnectionProvider } from "@/contexts/ConnectionContext";
-import { NotificationProvider } from "@/contexts/NotificationContext";
-import { MessagingProvider } from "@/contexts/MessagingContext";
-import { EventsProvider } from "@/contexts/EventsContext";
-import { JobsProvider } from "@/contexts/JobsContext";
-import { KnowledgeProvider } from "@/contexts/KnowledgeContext";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
+// Auth pages
+import AuthLayout from './pages/auth/AuthLayout';
+import LoginPage from './pages/auth/LoginPage';
+import SignupPage from './pages/auth/SignupPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import VerifyEmailPage from './pages/auth/VerifyEmailPage';
 
-// UI components
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as SonnerToaster } from "sonner";
-import "@/App.css";
+// Auth callback handler
+import AuthCallback from './pages/AuthCallback';
+
+// Protected route component
+import ProtectedRoute from './components/auth/ProtectedRoute';
+
+// Context Providers
+import { AuthProvider } from './contexts/AuthContext';
+import { ProfileProvider } from './contexts/ProfileContext';
+import { ConnectionProvider } from './contexts/ConnectionContext';
+import { EventsProvider } from './contexts/EventsContext';
+import { JobsProvider } from './contexts/JobsContext';
+import { MessagingProvider } from './contexts/MessagingContext';
+import { KnowledgeProvider } from './contexts/KnowledgeContext';
+import { NotificationsProvider } from './contexts/NotificationsContext';
+
+// Toast provider
+import { Toaster } from '@/components/ui/toaster';
+
+// Notification pages
+import NotificationsPage from './pages/NotificationsPage';
+import NotificationSettingsPage from './pages/NotificationSettingsPage';
+
+import './App.css';
 
 function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <AuthProvider>
         <ProfileProvider>
           <ConnectionProvider>
-            <NotificationProvider>
-              <MessagingProvider>
-                <EventsProvider>
-                  <JobsProvider>
-                    <KnowledgeProvider>
+            <EventsProvider>
+              <JobsProvider>
+                <MessagingProvider>
+                  <KnowledgeProvider>
+                    <NotificationsProvider>
                       <Routes>
                         {/* Public routes */}
                         <Route path="/" element={<Index />} />
-                        <Route path="/auth/callback" element={<AuthCallback />} />
-                        <Route path="/shared/:shareId" element={<SharedCredentials />} />
-
-                        {/* Authentication routes */}
                         <Route path="/auth" element={<AuthLayout />}>
                           <Route path="login" element={<LoginPage />} />
                           <Route path="signup" element={<SignupPage />} />
@@ -94,180 +94,66 @@ function App() {
                           <Route path="reset-password" element={<ResetPasswordPage />} />
                           <Route path="verify-email" element={<VerifyEmailPage />} />
                         </Route>
+                        <Route path="/auth/callback" element={<AuthCallback />} />
 
                         {/* Protected routes */}
-                        <Route path="/dashboard" element={
-                          <ProtectedRoute>
-                            <Dashboard />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/cv-maker" element={
-                          <ProtectedRoute>
-                            <CVMaker />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/credential-wallet" element={
-                          <ProtectedRoute>
-                            <CredentialWallet />
-                          </ProtectedRoute>
-                        } />
-                        {/* Fix for the /credentials route - redirect to /credential-wallet */}
-                        <Route path="/credentials" element={
-                          <ProtectedRoute>
-                            <CredentialWallet />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/share-credentials" element={
-                          <ProtectedRoute>
-                            <ShareCredentials />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/complete-profile" element={
-                          <ProtectedRoute>
-                            <CompleteProfile />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/profile-setup" element={
-                          <ProtectedRoute>
-                            <ProfileSetup />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/feed" element={
-                          <ProtectedRoute>
-                            <Feed />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/new-post" element={
-                          <ProtectedRoute>
-                            <NewPost />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/alumni/:id" element={
-                          <ProtectedRoute>
-                            <ProfilePage />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/profile" element={
-                          <ProtectedRoute>
-                            <ProfilePage />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/profile/:id" element={
-                          <ProtectedRoute>
-                            <ProfilePage />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/alumni-directory" element={
-                          <ProtectedRoute>
-                            <AlumniDirectory />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/network" element={
-                          <ProtectedRoute>
-                            <MyNetwork />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/privacy-settings" element={
-                          <ProtectedRoute>
-                            <PrivacySettings />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/messages" element={
-                          <ProtectedRoute>
-                            <MessagingPage />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/more" element={
-                          <ProtectedRoute>
-                            <MorePage />
-                          </ProtectedRoute>
-                        } />
-                        
-                        {/* Events routes */}
-                        <Route path="/events" element={
-                          <ProtectedRoute>
-                            <EventsPage />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/events/:id" element={
-                          <ProtectedRoute>
-                            <EventDetailPage />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/events/new" element={
-                          <ProtectedRoute>
-                            <CreateEventPage />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/events/:id/edit" element={
-                          <ProtectedRoute>
-                            <EditEventPage />
-                          </ProtectedRoute>
-                        } />
-                        
-                        {/* Knowledge Hub routes */}
-                        <Route path="/knowledge" element={<KnowledgeHub />} />
-                        <Route path="/knowledge/:id" element={<KnowledgePostDetail />} />
-                        
-                        {/* Job Board routes */}
-                        <Route path="/jobs" element={
-                          <ProtectedRoute>
-                            <JobsListingPage />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/jobs/:id" element={
-                          <ProtectedRoute>
-                            <JobDetailPage />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/jobs/post" element={
-                          <ProtectedRoute>
-                            <PostJobPage />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/jobs/:id/edit" element={
-                          <ProtectedRoute>
-                            <EditJobPage />
-                          </ProtectedRoute>
-                        } />
-                        <Route path="/my-applications" element={
-                          <ProtectedRoute>
-                            <MyApplicationsPage />
-                          </ProtectedRoute>
-                        } />
-                        
-                        {/* Admin routes */}
-                        <Route path="/admin" element={
-                          <ProtectedRoute requiredRoles={['admin']}>
-                            <AdminLayout />
-                          </ProtectedRoute>
-                        }>
-                          <Route path="dashboard" element={<AdminDashboard />} />
-                          <Route path="users" element={<UserManagement />} />
-                          <Route path="content" element={<ContentModeration />} />
-                          <Route path="roles" element={<RoleManagement />} />
-                          <Route path="announcements" element={<Announcements />} />
-                          <Route path="audit-logs" element={<AuditLogs />} />
-                          <Route path="settings" element={<Settings />} />
-                          <Route index element={<AdminDashboard />} />
+                        <Route element={<ProtectedRoute />}>
+                          <Route path="/dashboard" element={<Dashboard />} />
+                          <Route path="/feed" element={<Feed />} />
+                          <Route path="/credential-wallet" element={<CredentialWallet />} />
+                          <Route path="/share-credentials" element={<ShareCredentials />} />
+                          <Route path="/shared-credentials/:shareId" element={<SharedCredentials />} />
+                          <Route path="/alumni-directory" element={<AlumniDirectory />} />
+                          <Route path="/profile/:userId" element={<AlumniProfile />} />
+                          <Route path="/profile" element={<ProfilePage />} />
+                          <Route path="/profile-setup" element={<ProfileSetup />} />
+                          <Route path="/complete-profile" element={<CompleteProfile />} />
+                          <Route path="/events" element={<EventsPage />} />
+                          <Route path="/events/:id" element={<EventDetailPage />} />
+                          <Route path="/events/create" element={<CreateEventPage />} />
+                          <Route path="/events/edit/:id" element={<EditEventPage />} />
+                          <Route path="/knowledge" element={<KnowledgeHub />} />
+                          <Route path="/knowledge/:postId" element={<KnowledgePostDetail />} />
+                          <Route path="/knowledge/new" element={<NewPost />} />
+                          <Route path="/jobs" element={<JobsListingPage />} />
+                          <Route path="/jobs/:id" element={<JobDetailPage />} />
+                          <Route path="/jobs/post" element={<PostJobPage />} />
+                          <Route path="/jobs/edit/:id" element={<EditJobPage />} />
+                          <Route path="/my-applications" element={<MyApplicationsPage />} />
+                          <Route path="/cv-maker" element={<CVMaker />} />
+                          <Route path="/network" element={<MyNetwork />} />
+                          <Route path="/messages" element={<MessagingPage />} />
+                          <Route path="/messages/:conversationId" element={<MessagingPage />} />
+                          <Route path="/privacy-settings" element={<PrivacySettings />} />
+                          <Route path="/more" element={<MorePage />} />
+                          
+                          {/* Notification routes */}
+                          <Route path="/notifications" element={<NotificationsPage />} />
+                          <Route path="/notification-settings" element={<NotificationSettingsPage />} />
+
+                          {/* Admin routes */}
+                          <Route path="/admin" element={<AdminDashboard />} />
+                          <Route path="/admin/users" element={<UserManagement />} />
+                          <Route path="/admin/content" element={<ContentModeration />} />
+                          <Route path="/admin/roles" element={<RoleManagement />} />
+                          <Route path="/admin/announcements" element={<Announcements />} />
+                          <Route path="/admin/audit" element={<AuditLogs />} />
+                          <Route path="/admin/settings" element={<Settings />} />
                         </Route>
-                        
-                        {/* 404 route */}
+
+                        {/* 404 - Not found */}
                         <Route path="*" element={<NotFound />} />
                       </Routes>
-                      
-                      {/* Toast notifications */}
-                      <SonnerToaster position="top-center" richColors />
                       <Toaster />
-                    </KnowledgeProvider>
-                  </JobsProvider>
-                </EventsProvider>
-              </MessagingProvider>
-            </NotificationProvider>
+                    </NotificationsProvider>
+                  </KnowledgeProvider>
+                </MessagingProvider>
+              </JobsProvider>
+            </EventsProvider>
           </ConnectionProvider>
         </ProfileProvider>
       </AuthProvider>
-    </Router>
+    </BrowserRouter>
   );
 }
 

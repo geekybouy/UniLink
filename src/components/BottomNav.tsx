@@ -1,11 +1,13 @@
 
 import { useLocation, Link } from 'react-router-dom';
-import { Home, Users, BookOpen, MessageCircle, Shield, Calendar, Briefcase, Menu } from 'lucide-react';
+import { Home, Users, BookOpen, MessageCircle, Bell, Calendar, Briefcase, Menu } from 'lucide-react';
 import { MessagingBadge } from './messaging/MessagingBadge';
 import { cn } from '@/lib/utils';
+import { useNotifications } from '@/contexts/NotificationsContext';
 
 const BottomNav = () => {
   const location = useLocation();
+  const { unreadCount } = useNotifications();
   
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
@@ -46,6 +48,18 @@ const BottomNav = () => {
           label="Messages"
           active={isActive('/messages')}
           badge={<MessagingBadge />}
+        />
+        
+        <NavItem
+          to="/notifications"
+          icon={Bell}
+          label="Notifications"
+          active={isActive('/notifications') || isActive('/notification-settings')}
+          badge={unreadCount > 0 ? (
+            <span className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center rounded-full bg-destructive text-white text-xs">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          ) : undefined}
         />
 
         <NavItem
