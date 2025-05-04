@@ -1,17 +1,22 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
 import { 
   Post, 
   Comment, 
   Tag, 
-  Vote, 
   ContentType, 
   PostFormData,
-  SearchParams,
-  Bookmark
+  SearchParams
 } from '@/types/knowledge';
+
+// Import services
+import * as postService from '@/services/knowledge/postService';
+import * as commentService from '@/services/knowledge/commentService';
+import * as userInteractionService from '@/services/knowledge/userInteractionService';
+import * as tagService from '@/services/knowledge/tagService';
+import * as dataFetchService from '@/services/knowledge/dataFetchService';
 
 interface KnowledgeContextType {
   posts: Post[];
@@ -49,813 +54,99 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   useEffect(() => {
     if (user) {
-      fetchPosts();
-      fetchTags();
+      fetchData();
     }
   }, [user]);
 
-  const fetchPosts = async () => {
+  const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Fetch all approved posts
-      const { data: postsData, error: postsError } = await supabase
-        .from('posts')
-        .select(`
-          *,
-          user:profiles!inner (
-            full_name,
-            avatar_url
-          )
-        `)
-        .eq('is_approved', true)
-        .order('created_at', { ascending: false });
-
-      if (postsError) throw postsError;
+      // Run these in parallel
+      const [postsData, featuredData, tagsData] = await Promise.all([
+        dataFetchService.fetchPosts(),
+        dataFetchService.fetchFeaturedPosts(),
+        tagService.fetchTags()
+      ]);
       
-      // Get votes counts
-      const postsWithCounts = await enrichPostsWithCounts(postsData || []);
-      setPosts(postsWithCounts);
-
-      // Fetch featured posts
-      const { data: featuredData, error: featuredError } = await supabase
-        .from('posts')
-        .select(`
-          *,
-          user:profiles!inner (
-            full_name,
-            avatar_url
-          )
-        `)
-        .eq('is_approved', true)
-        .eq('is_featured', true)
-        .order('created_at', { ascending: false });
-
-      if (featuredError) throw featuredError;
+      setPosts(postsData);
+      setFeaturedPosts(featuredData);
+      setTags(tagsData);
       
-      const featuredWithCounts = await enrichPostsWithCounts(featuredData || []);
-      setFeaturedPosts(featuredWithCounts);
-
       // Only fetch these if user is logged in
       if (user) {
-        // Fetch user's posts
-        const { data: userPostsData, error: userPostsError } = await supabase
-          .from('posts')
-          .select(`
-            *,
-            user:profiles!inner (
-              full_name,
-              avatar_url
-            )
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (userPostsError) throw userPostsError;
+        const [userPostsData, bookmarkedPostsData] = await Promise.all([
+          dataFetchService.fetchUserPosts(user.id),
+          dataFetchService.fetchBookmarkedPosts(user.id)
+        ]);
         
-        const userPostsWithCounts = await enrichPostsWithCounts(userPostsData || []);
-        setUserPosts(userPostsWithCounts);
-
-        // Fetch bookmarked posts using direct query instead of RPC
-        const { data: bookmarksData, error: bookmarksError } = await supabase
-          .from('bookmarks')
-          .select('post_id')
-          .eq('user_id', user.id);
-
-        if (bookmarksError) throw bookmarksError;
-
-        if (bookmarksData && bookmarksData.length > 0) {
-          const bookmarkedPostIds = bookmarksData.map(bookmark => bookmark.post_id);
-          const { data: bookmarkedPostsData, error: bookmarkedPostsError } = await supabase
-            .from('posts')
-            .select(`
-              *,
-              user:profiles!inner (
-                full_name,
-                avatar_url
-              )
-            `)
-            .in('id', bookmarkedPostIds)
-            .eq('is_approved', true)
-            .order('created_at', { ascending: false });
-
-          if (bookmarkedPostsError) throw bookmarkedPostsError;
-          
-          const bookmarkedWithCounts = await enrichPostsWithCounts(bookmarkedPostsData || []);
-          setBookmarkedPosts(bookmarkedWithCounts);
-        } else {
-          setBookmarkedPosts([]);
-        }
+        setUserPosts(userPostsData);
+        setBookmarkedPosts(bookmarkedPostsData);
       }
-    } catch (error: any) {
-      toast.error('Error loading posts: ' + error.message);
-      console.error('Error loading posts:', error);
+    } catch (error) {
+      console.error("Error fetching knowledge data:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const enrichPostsWithCounts = async (posts: any[]): Promise<Post[]> => {
-    if (!posts.length) return [];
-    
-    const postIds = posts.map(post => post.id);
-    
-    // Get votes counts using direct query
-    const { data: votesData } = await supabase
-      .from('votes')
-      .select('post_id, is_upvote')
-      .in('post_id', postIds);
-    
-    // Get comments counts using direct query
-    const { data: commentsData } = await supabase
-      .from('comments')
-      .select('post_id, id')
-      .in('post_id', postIds);
-    
-    // Get user's votes and bookmarks if logged in
-    let userVotes: Record<string, boolean> = {};
-    let userBookmarks: Record<string, boolean> = {};
-    
-    if (user) {
-      // Get user votes using direct query
-      const { data: userVotesData } = await supabase
-        .from('votes')
-        .select('post_id')
-        .eq('user_id', user.id)
-        .in('post_id', postIds);
-        
-      if (userVotesData && Array.isArray(userVotesData)) {
-        userVotes = userVotesData.reduce((acc: Record<string, boolean>, vote: any) => {
-          if (vote && typeof vote === 'object' && vote.post_id) {
-            acc[vote.post_id] = true;
-          }
-          return acc;
-        }, {});
-      }
-      
-      // Get user bookmarks using direct query
-      const { data: userBookmarksData } = await supabase
-        .from('bookmarks')
-        .select('post_id')
-        .eq('user_id', user.id)
-        .in('post_id', postIds);
-        
-      if (userBookmarksData && Array.isArray(userBookmarksData)) {
-        userBookmarks = userBookmarksData.reduce((acc: Record<string, boolean>, bookmark: any) => {
-          if (bookmark && typeof bookmark === 'object' && bookmark.post_id) {
-            acc[bookmark.post_id] = true;
-          }
-          return acc;
-        }, {});
-      }
-    }
-    
-    // Count votes by post
-    const voteCounts: Record<string, number> = {};
-    if (votesData && Array.isArray(votesData)) {
-      votesData.forEach((vote: any) => {
-        if (vote && typeof vote === 'object' && vote.post_id && vote.is_upvote) {
-          voteCounts[vote.post_id] = (voteCounts[vote.post_id] || 0) + 1;
-        }
-      });
-    }
-    
-    // Count comments by post
-    const commentCounts: Record<string, number> = {};
-    if (commentsData && Array.isArray(commentsData)) {
-      commentsData.forEach((comment: any) => {
-        if (comment && typeof comment === 'object' && comment.post_id) {
-          commentCounts[comment.post_id] = (commentCounts[comment.post_id] || 0) + 1;
-        }
-      });
-    }
-    
-    // Add counts to posts and ensure proper typing
-    return posts.map((post: any) => {
-      // Make sure the returned object matches the Post interface
-      return {
-        id: post.id,
-        title: post.title || '',
-        content: post.content,
-        user_id: post.user_id,
-        content_type: post.content_type as ContentType || 'article',
-        file_url: post.file_url,
-        link_url: post.link_url,
-        image_url: post.image_url,
-        created_at: post.created_at,
-        updated_at: post.updated_at || post.created_at,
-        is_featured: post.is_featured || false,
-        is_approved: post.is_approved || true,
-        user: post.user,
-        votes_count: voteCounts[post.id] || 0,
-        comments_count: commentCounts[post.id] || 0,
-        user_has_voted: userVotes[post.id] || false,
-        user_has_bookmarked: userBookmarks[post.id] || false,
-        tags: post.tags || []
-      };
-    });
+  // Expose service functions with user context
+  const createPostWithUser = async (postData: PostFormData, file?: File) => {
+    const result = await postService.createPost(postData, user?.id, file);
+    if (result) fetchData(); // Refresh data
+    return result;
   };
 
-  const fetchTags = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('tags')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      setTags(data || []);
-    } catch (error: any) {
-      toast.error('Error loading tags: ' + error.message);
-      console.error('Error loading tags:', error);
-    }
+  const updatePostWithUser = async (id: string, postData: PostFormData, file?: File) => {
+    const result = await postService.updatePost(id, postData, user?.id, file);
+    if (result) fetchData(); // Refresh data
+    return result;
   };
 
-  const uploadFile = async (file: File): Promise<string | null> => {
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError, data } = await supabase.storage
-        .from('post_files')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('post_files')
-        .getPublicUrl(filePath);
-
-      return publicUrl;
-    } catch (error: any) {
-      toast.error('Error uploading file: ' + error.message);
-      console.error('Error uploading file:', error);
-      return null;
-    }
+  const deletePostWithUser = async (id: string) => {
+    const result = await postService.deletePost(id, user?.id);
+    if (result) fetchData(); // Refresh data
+    return result;
   };
 
-  const createPost = async (postData: PostFormData, file?: File): Promise<Post | null> => {
-    if (!user) {
-      toast.error('You must be logged in to create a post');
-      return null;
-    }
-
-    try {
-      let fileUrl = null;
-      if (file && (postData.content_type === 'file' || postData.content_type === 'image')) {
-        fileUrl = await uploadFile(file);
-        if (!fileUrl) return null;
-      }
-
-      const newPost = {
-        title: postData.title,
-        content: postData.content,
-        user_id: user.id,
-        content_type: postData.content_type,
-        file_url: fileUrl,
-        link_url: postData.link_url || null,
-        is_featured: false,
-        is_approved: true
-      };
-
-      const { data, error } = await supabase
-        .from('posts')
-        .insert([newPost])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Add tags if any
-      if (postData.tags && postData.tags.length > 0) {
-        const tagInserts = postData.tags.map(tagId => ({
-          post_id: data.id,
-          tag_id: tagId
-        }));
-
-        const { error: tagError } = await supabase
-          .from('post_tags')
-          .insert(tagInserts);
-
-        if (tagError) throw tagError;
-      }
-
-      toast.success('Post created successfully');
-      await fetchPosts(); // Refresh posts
-      
-      // Ensure the returned data matches the Post interface
-      const post: Post = {
-        ...data,
-        tags: [],
-        votes_count: 0,
-        comments_count: 0,
-        user_has_voted: false,
-        user_has_bookmarked: false
-      };
-      
-      return post;
-    } catch (error: any) {
-      toast.error('Error creating post: ' + error.message);
-      console.error('Error creating post:', error);
-      return null;
-    }
+  const addCommentWithUser = async (postId: string, content: string) => {
+    return await commentService.addComment(postId, content, user?.id);
   };
 
-  const updatePost = async (id: string, postData: PostFormData, file?: File): Promise<boolean> => {
-    if (!user) {
-      toast.error('You must be logged in to update a post');
-      return false;
-    }
-
-    try {
-      const { data: existingPost, error: fetchError } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('id', id)
-        .eq('user_id', user.id)
-        .single();
-
-      if (fetchError) throw fetchError;
-      if (!existingPost) {
-        toast.error('Post not found or you do not have permission to edit it');
-        return false;
-      }
-
-      let fileUrl = existingPost.file_url;
-      if (file && (postData.content_type === 'file' || postData.content_type === 'image')) {
-        const newFileUrl = await uploadFile(file);
-        if (newFileUrl) fileUrl = newFileUrl;
-      }
-
-      const updateData = {
-        title: postData.title,
-        content: postData.content,
-        content_type: postData.content_type,
-        file_url: fileUrl,
-        link_url: postData.link_url || null,
-      };
-
-      const { error: updateError } = await supabase
-        .from('posts')
-        .update(updateData)
-        .eq('id', id);
-
-      if (updateError) throw updateError;
-
-      // Update tags - first remove existing tags
-      const { error: deleteTagError } = await supabase
-        .from('post_tags')
-        .delete()
-        .eq('post_id', id);
-
-      if (deleteTagError) throw deleteTagError;
-
-      // Then add new tags
-      if (postData.tags && postData.tags.length > 0) {
-        const tagInserts = postData.tags.map(tagId => ({
-          post_id: id,
-          tag_id: tagId
-        }));
-
-        const { error: tagError } = await supabase
-          .from('post_tags')
-          .insert(tagInserts);
-
-        if (tagError) throw tagError;
-      }
-
-      toast.success('Post updated successfully');
-      await fetchPosts(); // Refresh posts
-      return true;
-    } catch (error: any) {
-      toast.error('Error updating post: ' + error.message);
-      console.error('Error updating post:', error);
-      return false;
-    }
+  const deleteCommentWithUser = async (id: string) => {
+    return await commentService.deleteComment(id, user?.id);
   };
 
-  const deletePost = async (id: string): Promise<boolean> => {
-    if (!user) {
-      toast.error('You must be logged in to delete a post');
-      return false;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('posts')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      toast.success('Post deleted successfully');
-      await fetchPosts(); // Refresh posts
-      return true;
-    } catch (error: any) {
-      toast.error('Error deleting post: ' + error.message);
-      console.error('Error deleting post:', error);
-      return false;
-    }
+  const upvotePostWithUser = async (postId: string) => {
+    const result = await userInteractionService.upvotePost(postId, user?.id);
+    if (result) fetchData(); // Refresh data
+    return result;
   };
 
-  const fetchPostById = async (id: string): Promise<Post | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          *,
-          user:profiles!inner (
-            full_name,
-            avatar_url
-          )
-        `)
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-
-      // Fetch tags for the post
-      const { data: tagData, error: tagError } = await supabase
-        .from('post_tags')
-        .select(`
-          tag:tags (
-            id,
-            name
-          )
-        `)
-        .eq('post_id', id);
-      
-      if (tagError) throw tagError;
-      
-      // Extract tags from the join result
-      const tags = tagData?.map(item => item.tag as Tag) || [];
-      
-      // Create a post object with the correct shape
-      const post: Post = {
-        id: data.id,
-        title: data.title || '',
-        content: data.content,
-        user_id: data.user_id,
-        content_type: data.content_type as ContentType || 'article',
-        file_url: data.file_url,
-        link_url: data.link_url,
-        image_url: data.image_url,
-        created_at: data.created_at,
-        updated_at: data.updated_at || data.created_at,
-        is_featured: data.is_featured || false,
-        is_approved: data.is_approved || true,
-        user: data.user,
-        tags,
-        votes_count: 0,
-        comments_count: 0,
-        user_has_voted: false,
-        user_has_bookmarked: false
-      };
-
-      // Add votes and comments counts
-      const enrichedPosts = await enrichPostsWithCounts([post]);
-      return enrichedPosts[0] || null;
-    } catch (error: any) {
-      toast.error('Error fetching post: ' + error.message);
-      console.error('Error fetching post:', error);
-      return null;
-    }
+  const removeVoteWithUser = async (postId: string) => {
+    const result = await userInteractionService.removeVote(postId, user?.id);
+    if (result) fetchData(); // Refresh data
+    return result;
   };
 
-  const fetchCommentsByPostId = async (postId: string): Promise<Comment[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('comments')
-        .select(`
-          *,
-          user:profiles (
-            full_name,
-            avatar_url
-          )
-        `)
-        .eq('post_id', postId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      // Transform the data to match the Comment interface
-      const comments: Comment[] = data.map((item: any) => ({
-        id: item.id,
-        content: item.content,
-        user_id: item.user_id,
-        post_id: item.post_id,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-        user: item.user ? {
-          full_name: item.user.full_name,
-          avatar_url: item.user.avatar_url
-        } : undefined
-      }));
-      
-      return comments;
-    } catch (error: any) {
-      toast.error('Error fetching comments: ' + error.message);
-      console.error('Error fetching comments:', error);
-      return [];
-    }
+  const bookmarkPostWithUser = async (postId: string) => {
+    const result = await userInteractionService.bookmarkPost(postId, user?.id);
+    if (result) fetchData(); // Refresh data
+    return result;
   };
 
-  const addComment = async (postId: string, content: string): Promise<Comment | null> => {
-    if (!user) {
-      toast.error('You must be logged in to comment');
-      return null;
-    }
-
-    try {
-      const { data: rawData, error } = await supabase
-        .from('comments')
-        .insert([
-          {
-            content,
-            post_id: postId,
-            user_id: user.id
-          }
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Get user info for the comment
-      const { data: userData, error: userError } = await supabase
-        .from('profiles')
-        .select('full_name, avatar_url')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (userError) throw userError;
-      
-      // Transform to match Comment interface
-      const comment: Comment = {
-        id: rawData.id,
-        content: rawData.content,
-        user_id: rawData.user_id,
-        post_id: rawData.post_id,
-        created_at: rawData.created_at,
-        updated_at: rawData.updated_at,
-        user: userData ? {
-          full_name: userData.full_name,
-          avatar_url: userData.avatar_url
-        } : undefined
-      };
-      
-      toast.success('Comment added');
-      return comment;
-    } catch (error: any) {
-      toast.error('Error adding comment: ' + error.message);
-      console.error('Error adding comment:', error);
-      return null;
-    }
+  const removeBookmarkWithUser = async (postId: string) => {
+    const result = await userInteractionService.removeBookmark(postId, user?.id);
+    if (result) fetchData(); // Refresh data
+    return result;
   };
 
-  const deleteComment = async (id: string): Promise<boolean> => {
-    if (!user) {
-      toast.error('You must be logged in to delete a comment');
-      return false;
+  const createTagWithUser = async (name: string) => {
+    const result = await tagService.createTag(name, user?.id);
+    if (result) {
+      // Update tags
+      setTags(prevTags => [...prevTags, result]);
     }
-
-    try {
-      const { error } = await supabase
-        .from('comments')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      toast.success('Comment deleted');
-      return true;
-    } catch (error: any) {
-      toast.error('Error deleting comment: ' + error.message);
-      console.error('Error deleting comment:', error);
-      return false;
-    }
-  };
-
-  const upvotePost = async (postId: string): Promise<boolean> => {
-    if (!user) {
-      toast.error('You must be logged in to vote');
-      return false;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('votes')
-        .upsert({
-          post_id: postId,
-          user_id: user.id,
-          is_upvote: true
-        });
-
-      if (error) throw error;
-      await fetchPosts(); // Refresh posts to update counts
-      return true;
-    } catch (error: any) {
-      toast.error('Error voting: ' + error.message);
-      console.error('Error voting:', error);
-      return false;
-    }
-  };
-
-  const removeVote = async (postId: string): Promise<boolean> => {
-    if (!user) {
-      toast.error('You must be logged in to remove a vote');
-      return false;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('votes')
-        .delete()
-        .eq('post_id', postId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      await fetchPosts(); // Refresh posts to update counts
-      return true;
-    } catch (error: any) {
-      toast.error('Error removing vote: ' + error.message);
-      console.error('Error removing vote:', error);
-      return false;
-    }
-  };
-
-  const bookmarkPost = async (postId: string): Promise<boolean> => {
-    if (!user) {
-      toast.error('You must be logged in to bookmark');
-      return false;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('bookmarks')
-        .insert({
-          post_id: postId,
-          user_id: user.id
-        });
-
-      if (error) throw error;
-      await fetchPosts(); // Refresh posts to update state
-      toast.success('Post bookmarked');
-      return true;
-    } catch (error: any) {
-      toast.error('Error bookmarking post: ' + error.message);
-      console.error('Error bookmarking post:', error);
-      return false;
-    }
-  };
-
-  const removeBookmark = async (postId: string): Promise<boolean> => {
-    if (!user) {
-      toast.error('You must be logged in to remove a bookmark');
-      return false;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('bookmarks')
-        .delete()
-        .eq('post_id', postId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      await fetchPosts(); // Refresh posts to update state
-      toast.success('Bookmark removed');
-      return true;
-    } catch (error: any) {
-      toast.error('Error removing bookmark: ' + error.message);
-      console.error('Error removing bookmark:', error);
-      return false;
-    }
-  };
-
-  const searchPosts = async ({ query, contentType, tag, featured }: SearchParams): Promise<Post[]> => {
-    try {
-      // Start building the query
-      let supabaseQuery = supabase
-        .from('posts')
-        .select(`
-          *,
-          user:profiles!inner (
-            full_name,
-            avatar_url
-          )
-        `)
-        .eq('is_approved', true);
-        
-      // Add content_type filter if specified
-      if (contentType && contentType !== 'all') {
-        supabaseQuery = supabaseQuery.eq('content_type', contentType);
-      }
-      
-      // Add featured filter if specified
-      if (featured) {
-        supabaseQuery = supabaseQuery.eq('is_featured', true);
-      }
-      
-      // Add search query if specified
-      if (query) {
-        supabaseQuery = supabaseQuery.or(`title.ilike.%${query}%,content.ilike.%${query}%`);
-      }
-      
-      // Execute the query
-      const { data, error } = await supabaseQuery
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      if (!data || data.length === 0) {
-        return [];
-      }
-      
-      // Handle tag filtering separately after getting initial results
-      let filteredPosts = [...data];
-      
-      if (tag) {
-        // Get post IDs that have the specified tag
-        const { data: taggedPostsData, error: tagError } = await supabase
-          .from('post_tags')
-          .select('post_id')
-          .eq('tag_id', tag);
-          
-        if (tagError) throw tagError;
-        
-        if (taggedPostsData && taggedPostsData.length > 0) {
-          const taggedPostIds = taggedPostsData.map(item => item.post_id);
-          // Filter posts that match the tagged post IDs
-          filteredPosts = filteredPosts.filter(post => taggedPostIds.includes(post.id));
-        } else {
-          // If no posts with this tag, return empty array
-          return [];
-        }
-      }
-      
-      // Process posts to add tags, vote counts, etc.
-      const enrichedPosts = await enrichPostsWithCounts(filteredPosts);
-      
-      // Now fetch tags for each post
-      for (const post of enrichedPosts) {
-        const { data: tagData } = await supabase
-          .from('post_tags')
-          .select(`
-            tag:tags (
-              id,
-              name
-            )
-          `)
-          .eq('post_id', post.id);
-          
-        if (tagData && tagData.length > 0) {
-          post.tags = tagData.map(item => item.tag as Tag);
-        } else {
-          post.tags = [];
-        }
-      }
-      
-      return enrichedPosts;
-    } catch (error: any) {
-      toast.error('Error searching posts: ' + error.message);
-      console.error('Error searching posts:', error);
-      return [];
-    }
-  };
-
-  const createTag = async (name: string): Promise<Tag | null> => {
-    if (!user) {
-      toast.error('You must be logged in to create a tag');
-      return null;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('tags')
-        .insert([{ name }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      await fetchTags(); // Refresh tags
-      return data as Tag;
-    } catch (error: any) {
-      // Check if it's a duplicate tag error
-      if (error.code === '23505') {
-        toast.error('This tag already exists');
-      } else {
-        toast.error('Error creating tag: ' + error.message);
-      }
-      console.error('Error creating tag:', error);
-      return null;
-    }
-  };
-
-  const refreshPosts = async () => {
-    await fetchPosts();
+    return result;
   };
 
   const value = {
@@ -865,20 +156,20 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     userPosts,
     tags,
     isLoading,
-    createPost,
-    updatePost,
-    deletePost,
-    fetchPostById,
-    fetchCommentsByPostId,
-    addComment,
-    deleteComment,
-    upvotePost,
-    removeVote,
-    bookmarkPost,
-    removeBookmark,
-    searchPosts,
-    createTag,
-    refreshPosts,
+    createPost: createPostWithUser,
+    updatePost: updatePostWithUser,
+    deletePost: deletePostWithUser,
+    fetchPostById: postService.fetchPostById,
+    fetchCommentsByPostId: commentService.fetchCommentsByPostId,
+    addComment: addCommentWithUser,
+    deleteComment: deleteCommentWithUser,
+    upvotePost: upvotePostWithUser,
+    removeVote: removeVoteWithUser,
+    bookmarkPost: bookmarkPostWithUser,
+    removeBookmark: removeBookmarkWithUser,
+    searchPosts: postService.searchPosts,
+    createTag: createTagWithUser,
+    refreshPosts: fetchData,
   };
 
   return (

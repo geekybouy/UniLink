@@ -15,7 +15,7 @@ export const customSupabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBL
   }
 });
 
-// Use this for any custom table queries that aren't yet defined in the types
+// Simpler typed client without excessive generics that can cause type instantiation issues
 export const typedSupabaseClient = {
   // Education table
   education: {
