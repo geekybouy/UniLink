@@ -20,6 +20,10 @@ export const fetchCommentsByPostId = async (postId: string): Promise<Comment[]> 
 
     if (error) throw error;
     
+    if (!data || data.length === 0) {
+      return [];
+    }
+    
     // Transform the data to match the Comment interface
     const comments: Comment[] = data.map((item: any) => ({
       id: item.id,
@@ -27,11 +31,11 @@ export const fetchCommentsByPostId = async (postId: string): Promise<Comment[]> 
       user_id: item.user_id,
       post_id: item.post_id,
       created_at: item.created_at,
-      updated_at: item.updated_at,
+      updated_at: item.updated_at || item.created_at,
       user: item.user ? {
-        full_name: item.user.full_name,
-        avatar_url: item.user.avatar_url
-      } : undefined
+        full_name: item.user.full_name || 'Unknown User',
+        avatar_url: item.user.avatar_url || null
+      } : { full_name: 'Unknown User', avatar_url: null }
     }));
     
     return comments;
@@ -80,11 +84,11 @@ export const addComment = async (postId: string, content: string, userId: string
       user_id: rawData.user_id,
       post_id: rawData.post_id,
       created_at: rawData.created_at,
-      updated_at: rawData.updated_at,
+      updated_at: rawData.updated_at || rawData.created_at,
       user: userData ? {
-        full_name: userData.full_name,
-        avatar_url: userData.avatar_url
-      } : undefined
+        full_name: userData.full_name || 'Unknown User',
+        avatar_url: userData.avatar_url || null
+      } : { full_name: 'Unknown User', avatar_url: null }
     };
     
     toast.success('Comment added');
