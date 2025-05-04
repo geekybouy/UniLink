@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
@@ -15,7 +16,7 @@ import * as postService from '@/services/knowledge/postService';
 import * as commentService from '@/services/knowledge/commentService';
 import * as userInteractionService from '@/services/knowledge/userInteractionService';
 import * as tagService from '@/services/knowledge/tagService';
-import * as dataFetchService from '@/services/knowledge/dataFetchService';
+import * as dataService from '@/services/knowledge/dataService';
 
 interface KnowledgeContextType {
   posts: Post[];
@@ -62,8 +63,8 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       // Run these in parallel
       const [postsData, featuredData, tagsData] = await Promise.all([
-        dataFetchService.fetchPosts(),
-        dataFetchService.fetchFeaturedPosts(),
+        dataService.fetchPosts(),
+        dataService.fetchFeaturedPosts(),
         tagService.fetchTags()
       ]);
       
@@ -74,8 +75,8 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // Only fetch these if user is logged in
       if (user) {
         const [userPostsData, bookmarkedPostsData] = await Promise.all([
-          dataFetchService.fetchUserPosts(user.id),
-          dataFetchService.fetchBookmarkedPosts(user.id)
+          dataService.fetchUserPosts(user.id),
+          dataService.fetchBookmarkedPosts(user.id)
         ]);
         
         setUserPosts(userPostsData);
