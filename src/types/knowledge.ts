@@ -1,6 +1,4 @@
 
-import { Database } from '@/integrations/supabase/types';
-
 export type ContentType = 'article' | 'link' | 'file' | 'image';
 
 export interface Tag {

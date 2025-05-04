@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -119,8 +118,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         // Fetch bookmarked posts
         const { data: bookmarksData, error: bookmarksError } = await supabase
           .from('bookmarks')
-          .select('post_id')
-          .eq('user_id', user.id);
+          .select('post_id');
 
         if (bookmarksError) throw bookmarksError;
 
@@ -181,10 +179,14 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         .eq('user_id', user.id)
         .in('post_id', postIds);
         
-      userVotes = (userVotesData || []).reduce((acc: Record<string, boolean>, vote) => {
-        acc[vote.post_id] = true;
-        return acc;
-      }, {});
+      if (userVotesData) {
+        userVotes = userVotesData.reduce((acc: Record<string, boolean>, vote) => {
+          if (vote && typeof vote === 'object' && 'post_id' in vote) {
+            acc[vote.post_id as string] = true;
+          }
+          return acc;
+        }, {});
+      }
       
       const { data: userBookmarksData } = await supabase
         .from('bookmarks')
@@ -192,25 +194,37 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         .eq('user_id', user.id)
         .in('post_id', postIds);
         
-      userBookmarks = (userBookmarksData || []).reduce((acc: Record<string, boolean>, bookmark) => {
-        acc[bookmark.post_id] = true;
-        return acc;
-      }, {});
+      if (userBookmarksData) {
+        userBookmarks = userBookmarksData.reduce((acc: Record<string, boolean>, bookmark) => {
+          if (bookmark && typeof bookmark === 'object' && 'post_id' in bookmark) {
+            acc[bookmark.post_id as string] = true;
+          }
+          return acc;
+        }, {});
+      }
     }
     
     // Count votes by post
     const voteCounts: Record<string, number> = {};
-    (votesData || []).forEach(vote => {
-      if (vote.is_upvote) {
-        voteCounts[vote.post_id] = (voteCounts[vote.post_id] || 0) + 1;
-      }
-    });
+    if (votesData) {
+      votesData.forEach(vote => {
+        if (vote && typeof vote === 'object' && 'post_id' in vote && 'is_upvote' in vote) {
+          if (vote.is_upvote) {
+            voteCounts[vote.post_id as string] = (voteCounts[vote.post_id as string] || 0) + 1;
+          }
+        }
+      });
+    }
     
     // Count comments by post
     const commentCounts: Record<string, number> = {};
-    (commentsData || []).forEach(comment => {
-      commentCounts[comment.post_id] = (commentCounts[comment.post_id] || 0) + 1;
-    });
+    if (commentsData) {
+      commentsData.forEach(comment => {
+        if (comment && typeof comment === 'object' && 'post_id' in comment) {
+          commentCounts[comment.post_id as string] = (commentCounts[comment.post_id as string] || 0) + 1;
+        }
+      });
+    }
     
     // Add counts to posts
     return posts.map((post: any) => ({
