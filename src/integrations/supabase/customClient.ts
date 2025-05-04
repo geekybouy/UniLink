@@ -1,12 +1,11 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { Database } from './types';
 
 // Get the URL and key from the existing client
 const SUPABASE_URL = "https://tchudsedvmebjqzewlyb.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjaHVkc2Vkdm1lYmpxemV3bHliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU2NTEzMDMsImV4cCI6MjA2MTIyNzMwM30.SPrcFlHeSyEkhlL7eituhogjR4WjaCuLXhl3UUk7-JQ";
 
-export const customSupabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+export const customSupabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
@@ -25,6 +24,7 @@ export const typedSupabaseClient = {
     delete: (id: string) => customSupabase.from('education').delete().eq('id', id),
     getByUserId: (userId: string) => customSupabase.from('education').select('*').eq('user_id', userId)
   },
+  
   // Skills table
   skills: {
     insert: (data: any) => customSupabase.from('skills').insert(data),
@@ -33,6 +33,7 @@ export const typedSupabaseClient = {
     delete: (id: string) => customSupabase.from('skills').delete().eq('id', id),
     getByUserId: (userId: string) => customSupabase.from('skills').select('*').eq('user_id', userId)
   },
+  
   // Social links table
   socialLinks: {
     insert: (data: any) => customSupabase.from('social_links').insert(data),
@@ -41,6 +42,7 @@ export const typedSupabaseClient = {
     delete: (id: string) => customSupabase.from('social_links').delete().eq('id', id),
     getByUserId: (userId: string) => customSupabase.from('social_links').select('*').eq('user_id', userId)
   },
+  
   // Work experience table
   workExperience: {
     insert: (data: any) => customSupabase.from('work_experience').insert(data),
@@ -49,6 +51,7 @@ export const typedSupabaseClient = {
     delete: (id: string) => customSupabase.from('work_experience').delete().eq('id', id),
     getByUserId: (userId: string) => customSupabase.from('work_experience').select('*').eq('user_id', userId)
   },
+  
   // Profiles table with additional methods
   profiles: {
     insert: (data: any) => customSupabase.from('profiles').insert(data),

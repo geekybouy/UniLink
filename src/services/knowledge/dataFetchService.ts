@@ -3,16 +3,65 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Post } from '@/types/knowledge';
 import { enrichPostsWithCounts } from './postService';
-import { hasNewPostsSchema, transformLegacyPost, extractUserInfo } from './dbSchemaService';
+import { 
+  hasNewPostsSchema, 
+  transformLegacyPost, 
+  extractUserInfo 
+} from './dbSchemaService';
+
+// Check schema support when initializing
+let schemaSupport = {
+  hasChecked: false,
+  hasNewSchema: false
+};
+
+const getSchemaSupport = async () => {
+  if (!schemaSupport.hasChecked) {
+    schemaSupport.hasNewSchema = await hasNewPostsSchema();
+    schemaSupport.hasChecked = true;
+  }
+  return schemaSupport.hasNewSchema;
+};
+
+// Process a post from the database to the expected Post format
+const processPost = (post: any, hasNewSchema: boolean): Post => {
+  // For legacy schema, transform the post
+  const processedPost = hasNewSchema ? post : transformLegacyPost(post);
+  
+  // Extract user info safely
+  const userInfo = extractUserInfo(processedPost);
+  
+  // Return a properly formatted Post object
+  return {
+    id: processedPost.id,
+    title: processedPost.title || 'Untitled Post',
+    content: processedPost.content || '',
+    user_id: processedPost.user_id,
+    content_type: processedPost.content_type || 'article',
+    file_url: processedPost.file_url || processedPost.image_url || null,
+    link_url: processedPost.link_url || null,
+    image_url: processedPost.image_url || null,
+    created_at: processedPost.created_at,
+    updated_at: processedPost.updated_at || processedPost.created_at,
+    is_featured: processedPost.is_featured || false,
+    is_approved: processedPost.is_approved || true,
+    user: userInfo,
+    tags: [],
+    votes_count: 0,
+    comments_count: 0,
+    user_has_voted: false,
+    user_has_bookmarked: false
+  } as Post;
+};
 
 // Fetch all approved posts
 export const fetchPosts = async (): Promise<Post[]> => {
   try {
     // Check if we have the new schema
-    const hasNewSchema = await hasNewPostsSchema();
+    const hasNewSchema = await getSchemaSupport();
 
     // Start building the query
-    const query = supabase
+    let query = supabase
       .from('posts')
       .select(`
         *,
@@ -24,7 +73,7 @@ export const fetchPosts = async (): Promise<Post[]> => {
 
     // Add is_approved filter if the schema supports it
     if (hasNewSchema) {
-      query.eq('is_approved', true);
+      query = query.eq('is_approved', true);
     }
     
     const { data, error } = await query.order('created_at', { ascending: false });
@@ -36,34 +85,7 @@ export const fetchPosts = async (): Promise<Post[]> => {
     }
     
     // Process posts to add tags, vote counts, etc.
-    const mappedPosts = data.map(post => {
-      // For legacy schema, transform the post
-      const processedPost = hasNewSchema ? post : transformLegacyPost(post);
-      
-      // Extract user info safely
-      const userInfo = extractUserInfo(processedPost);
-      
-      return {
-        id: processedPost.id,
-        title: processedPost.title || 'Untitled Post',
-        content: processedPost.content || '',
-        user_id: processedPost.user_id,
-        content_type: processedPost.content_type || 'article',
-        file_url: processedPost.file_url || processedPost.image_url || null,
-        link_url: processedPost.link_url || null,
-        image_url: processedPost.image_url || null,
-        created_at: processedPost.created_at,
-        updated_at: processedPost.updated_at || processedPost.created_at,
-        is_featured: processedPost.is_featured || false,
-        is_approved: processedPost.is_approved || true,
-        user: userInfo,
-        tags: [],
-        votes_count: 0,
-        comments_count: 0,
-        user_has_voted: false,
-        user_has_bookmarked: false
-      } as Post;
-    });
+    const mappedPosts = data.map(post => processPost(post, hasNewSchema));
     
     // Get votes counts
     const postsWithCounts = await enrichPostsWithCounts(mappedPosts);
@@ -79,7 +101,7 @@ export const fetchPosts = async (): Promise<Post[]> => {
 export const fetchFeaturedPosts = async (): Promise<Post[]> => {
   try {
     // Check if we have the new schema
-    const hasNewSchema = await hasNewPostsSchema();
+    const hasNewSchema = await getSchemaSupport();
       
     if (!hasNewSchema) {
       console.warn("Featured posts not supported with current schema");
@@ -105,32 +127,8 @@ export const fetchFeaturedPosts = async (): Promise<Post[]> => {
       return [];
     }
     
-    // Map and transform the posts
-    const mappedPosts = data.map(post => {
-      // Extract user info safely
-      const userInfo = extractUserInfo(post);
-
-      return {
-        id: post.id,
-        title: post.title || 'Untitled Post',
-        content: post.content || '',
-        user_id: post.user_id,
-        content_type: post.content_type || 'article',
-        file_url: post.file_url || null,
-        link_url: post.link_url || null,
-        image_url: post.image_url || null,
-        created_at: post.created_at,
-        updated_at: post.updated_at || post.created_at,
-        is_featured: post.is_featured || false,
-        is_approved: post.is_approved || true,
-        user: userInfo,
-        tags: [],
-        votes_count: 0,
-        comments_count: 0,
-        user_has_voted: false,
-        user_has_bookmarked: false
-      } as Post;
-    });
+    // Process posts
+    const mappedPosts = data.map(post => processPost(post, true));
     
     const featuredWithCounts = await enrichPostsWithCounts(mappedPosts);
     return featuredWithCounts;
@@ -165,37 +163,10 @@ export const fetchUserPosts = async (userId: string | undefined): Promise<Post[]
     }
     
     // Check if we have the new schema
-    const hasNewSchema = await hasNewPostsSchema();
+    const hasNewSchema = await getSchemaSupport();
     
-    // Map and transform the posts
-    const mappedPosts = data.map(post => {
-      // For legacy schema, transform the post
-      const processedPost = hasNewSchema ? post : transformLegacyPost(post);
-      
-      // Extract user info safely
-      const userInfo = extractUserInfo(processedPost);
-      
-      return {
-        id: processedPost.id,
-        title: processedPost.title || 'Untitled Post',
-        content: processedPost.content || '',
-        user_id: processedPost.user_id,
-        content_type: processedPost.content_type || 'article',
-        file_url: processedPost.file_url || processedPost.image_url || null,
-        link_url: processedPost.link_url || null,
-        image_url: processedPost.image_url || null,
-        created_at: processedPost.created_at,
-        updated_at: processedPost.updated_at || processedPost.created_at,
-        is_featured: processedPost.is_featured || false,
-        is_approved: processedPost.is_approved || true,
-        user: userInfo,
-        tags: [],
-        votes_count: 0,
-        comments_count: 0,
-        user_has_voted: false,
-        user_has_bookmarked: false
-      } as Post;
-    });
+    // Process posts
+    const mappedPosts = data.map(post => processPost(post, hasNewSchema));
     
     const userPostsWithCounts = await enrichPostsWithCounts(mappedPosts);
     return userPostsWithCounts;
@@ -239,37 +210,10 @@ export const fetchBookmarkedPosts = async (userId: string | undefined): Promise<
       }
       
       // Check if we have the new schema
-      const hasNewSchema = await hasNewPostsSchema();
+      const hasNewSchema = await getSchemaSupport();
       
-      // Map and transform the posts
-      const mappedPosts = bookmarkedPostsData.map(post => {
-        // For legacy schema, transform the post
-        const processedPost = hasNewSchema ? post : transformLegacyPost(post);
-        
-        // Extract user info safely
-        const userInfo = extractUserInfo(processedPost);
-        
-        return {
-          id: processedPost.id,
-          title: processedPost.title || 'Untitled Post',
-          content: processedPost.content || '',
-          user_id: processedPost.user_id,
-          content_type: processedPost.content_type || 'article',
-          file_url: processedPost.file_url || processedPost.image_url || null,
-          link_url: processedPost.link_url || null,
-          image_url: processedPost.image_url || null,
-          created_at: processedPost.created_at,
-          updated_at: processedPost.updated_at || processedPost.created_at,
-          is_featured: processedPost.is_featured || false,
-          is_approved: processedPost.is_approved || true,
-          user: userInfo,
-          tags: [],
-          votes_count: 0,
-          comments_count: 0,
-          user_has_voted: false,
-          user_has_bookmarked: false
-        } as Post;
-      });
+      // Process posts
+      const mappedPosts = bookmarkedPostsData.map(post => processPost(post, hasNewSchema));
       
       const bookmarkedWithCounts = await enrichPostsWithCounts(mappedPosts);
       return bookmarkedWithCounts;

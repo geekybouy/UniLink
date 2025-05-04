@@ -6,20 +6,25 @@ export interface TableColumn {
   data_type: string;
 }
 
-// Check if a column exists in a table
+// Safe check if a column exists in a table
 export const columnExists = async (tableName: string, columnName: string): Promise<boolean> => {
   try {
-    // Use system tables to check if column exists
-    const { data, error } = await supabase.from('posts')
-      .select('title')
-      .limit(1);
+    // Use a simple query to check if the column exists
+    // We'll directly query information_schema which is more reliable than using RPC
+    const { data, error } = await supabase
+      .from('information_schema.columns')
+      .select('column_name')
+      .eq('table_schema', 'public')
+      .eq('table_name', tableName)
+      .eq('column_name', columnName)
+      .maybeSingle();
     
-    // If the query succeeds and includes this column, it exists
-    if (!error && data !== null) {
-      // For title specifically, if it's part of the returned data object keys
-      return Object.prototype.hasOwnProperty.call(data[0] || {}, columnName);
+    if (error) {
+      console.error(`Error checking for column ${columnName}:`, error);
+      return false;
     }
-    return false;
+    
+    return data !== null && data.column_name === columnName;
   } catch (error) {
     console.error(`Error checking for column ${columnName} in table ${tableName}:`, error);
     return false;
@@ -33,14 +38,18 @@ export const hasNewPostsSchema = async (): Promise<boolean> => {
 
 // Transform legacy post data to match the new schema
 export const transformLegacyPost = (post: any) => {
-  const lines = (post.content || '').split('\n');
+  if (!post) return post;
+  
+  // Safely handle post content
+  const content = post.content || '';
+  const lines = content.split('\n');
   const title = lines.length > 0 ? lines[0] : 'Untitled Post';
-  const content = lines.length > 1 ? lines.slice(1).join('\n').trim() : '';
+  const newContent = lines.length > 1 ? lines.slice(1).join('\n').trim() : '';
   
   return {
     ...post,
     title,
-    content,
+    content: newContent,
     content_type: 'article', // Default for legacy posts
     file_url: post.image_url,
     link_url: null,
@@ -54,9 +63,14 @@ export const transformLegacyPost = (post: any) => {
 export const extractUserInfo = (post: any) => {
   let userInfo = { full_name: 'Unknown User', avatar_url: null };
   
-  if (post.user) {
-    // Check if user is a SelectQueryError or a valid object
-    if (typeof post.user === 'object' && !post.user.error) {
+  if (post && post.user) {
+    // Check if user is a valid object
+    if (typeof post.user === 'object') {
+      // If it's an error or doesn't have the expected fields, use default values
+      if (post.user.error || !post.user.full_name) {
+        return userInfo;
+      }
+      
       userInfo = {
         full_name: post.user.full_name || 'Unknown User',
         avatar_url: post.user.avatar_url || null

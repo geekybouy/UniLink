@@ -48,11 +48,12 @@ const ModToolbar: React.FC<ModToolbarProps> = ({ postId, isFeatured, onPostUpdat
     }
     
     try {
+      // Use type casting to bypass TypeScript checking since the schema might vary
+      const updateData = { is_featured: !isFeatured } as any;
+      
       const { error } = await supabase
         .from('posts')
-        .update({ 
-          is_featured: !isFeatured 
-        } as any)  // Using 'as any' to bypass TypeScript checking
+        .update(updateData)
         .eq('id', postId);
 
       if (error) throw error;
