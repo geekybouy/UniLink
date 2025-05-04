@@ -115,14 +115,16 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         const userPostsWithCounts = await enrichPostsWithCounts(userPostsData || []);
         setUserPosts(userPostsWithCounts);
 
-        // Fetch bookmarked posts using custom query to avoid type issues
+        // Fetch bookmarked posts using direct query instead of RPC
         const { data: bookmarksData, error: bookmarksError } = await supabase
-          .rpc('get_user_bookmarks', { user_id: user.id });
+          .from('bookmarks')
+          .select('post_id')
+          .eq('user_id', user.id);
 
         if (bookmarksError) throw bookmarksError;
 
         if (bookmarksData && bookmarksData.length > 0) {
-          const bookmarkedPostIds = bookmarksData.map((bookmark: any) => bookmark.post_id);
+          const bookmarkedPostIds = bookmarksData.map(bookmark => bookmark.post_id);
           const { data: bookmarkedPostsData, error: bookmarkedPostsError } = await supabase
             .from('posts')
             .select(`
@@ -140,6 +142,8 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           
           const bookmarkedWithCounts = await enrichPostsWithCounts(bookmarkedPostsData || []);
           setBookmarkedPosts(bookmarkedWithCounts);
+        } else {
+          setBookmarkedPosts([]);
         }
       }
     } catch (error: any) {
@@ -155,25 +159,29 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     
     const postIds = posts.map(post => post.id);
     
-    // Get votes counts using RPC
+    // Get votes counts using direct query instead of RPC
     const { data: votesData } = await supabase
-      .rpc('get_post_votes', { post_ids: postIds });
+      .from('votes')
+      .select('post_id, is_upvote')
+      .in('post_id', postIds);
     
-    // Get comments counts using RPC
+    // Get comments counts using direct query instead of RPC
     const { data: commentsData } = await supabase
-      .rpc('get_post_comments', { post_ids: postIds });
+      .from('comments')
+      .select('post_id, id')
+      .in('post_id', postIds);
     
     // Get user's votes and bookmarks if logged in
     let userVotes: Record<string, boolean> = {};
     let userBookmarks: Record<string, boolean> = {};
     
     if (user) {
-      // Get user votes using RPC
+      // Get user votes using direct query instead of RPC
       const { data: userVotesData } = await supabase
-        .rpc('get_user_post_votes', { 
-          user_id: user.id,
-          post_ids: postIds
-        });
+        .from('votes')
+        .select('post_id')
+        .eq('user_id', user.id)
+        .in('post_id', postIds);
         
       if (userVotesData && Array.isArray(userVotesData)) {
         userVotes = userVotesData.reduce((acc: Record<string, boolean>, vote: any) => {
@@ -184,12 +192,12 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }, {});
       }
       
-      // Get user bookmarks using RPC
+      // Get user bookmarks using direct query instead of RPC
       const { data: userBookmarksData } = await supabase
-        .rpc('get_user_post_bookmarks', {
-          user_id: user.id,
-          post_ids: postIds
-        });
+        .from('bookmarks')
+        .select('post_id')
+        .eq('user_id', user.id)
+        .in('post_id', postIds);
         
       if (userBookmarksData && Array.isArray(userBookmarksData)) {
         userBookmarks = userBookmarksData.reduce((acc: Record<string, boolean>, bookmark: any) => {
@@ -234,7 +242,8 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const fetchTags = async () => {
     try {
       const { data, error } = await supabase
-        .rpc('get_all_tags')
+        .from('tags')
+        .select('*')
         .order('name');
 
       if (error) throw error;
@@ -306,6 +315,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           tag_id: tagId
         }));
 
+        // Use the typedSupabaseClient for post_tags
         const { error: tagError } = await supabase
           .from('post_tags')
           .insert(tagInserts);
@@ -379,6 +389,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           tag_id: tagId
         }));
 
+        // Use direct insert instead of through typedClient
         const { error: tagError } = await supabase
           .from('post_tags')
           .insert(tagInserts);
@@ -431,7 +442,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             full_name,
             avatar_url
           ),
-          post_tags (
+          post_tags!inner (
             tag:tag_id (
               id,
               name

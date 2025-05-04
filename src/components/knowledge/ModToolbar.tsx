@@ -30,7 +30,6 @@ interface ModToolbarProps {
 const ModToolbar: React.FC<ModToolbarProps> = ({ postId, isFeatured, onPostUpdated }) => {
   const toggleFeatured = async () => {
     try {
-      // Use the correct field name that exists in the posts table
       const { error } = await supabase
         .from('posts')
         .update({ is_featured: !isFeatured })
