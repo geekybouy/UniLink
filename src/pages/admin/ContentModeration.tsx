@@ -68,18 +68,21 @@ const ContentModeration = () => {
             content: post.content || '',
             created_at: post.created_at || new Date().toISOString(),
             user_id: post.user_id || '',
-            // Handle the possibility of user being an error object
-            user: post.user && typeof post.user === 'object' && !post.user.error
-              ? { full_name: post.user.full_name || 'Unknown User', avatar_url: post.user.avatar_url }
+            // Handle the possibility of user being null or an error object
+            user: post.user && typeof post.user === 'object' && !('error' in post.user) 
+              ? { 
+                  full_name: post.user.full_name || 'Unknown User', 
+                  avatar_url: post.user.avatar_url 
+                }
               : { full_name: 'Unknown User' },
             // Add default values for fields that might not exist in the database
             content_type: 'article',
-            file_url: post.file_url || post.image_url || null,
+            file_url: post.image_url || null,
             link_url: null,
-            is_approved: post.is_approved || false,
-            is_featured: post.is_featured || false,
-            votes_count: post.votes_count || 0,
-            comments_count: post.comments_count || 0,
+            is_approved: false,
+            is_featured: false,
+            votes_count: 0,
+            comments_count: 0,
             user_has_voted: false,
             user_has_bookmarked: false,
             image_url: post.image_url || null
@@ -142,10 +145,8 @@ const ContentModeration = () => {
       const { error } = await supabase
         .from('posts')
         .update({ 
-          is_approved: true,
-          // If the column doesn't exist, this will be ignored
-          // Adding a fallback method to mark as approved
-          content: supabase.rpc('update_approval_in_content', { post_id: postId })
+          // Just update content directly without trying to use RPC
+          content: `[APPROVED] ${allPosts.find(p => p.id === postId)?.content || ''}` 
         })
         .eq('id', postId);
     
@@ -165,10 +166,8 @@ const ContentModeration = () => {
       const { error } = await supabase
         .from('posts')
         .update({ 
-          is_featured: true,
-          // If the column doesn't exist, this will be ignored
-          // Adding a fallback method to mark as featured
-          content: supabase.rpc('update_featuring_in_content', { post_id: postId })
+          // Just update content directly without trying to use RPC
+          content: `[FEATURED] ${allPosts.find(p => p.id === postId)?.content || ''}`
         })
         .eq('id', postId);
     
@@ -213,16 +212,17 @@ const ContentModeration = () => {
         if (confirm(`Are you sure you want to approve ${selectedPosts.length} posts?`)) {
           try {
             for (const postId of selectedPosts) {
-              const { error } = await supabase
-                .from('posts')
-                .update({ 
-                  is_approved: true,
-                  // If the column doesn't exist, this will be ignored
-                  content: supabase.rpc('update_approval_in_content', { post_id: postId })
-                })
-                .eq('id', postId);
-              
-              if (error) throw error;
+              const post = allPosts.find(p => p.id === postId);
+              if (post) {
+                const { error } = await supabase
+                  .from('posts')
+                  .update({ 
+                    content: `[APPROVED] ${post.content}`
+                  })
+                  .eq('id', postId);
+                
+                if (error) throw error;
+              }
             }
             
             toast.success(`${selectedPosts.length} posts approved successfully`);
@@ -239,16 +239,17 @@ const ContentModeration = () => {
         if (confirm(`Are you sure you want to feature ${selectedPosts.length} posts?`)) {
           try {
             for (const postId of selectedPosts) {
-              const { error } = await supabase
-                .from('posts')
-                .update({ 
-                  is_featured: true,
-                  // If the column doesn't exist, this will be ignored
-                  content: supabase.rpc('update_featuring_in_content', { post_id: postId })
-                })
-                .eq('id', postId);
-              
-              if (error) throw error;
+              const post = allPosts.find(p => p.id === postId);
+              if (post) {
+                const { error } = await supabase
+                  .from('posts')
+                  .update({ 
+                    content: `[FEATURED] ${post.content}`
+                  })
+                  .eq('id', postId);
+                
+                if (error) throw error;
+              }
             }
             
             toast.success(`${selectedPosts.length} posts featured successfully`);
