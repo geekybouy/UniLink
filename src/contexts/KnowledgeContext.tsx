@@ -115,15 +115,14 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         const userPostsWithCounts = await enrichPostsWithCounts(userPostsData || []);
         setUserPosts(userPostsWithCounts);
 
-        // Fetch bookmarked posts
+        // Fetch bookmarked posts using custom query to avoid type issues
         const { data: bookmarksData, error: bookmarksError } = await supabase
-          .from('bookmarks')
-          .select('post_id');
+          .rpc('get_user_bookmarks', { user_id: user.id });
 
         if (bookmarksError) throw bookmarksError;
 
         if (bookmarksData && bookmarksData.length > 0) {
-          const bookmarkedPostIds = bookmarksData.map(bookmark => bookmark.post_id);
+          const bookmarkedPostIds = bookmarksData.map((bookmark: any) => bookmark.post_id);
           const { data: bookmarkedPostsData, error: bookmarkedPostsError } = await supabase
             .from('posts')
             .select(`
@@ -156,48 +155,46 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     
     const postIds = posts.map(post => post.id);
     
-    // Get votes counts
+    // Get votes counts using RPC
     const { data: votesData } = await supabase
-      .from('votes')
-      .select('post_id, is_upvote')
-      .in('post_id', postIds);
+      .rpc('get_post_votes', { post_ids: postIds });
     
-    // Get comments counts
+    // Get comments counts using RPC
     const { data: commentsData } = await supabase
-      .from('comments')
-      .select('post_id, id')
-      .in('post_id', postIds);
+      .rpc('get_post_comments', { post_ids: postIds });
     
     // Get user's votes and bookmarks if logged in
     let userVotes: Record<string, boolean> = {};
     let userBookmarks: Record<string, boolean> = {};
     
     if (user) {
+      // Get user votes using RPC
       const { data: userVotesData } = await supabase
-        .from('votes')
-        .select('post_id')
-        .eq('user_id', user.id)
-        .in('post_id', postIds);
+        .rpc('get_user_post_votes', { 
+          user_id: user.id,
+          post_ids: postIds
+        });
         
-      if (userVotesData) {
-        userVotes = userVotesData.reduce((acc: Record<string, boolean>, vote) => {
-          if (vote && typeof vote === 'object' && 'post_id' in vote) {
-            acc[vote.post_id as string] = true;
+      if (userVotesData && Array.isArray(userVotesData)) {
+        userVotes = userVotesData.reduce((acc: Record<string, boolean>, vote: any) => {
+          if (vote && typeof vote === 'object' && vote.post_id) {
+            acc[vote.post_id] = true;
           }
           return acc;
         }, {});
       }
       
+      // Get user bookmarks using RPC
       const { data: userBookmarksData } = await supabase
-        .from('bookmarks')
-        .select('post_id')
-        .eq('user_id', user.id)
-        .in('post_id', postIds);
+        .rpc('get_user_post_bookmarks', {
+          user_id: user.id,
+          post_ids: postIds
+        });
         
-      if (userBookmarksData) {
-        userBookmarks = userBookmarksData.reduce((acc: Record<string, boolean>, bookmark) => {
-          if (bookmark && typeof bookmark === 'object' && 'post_id' in bookmark) {
-            acc[bookmark.post_id as string] = true;
+      if (userBookmarksData && Array.isArray(userBookmarksData)) {
+        userBookmarks = userBookmarksData.reduce((acc: Record<string, boolean>, bookmark: any) => {
+          if (bookmark && typeof bookmark === 'object' && bookmark.post_id) {
+            acc[bookmark.post_id] = true;
           }
           return acc;
         }, {});
@@ -206,22 +203,20 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     
     // Count votes by post
     const voteCounts: Record<string, number> = {};
-    if (votesData) {
-      votesData.forEach(vote => {
-        if (vote && typeof vote === 'object' && 'post_id' in vote && 'is_upvote' in vote) {
-          if (vote.is_upvote) {
-            voteCounts[vote.post_id as string] = (voteCounts[vote.post_id as string] || 0) + 1;
-          }
+    if (votesData && Array.isArray(votesData)) {
+      votesData.forEach((vote: any) => {
+        if (vote && typeof vote === 'object' && vote.post_id && vote.is_upvote) {
+          voteCounts[vote.post_id] = (voteCounts[vote.post_id] || 0) + 1;
         }
       });
     }
     
     // Count comments by post
     const commentCounts: Record<string, number> = {};
-    if (commentsData) {
-      commentsData.forEach(comment => {
-        if (comment && typeof comment === 'object' && 'post_id' in comment) {
-          commentCounts[comment.post_id as string] = (commentCounts[comment.post_id as string] || 0) + 1;
+    if (commentsData && Array.isArray(commentsData)) {
+      commentsData.forEach((comment: any) => {
+        if (comment && typeof comment === 'object' && comment.post_id) {
+          commentCounts[comment.post_id] = (commentCounts[comment.post_id] || 0) + 1;
         }
       });
     }
@@ -239,8 +234,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const fetchTags = async () => {
     try {
       const { data, error } = await supabase
-        .from('tags')
-        .select('*')
+        .rpc('get_all_tags')
         .order('name');
 
       if (error) throw error;
