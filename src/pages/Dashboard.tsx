@@ -34,7 +34,7 @@ import { UpcomingEvents } from '@/components/dashboard/UpcomingEvents';
 import { ShieldCheck } from "lucide-react";
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const { profile, refreshProfile, loading } = useProfile();
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);

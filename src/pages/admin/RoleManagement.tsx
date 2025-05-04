@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -111,15 +110,19 @@ const RoleManagement = () => {
       // Fetch roles for each user
       if (profilesData) {
         const usersWithRoles = await Promise.all(profilesData.map(async (profile) => {
+          // Convert numeric ID to string if needed
+          const profileId = profile.id.toString();
+          
           const { data: rolesData, error: rolesError } = await supabase
             .from('user_roles')
             .select('role')
-            .eq('user_id', profile.id);
+            .eq('user_id', profileId);
             
           if (rolesError) throw rolesError;
           
           return {
             ...profile,
+            id: profileId, // Ensure ID is a string
             roles: rolesData?.map(r => r.role as UserRole) || []
           };
         }));
@@ -155,21 +158,21 @@ const RoleManagement = () => {
       const userRoles = users.find(u => u.id === userId)?.roles || [];
       
       if (userRoles.includes(role)) {
-        // Remove role
+        // Remove role - convert role to string to match expected type
         const { error } = await supabase
           .from('user_roles')
           .delete()
           .eq('user_id', userId)
-          .eq('role', role);
+          .eq('role', role as any); // Type casting to work with Supabase's expected type
         
         if (error) throw error;
         
         toast.success(`Role '${role}' removed successfully`);
       } else {
-        // Add role
+        // Add role - convert role to string to match expected type
         const { error } = await supabase
           .from('user_roles')
-          .insert({ user_id: userId, role });
+          .insert({ user_id: userId, role: role as any }); // Type casting to work with Supabase's expected type
         
         if (error) throw error;
         

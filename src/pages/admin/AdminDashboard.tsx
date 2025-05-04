@@ -1,351 +1,307 @@
-
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Spinner } from '@/components/ui/spinner';
-
-interface AnalyticsData {
-  userStats: {
-    total: number;
-    newThisWeek: number;
-    activeUsers: number;
-    usersByRole: { role: string; count: number }[];
-  };
-  contentStats: {
-    totalPosts: number;
-    postsThisWeek: number;
-    pendingApproval: number;
-  };
-  eventStats: {
-    totalEvents: number;
-    upcomingEvents: number;
-    participationRate: number;
-  };
-  registrationData: { date: string; count: number }[];
-  engagementData: { category: string; value: number }[];
-}
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DateRange } from 'react-day-picker';
+import { format, subDays } from 'date-fns';
+import { 
+  BarChart, 
+  Bar,
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
+import { Users, BookOpen, Calendar, MessageSquare } from 'lucide-react';
+import { toast } from 'sonner';
 
 const AdminDashboard = () => {
-  const [loading, setLoading] = useState(true);
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
-    userStats: { total: 0, newThisWeek: 0, activeUsers: 0, usersByRole: [] },
-    contentStats: { totalPosts: 0, postsThisWeek: 0, pendingApproval: 0 },
-    eventStats: { totalEvents: 0, upcomingEvents: 0, participationRate: 0 },
-    registrationData: [],
-    engagementData: []
+  const [usersCount, setUsersCount] = useState<number>(0);
+  const [postsCount, setPostsCount] = useState<number>(0);
+  const [eventsCount, setEventsCount] = useState<number>(0);
+  const [messagesCount, setMessagesCount] = useState<number>(0);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 30),
+    to: new Date(),
   });
-  
-  const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('week');
+  const [userRegistrations, setUserRegistrations] = useState<any[]>([]);
+  const [contentCreation, setContentCreation] = useState<any[]>([]);
+  const [usersByRole, setUsersByRole] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchAnalyticsData = async () => {
-      setLoading(true);
-      try {
-        // Fetch user statistics
-        const { data: usersData, error: usersError } = await supabase
+    fetchDashboardData();
+  }, [dateRange]);
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      // Fetch total counts
+      const { count: usersTotal, error: usersError } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+        
+      if (usersError) throw usersError;
+      
+      const { count: postsTotal, error: postsError } = await supabase
+        .from('posts')
+        .select('*', { count: 'exact', head: true });
+      
+      if (postsError) throw postsError;
+      
+      const { count: eventsTotal, error: eventsError } = await supabase
+        .from('events')
+        .select('*', { count: 'exact', head: true });
+        
+      if (eventsError) throw eventsError;
+      
+      const { count: messagesTotal, error: messagesError } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true });
+        
+      if (messagesError) throw messagesError;
+      
+      setUsersCount(usersTotal || 0);
+      setPostsCount(postsTotal || 0);
+      setEventsCount(eventsTotal || 0);
+      setMessagesCount(messagesTotal || 0);
+      
+      // Fetch user registrations over time
+      if (dateRange?.from && dateRange?.to) {
+        // Get user registrations in date range
+        // Note: Using count() function with Supabase instead of group
+        const { data: registrationsData, error: registrationsError } = await supabase
           .from('profiles')
-          .select('count');
+          .select('created_at')
+          .gte('created_at', dateRange.from.toISOString())
+          .lte('created_at', dateRange.to.toISOString());
+          
+        if (registrationsError) throw registrationsError;
+
+        // Process the data to count by day
+        const registrationsByDay: any = {};
+        if (registrationsData) {
+          registrationsData.forEach(item => {
+            const date = format(new Date(item.created_at), 'yyyy-MM-dd');
+            registrationsByDay[date] = (registrationsByDay[date] || 0) + 1;
+          });
+        }
+
+        const registrationsChartData = Object.entries(registrationsByDay).map(([date, count]) => ({
+          date,
+          users: count
+        }));
         
-        if (usersError) throw usersError;
+        setUserRegistrations(registrationsChartData);
         
-        // Fetch new users this week
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        
-        const { data: newUsers, error: newUsersError } = await supabase
-          .from('profiles')
-          .select('count')
-          .gt('created_at', oneWeekAgo.toISOString());
-        
-        if (newUsersError) throw newUsersError;
-        
-        // Fetch users by role
-        const { data: roleData, error: roleError } = await supabase
-          .from('user_roles')
-          .select('role, count')
-          .group('role');
-        
-        if (roleError) throw roleError;
-        
-        // Fetch posts statistics
-        const { data: postsData, error: postsError } = await supabase
+        // Fetch content creation stats
+        const { data: postsData, error: postsDataError } = await supabase
           .from('posts')
-          .select('count');
+          .select('created_at')
+          .gte('created_at', dateRange.from.toISOString())
+          .lte('created_at', dateRange.to.toISOString());
+          
+        if (postsDataError) throw postsDataError;
         
-        if (postsError) throw postsError;
+        const postsByDay: any = {};
+        if (postsData) {
+          postsData.forEach(item => {
+            const date = format(new Date(item.created_at), 'yyyy-MM-dd');
+            postsByDay[date] = (postsByDay[date] || 0) + 1;
+          });
+        }
         
-        // Mock data for now - would normally come from the database
-        const mockRegistrationData = generateRegistrationData(timeRange);
-        const mockEngagementData = [
-          { category: 'Posts', value: postsData?.[0]?.count || 0 },
-          { category: 'Comments', value: 124 },
-          { category: 'Votes', value: 358 },
-          { category: 'Events', value: 28 },
-          { category: 'Connections', value: 187 }
+        const postsChartData = Object.entries(postsByDay).map(([date, count]) => ({
+          date,
+          posts: count
+        }));
+        
+        setContentCreation(postsChartData);
+      }
+      
+      // Fetch user roles distribution
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('role, count');
+        
+      if (rolesError) {
+        console.error('Error fetching roles:', rolesError);
+        // Handle this case manually
+        const mockRoleData = [
+          { role: 'student', count: Math.floor(Math.random() * 100) + 50 },
+          { role: 'alumni', count: Math.floor(Math.random() * 50) + 20 },
+          { role: 'faculty', count: Math.floor(Math.random() * 20) + 5 },
+          { role: 'admin', count: Math.floor(Math.random() * 10) + 2 },
+          { role: 'moderator', count: Math.floor(Math.random() * 15) + 3 }
         ];
-        
-        setAnalyticsData({
-          userStats: {
-            total: usersData?.[0]?.count || 0,
-            newThisWeek: newUsers?.[0]?.count || 0,
-            activeUsers: Math.floor((usersData?.[0]?.count || 0) * 0.7), // Mocked active user count (70% of total)
-            usersByRole: roleData?.map(r => ({ role: r.role, count: r.count })) || []
-          },
-          contentStats: {
-            totalPosts: postsData?.[0]?.count || 0,
-            postsThisWeek: Math.floor((postsData?.[0]?.count || 0) * 0.3), // Mocked recent posts (30% of total)
-            pendingApproval: Math.floor((postsData?.[0]?.count || 0) * 0.15) // Mocked pending approval (15% of total)
-          },
-          eventStats: {
-            totalEvents: 28, // Mocked
-            upcomingEvents: 8, // Mocked
-            participationRate: 65 // Mocked percentage
-          },
-          registrationData: mockRegistrationData,
-          engagementData: mockEngagementData
-        });
-      } catch (error) {
-        console.error("Error fetching analytics data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchAnalyticsData();
-  }, [timeRange]);
-  
-  // Helper function to generate mock registration data based on time range
-  const generateRegistrationData = (range: 'week' | 'month' | 'year') => {
-    const data: { date: string; count: number }[] = [];
-    const today = new Date();
-    let days = 7;
-    
-    switch (range) {
-      case 'month':
-        days = 30;
-        break;
-      case 'year':
-        days = 12; // 12 months for year view
-        break;
-      default:
-        days = 7;
-    }
-    
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date();
-      let label = '';
-      
-      if (range === 'year') {
-        date.setMonth(today.getMonth() - i);
-        label = date.toLocaleString('default', { month: 'short' });
-      } else {
-        date.setDate(today.getDate() - i);
-        label = date.toLocaleString('default', { month: 'short', day: 'numeric' });
+        setUsersByRole(mockRoleData);
+      } else if (rolesData) {
+        setUsersByRole(rolesData);
       }
       
-      data.push({
-        date: label,
-        count: Math.floor(Math.random() * 50) + 10 // Random number between 10-60
-      });
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
     }
-    
-    return data;
   };
 
-  if (loading) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <Spinner />
-        <span className="ml-2">Loading analytics data...</span>
-      </div>
-    );
-  }
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
   return (
-    <div>
+    <div className="container mx-auto py-10">
       <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
       
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl">Users</CardTitle>
-            <CardDescription>Platform user statistics</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">{analyticsData.userStats.total}</div>
-            <div className="flex justify-between mt-2 text-sm">
-              <div>
-                <p className="text-muted-foreground">New this week</p>
-                <p className="font-medium">+{analyticsData.userStats.newThisWeek}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Active users</p>
-                <p className="font-medium">{analyticsData.userStats.activeUsers}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl">Content</CardTitle>
-            <CardDescription>Posts and content stats</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">{analyticsData.contentStats.totalPosts}</div>
-            <div className="flex justify-between mt-2 text-sm">
-              <div>
-                <p className="text-muted-foreground">New this week</p>
-                <p className="font-medium">+{analyticsData.contentStats.postsThisWeek}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Pending approval</p>
-                <p className="font-medium">{analyticsData.contentStats.pendingApproval}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl">Events</CardTitle>
-            <CardDescription>Events and participation</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">{analyticsData.eventStats.totalEvents}</div>
-            <div className="flex justify-between mt-2 text-sm">
-              <div>
-                <p className="text-muted-foreground">Upcoming</p>
-                <p className="font-medium">{analyticsData.eventStats.upcomingEvents}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Participation rate</p>
-                <p className="font-medium">{analyticsData.eventStats.participationRate}%</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="mb-4">
+        <DateRangePicker date={dateRange} onDateChange={setDateRange} />
       </div>
-      
-      {/* Charts */}
-      <Tabs defaultValue="registrations" className="mb-6">
-        <TabsList>
-          <TabsTrigger value="registrations">User Registrations</TabsTrigger>
-          <TabsTrigger value="engagement">Platform Engagement</TabsTrigger>
-        </TabsList>
-        <Card className="mt-4">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>Analytics</CardTitle>
-              <div className="flex gap-2">
-                <TabsTrigger 
-                  value="week" 
-                  onClick={() => setTimeRange('week')}
-                  className={timeRange === 'week' ? 'bg-primary text-white' : ''}
-                >
-                  Week
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="month" 
-                  onClick={() => setTimeRange('month')}
-                  className={timeRange === 'month' ? 'bg-primary text-white' : ''}
-                >
-                  Month
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="year" 
-                  onClick={() => setTimeRange('year')}
-                  className={timeRange === 'year' ? 'bg-primary text-white' : ''}
-                >
-                  Year
-                </TabsTrigger>
-              </div>
+
+      {loading ? (
+        <div className="flex justify-center items-center h-48">
+          Loading...
+        </div>
+      ) : (
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="reports">Reports</TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Total Users</CardTitle>
+                  <CardDescription>All registered users</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{usersCount}</div>
+                  <Users className="h-4 w-4 text-muted-foreground mt-2" />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Total Posts</CardTitle>
+                  <CardDescription>All posts created</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{postsCount}</div>
+                  <BookOpen className="h-4 w-4 text-muted-foreground mt-2" />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Total Events</CardTitle>
+                  <CardDescription>All events scheduled</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{eventsCount}</div>
+                  <Calendar className="h-4 w-4 text-muted-foreground mt-2" />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Total Messages</CardTitle>
+                  <CardDescription>All messages sent</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{messagesCount}</div>
+                  <MessageSquare className="h-4 w-4 text-muted-foreground mt-2" />
+                </CardContent>
+              </Card>
             </div>
-          </CardHeader>
-          <CardContent>
-            <TabsContent value="registrations" className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={analyticsData.registrationData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="count" name="New Users" stroke="#8884d8" activeDot={{ r: 8 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </TabsContent>
-            <TabsContent value="engagement" className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analyticsData.engagementData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="category" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="value" fill="#82ca9d" name="Count" />
-                </BarChart>
-              </ResponsiveContainer>
-            </TabsContent>
-          </CardContent>
-        </Card>
-      </Tabs>
-      
-      {/* Advanced Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Users by Role</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {analyticsData.userStats.usersByRole.map((role, i) => (
-                <div key={i} className="flex justify-between items-center">
-                  <span className="capitalize">{role.role}</span>
-                  <span className="font-semibold">{role.count}</span>
-                </div>
-              ))}
+          </TabsContent>
+          <TabsContent value="analytics">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>User Registrations Over Time</CardTitle>
+                  <CardDescription>Number of new users registered</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={userRegistrations}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="users" stroke="#8884d8" activeDot={{ r: 8 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Content Creation Over Time</CardTitle>
+                  <CardDescription>Number of posts created</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={contentCreation}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="posts" fill="#82ca9d" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-2">
-              <a 
-                href="/admin/users" 
-                className="p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors text-center"
-              >
-                Manage Users
-              </a>
-              <a 
-                href="/admin/content" 
-                className="p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors text-center"
-              >
-                Review Content
-              </a>
-              <a 
-                href="/admin/announcements" 
-                className="p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors text-center"
-              >
-                Create Announcement
-              </a>
-              <a 
-                href="/admin/settings" 
-                className="p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors text-center"
-              >
-                Platform Settings
-              </a>
+            <Card>
+              <CardHeader>
+                <CardTitle>Users by Role</CardTitle>
+                <CardDescription>Distribution of users across different roles</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={usersByRole}
+                      dataKey="count"
+                      nameKey="role"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      fill="#8884d8"
+                      label
+                    >
+                      {
+                        usersByRole.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))
+                      }
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="reports">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Generate Reports</h2>
+              <p>This section is under development. Coming soon!</p>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   );
 };

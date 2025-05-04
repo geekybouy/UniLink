@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -33,11 +32,14 @@ import { format } from 'date-fns';
 import { BellRing, CalendarIcon, Edit, Eye, Trash, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
+// Fixing the type definition for announcement type
+type AnnouncementType = 'info' | 'warning' | 'success' | 'error';
+
 interface Announcement {
   id: string;
   title: string;
   content: string;
-  type: 'info' | 'warning' | 'success' | 'error';
+  type: AnnouncementType;
   created_at: string;
   created_by: string;
   created_by_name: string;
@@ -57,7 +59,7 @@ const AnnouncementPage = () => {
   const [newAnnouncement, setNewAnnouncement] = useState({
     title: '',
     content: '',
-    type: 'info',
+    type: 'info' as AnnouncementType,
     start_date: new Date(),
     end_date: null as Date | null,
     is_active: true,
@@ -255,14 +257,14 @@ const AnnouncementPage = () => {
     }
   };
   
-  const getAnnouncementTypeBadge = (type: string) => {
+  const getAnnouncementTypeBadge = (type: AnnouncementType) => {
     switch (type) {
       case 'info':
         return <Badge variant="secondary">Info</Badge>;
       case 'warning':
-        return <Badge variant="warning" className="bg-amber-500">Warning</Badge>;
+        return <Badge variant="outline" className="bg-amber-500 text-white">Warning</Badge>;
       case 'success':
-        return <Badge variant="success" className="bg-green-600">Success</Badge>;
+        return <Badge variant="outline" className="bg-green-600 text-white">Success</Badge>;
       case 'error':
         return <Badge variant="destructive">Important</Badge>;
       default:
@@ -495,18 +497,7 @@ const AnnouncementPage = () => {
               <Button variant="outline" size="sm" onClick={() => handleViewAnnouncement(announcement)}>
                 <Eye className="h-4 w-4 mr-2" /> View
               </Button>
-              <Button 
-                variant={announcement.is_active ? "destructive" : "success"} 
-                size="sm"
-                className={announcement.is_active ? '' : 'bg-green-600 hover:bg-green-700'}
-                onClick={() => handleToggleActive(announcement.id, !announcement.is_active)}
-              >
-                {announcement.is_active 
-                  ? <CheckCircle2 className="h-4 w-4 mr-2" /> 
-                  : <CheckCircle2 className="h-4 w-4 mr-2" />
-                }
-                {announcement.is_active ? 'Deactivate' : 'Activate'}
-              </Button>
+              {renderActivateButton(announcement)}
               <Button variant="outline" size="sm" onClick={() => handleDeleteAnnouncement(announcement.id)}>
                 <Trash className="h-4 w-4 mr-2" /> Delete
               </Button>

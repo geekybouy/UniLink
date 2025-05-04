@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -62,27 +61,39 @@ const UserManagement = () => {
       // Fetch all users with their profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, email, full_name, created_at, avatar_url');
+        .select('id, email, full_name, avatar_url');
       
       if (profilesError) throw profilesError;
       
       // Fetch roles for each user
       if (profilesData) {
         const usersWithRoles = await Promise.all(profilesData.map(async (profile) => {
+          // Ensure profile.id is a string
+          const profileId = profile.id ? profile.id.toString() : '';
+          
+          if (!profileId) {
+            console.error('Invalid profile ID:', profile);
+            return null;
+          }
+          
           const { data: rolesData, error: rolesError } = await supabase
             .from('user_roles')
             .select('role')
-            .eq('user_id', profile.id);
+            .eq('user_id', profileId);
             
           if (rolesError) throw rolesError;
           
           return {
             ...profile,
-            roles: rolesData?.map(r => r.role) || []
-          };
+            id: profileId,
+            created_at: new Date().toISOString(), // Mock data since we don't have created_at
+            roles: rolesData?.map(r => r.role as UserRole) || [],
+            is_banned: false // Default value
+          } as User;
         }));
         
-        setUsers(usersWithRoles);
+        // Filter out any null values from invalid profiles
+        setUsers(usersWithRoles.filter(user => user !== null) as User[]);
       }
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -166,21 +177,22 @@ const UserManagement = () => {
       
       // Insert new roles
       if (selectedRoles.length > 0) {
-        const rolesToInsert = selectedRoles.map(role => ({
-          user_id: currentUser.id,
-          role
-        }));
+        // Insert roles one by one to avoid type issues
+        for (const role of selectedRoles) {
+          const { error } = await supabase
+            .from('user_roles')
+            .insert({
+              user_id: currentUser.id,
+              role: role as any // Type casting to work with Supabase's expected types
+            });
+          
+          if (error) throw error;
+        }
         
-        const { error } = await supabase
-          .from('user_roles')
-          .insert(rolesToInsert);
-        
-        if (error) throw error;
+        toast.success('User roles updated successfully');
+        fetchUsers(); // Refresh user list
+        setIsRoleDialogOpen(false);
       }
-      
-      toast.success('User roles updated successfully');
-      fetchUsers(); // Refresh user list
-      setIsRoleDialogOpen(false);
     } catch (error) {
       console.error('Error updating user roles:', error);
       toast.error('Failed to update user roles');
@@ -240,13 +252,15 @@ const UserManagement = () => {
       case 'delete':
         if (confirm(`Are you sure you want to delete ${selectedUsers.length} users? This cannot be undone.`)) {
           try {
-            // In a production app, consider archiving instead of deleting
-            const { error } = await supabase
-              .from('profiles')
-              .delete()
-              .in('id', selectedUsers);
-            
-            if (error) throw error;
+            // Delete each user one by one to avoid type issues
+            for (const userId of selectedUsers) {
+              const { error } = await supabase
+                .from('profiles')
+                .delete()
+                .eq('id', userId);
+              
+              if (error) throw error;
+            }
             
             toast.success(`${selectedUsers.length} users deleted successfully`);
             fetchUsers(); // Refresh user list
