@@ -1,4 +1,3 @@
-
 import React from 'react';
 import MainLayout from '@/layouts/MainLayout';
 import { useNotifications } from '@/contexts/NotificationsContext';
@@ -32,7 +31,7 @@ const NotificationSettingsPage = () => {
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ');
         }
-        return String(type);
+        return 'Unknown Notification Type';
     }
   };
 

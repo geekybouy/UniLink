@@ -8,7 +8,11 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { ChevronLeft, Users, FileText, BarChart2, Settings, Bell, Shield, FileSearch, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const AdminLayout = () => {
+interface AdminLayoutProps {
+  children?: React.ReactNode;
+}
+
+const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const { user, isLoading, hasRole } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -128,7 +132,7 @@ const AdminLayout = () => {
         </Sidebar>
         
         <div className={`flex-1 p-8 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
-          <Outlet />
+          {children || <Outlet />}
         </div>
       </div>
     </SidebarProvider>
