@@ -65,3 +65,17 @@ export function truncate(str: string, length: number): string {
 export function range(start: number, end: number): number[] {
   return Array.from({ length: end - start + 1 }, (_, i) => start + i);
 }
+
+/**
+ * Extracts initials from a person's name
+ */
+export function getInitials(name: string): string {
+  if (!name) return '';
+  
+  return name
+    .split(' ')
+    .map(part => part[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2);
+}
