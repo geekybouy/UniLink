@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
@@ -12,7 +11,7 @@ import {
 } from '@/types/knowledge';
 
 // Import services
-import * as postService from '@/services/knowledge/postService';
+import * as postService from '@/services/knowledge/postService'; 
 import * as commentService from '@/services/knowledge/commentService';
 import * as userInteractionService from '@/services/knowledge/userInteractionService';
 import * as tagService from '@/services/knowledge/tagService';
