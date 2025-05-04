@@ -1,10 +1,9 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 
 // Define user role type
-export type UserRole = 'student' | 'alumni' | 'admin' | 'faculty';
+export type UserRole = 'student' | 'alumni' | 'admin' | 'faculty' | 'moderator';
 
 interface AuthContextType {
   user: User | null;
@@ -18,7 +17,8 @@ interface AuthContextType {
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, fullName: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
-  hasRole: (role: UserRole) => boolean;
+  hasRole: (role: UserRole) => Promise<boolean>;
+  getUserRoles: () => Promise<UserRole[]>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,6 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -35,6 +36,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Fetch user roles when auth state changes
+        if (session?.user) {
+          fetchUserRoles(session.user.id);
+        } else {
+          setUserRoles([]);
+        }
       }
     );
 
@@ -42,6 +50,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      // Fetch user roles if session exists
+      if (session?.user) {
+        fetchUserRoles(session.user.id);
+      }
+      
       setLoading(false);
     });
 
@@ -50,8 +64,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Fetch user roles from database
+  const fetchUserRoles = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Error fetching user roles:', error);
+        return;
+      }
+
+      if (data) {
+        // Map roles from database to UserRole type
+        const roles = data.map(item => item.role as UserRole);
+        setUserRoles(roles);
+      }
+    } catch (error) {
+      console.error('Error in fetchUserRoles:', error);
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
+    setUserRoles([]);
   };
 
   // Implement the missing methods
@@ -88,10 +126,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Function to check if a user has a specific role
-  const hasRole = (role: UserRole): boolean => {
-    // This is a placeholder - in a real implementation, you would check against user roles
-    // stored in your database or user metadata
-    return true; // Implement proper role checking logic later
+  const hasRole = async (role: UserRole): Promise<boolean> => {
+    // First check cached roles
+    if (userRoles.includes(role)) {
+      return true;
+    }
+    
+    // If no cached roles or role not found, check database
+    if (user) {
+      try {
+        const { data, error } = await supabase
+          .rpc('has_role', { user_id: user.id, role });
+        
+        if (error) throw error;
+        return !!data;
+      } catch (error) {
+        console.error('Error checking user role:', error);
+        return false;
+      }
+    }
+    
+    return false;
+  };
+  
+  // Function to get all roles for the current user
+  const getUserRoles = async (): Promise<UserRole[]> => {
+    // Return cached roles if available
+    if (userRoles.length > 0) {
+      return userRoles;
+    }
+    
+    // Otherwise fetch from database
+    if (user) {
+      try {
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+        
+        if (error) throw error;
+        
+        if (data) {
+          const roles = data.map(item => item.role as UserRole);
+          setUserRoles(roles);
+          return roles;
+        }
+      } catch (error) {
+        console.error('Error fetching user roles:', error);
+      }
+    }
+    
+    return [];
   };
 
   const value = {
@@ -104,7 +189,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithEmail,
     signUpWithEmail,
     resetPassword,
-    hasRole
+    hasRole,
+    getUserRoles
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

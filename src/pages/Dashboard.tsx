@@ -31,12 +31,14 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { UpcomingEvents } from '@/components/dashboard/UpcomingEvents';
+import { ShieldCheck } from "lucide-react";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const { profile, refreshProfile, loading } = useProfile();
   const [isLoading, setIsLoading] = useState(true);
-
+  const [isAdmin, setIsAdmin] = useState(false);
+  
   useEffect(() => {
     const loadProfileData = async () => {
       setIsLoading(true);
@@ -52,9 +54,35 @@ const Dashboard: React.FC = () => {
     loadProfileData();
   }, [refreshProfile]);
 
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      const admin = await hasRole('admin');
+      setIsAdmin(admin);
+    };
+    
+    checkAdminRole();
+  }, [hasRole]);
+
   return (
     <MainLayout>
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+        
+        {isAdmin && (
+          <div className="mb-6 p-4 border rounded-lg bg-muted/10">
+            <div className="flex items-center">
+              <ShieldCheck className="h-5 w-5 mr-2 text-primary" />
+              <h2 className="text-lg font-medium">Admin Access</h2>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              You have administrator privileges. Access the admin dashboard to manage users, content, and system settings.
+            </p>
+            <Button asChild variant="default" size="sm" className="mt-2">
+              <a href="/admin/dashboard">Go to Admin Dashboard</a>
+            </Button>
+          </div>
+        )}
+        
         <div className="grid gap-6">
           <Card>
             <CardHeader>
