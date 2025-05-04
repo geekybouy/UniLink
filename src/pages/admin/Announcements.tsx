@@ -281,6 +281,16 @@ const AnnouncementPage = () => {
     );
   }
 
+  const renderActivateButton = (record: Announcement) => (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => handleToggleActive(record.id, !record.is_active)}
+    >
+      {record.is_active ? 'Deactivate' : 'Activate'}
+    </Button>
+  );
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">

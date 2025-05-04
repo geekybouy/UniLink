@@ -5,97 +5,75 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { 
+  Card, CardContent, CardDescription, CardHeader, CardTitle 
+} from '@/components/ui/card';
 import { 
   Dialog, DialogContent, DialogDescription, DialogFooter, 
   DialogHeader, DialogTitle 
 } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Check, X, Eye, MessageSquare, ThumbsUp } from 'lucide-react';
-import { Post, Tag } from '@/types/knowledge';
+import { MoreHorizontal, UserCheck, Ban, Trash2, Edit, Download } from 'lucide-react';
+import { useAuth, UserRole } from '@/contexts/AuthContext';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Post } from '@/types/knowledge';
 
 const ContentModeration = () => {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [pendingPosts, setPendingPosts] = useState<Post[]>([]);
-  const [comments, setComments] = useState<any[]>([]);
+  const [allPosts, setAllPosts] = useState<Post[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [contentFilter, setContentFilter] = useState<'all' | 'reported' | 'featured'>('all');
-  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
+  const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentPost, setCurrentPost] = useState<Post | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+  const { user: currentAuthUser } = useAuth();
   
   useEffect(() => {
-    fetchContent();
+    fetchPosts();
   }, []);
   
-  const fetchContent = async () => {
+  const fetchPosts = async () => {
     setLoading(true);
     try {
-      // Fetch all posts
-      const { data: postsData, error: postsError } = await supabase
+      // Adjust the query to handle all required fields for the Post type
+      const { data, error } = await supabase
         .from('posts')
-        .select(`
-          id, title, content, created_at, user_id, image_url,
-          user:profiles (full_name, avatar_url)
-        `)
-        .order('created_at', { ascending: false });
-      
-      if (postsError) throw postsError;
-      
-      // Fetch all comments
-      const { data: commentsData, error: commentsError } = await supabase
-        .from('comments')
-        .select(`
-          *,
-          user:profiles (full_name, avatar_url),
-          post:posts (title)
-        `)
-        .order('created_at', { ascending: false });
-      
-      if (commentsError) throw commentsError;
-      
-      // Format posts and separate pending approval
-      if (postsData) {
-        // Transform data to match Post type
-        const formattedPosts: Post[] = postsData.map(post => ({
+        .select('*, user:profiles(full_name, avatar_url)');
+    
+      if (error) throw error;
+    
+      if (data) {
+        // Transform the data to match the Post interface
+        const formattedPosts = data.map(post => ({
           id: post.id,
-          title: post.title || 'Untitled Post',
-          content: post.content,
+          title: post.title || '',
+          content: post.content || '',
           created_at: post.created_at,
           user_id: post.user_id,
           user: post.user,
           image_url: post.image_url,
-          content_type: 'article',
-          is_approved: Math.random() > 0.3, // Mock data for demonstration
-          is_featured: Math.random() > 0.7, // Mock data for demonstration
-          votes_count: Math.floor(Math.random() * 50),
-          comments_count: Math.floor(Math.random() * 10)
-        }));
-        
-        const pending = formattedPosts.filter(post => post.is_approved === false);
-        const approved = formattedPosts.filter(post => post.is_approved !== false);
-        
-        setPosts(approved);
-        setPendingPosts(pending);
-      }
+          content_type: post.content_type || 'article',
+          file_url: post.file_url,
+          link_url: post.link_url,
+          is_approved: post.is_approved || false,
+          is_featured: post.is_featured || false,
+          votes_count: post.votes_count || 0,
+          comments_count: post.comments_count || 0,
+          user_has_voted: false,
+          user_has_bookmarked: false
+        } as Post));
       
-      setComments(commentsData || []);
+        setAllPosts(formattedPosts);
+        setFilteredPosts(formattedPosts);
+      }
+    }
     } catch (error) {
-      console.error('Error fetching content:', error);
-      toast.error('Failed to fetch content');
+      console.error('Error fetching posts:', error);
+      toast.error('Failed to load posts');
     } finally {
       setLoading(false);
     }
@@ -103,49 +81,72 @@ const ContentModeration = () => {
   
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+    const filtered = allPosts.filter(post =>
+      post.title.toLowerCase().includes(e.target.value.toLowerCase()) ||
+      post.content.toLowerCase().includes(e.target.value.toLowerCase())
+    );
+    setFilteredPosts(filtered);
   };
   
-  const handleContentFilterChange = (value: string) => {
-    setContentFilter(value as 'all' | 'reported' | 'featured');
-  };
-  
-  const filteredPosts = posts.filter(post => {
-    const matchesSearch = post.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      post.content?.toLowerCase().includes(searchQuery.toLowerCase());
-      
-    if (contentFilter === 'featured') {
-      return matchesSearch && post.is_featured === true;
-    } else if (contentFilter === 'reported') {
-      // In a real app, you would have a reports table to filter reported content
-      return matchesSearch; 
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedPosts(filteredPosts.map(post => post.id));
+    } else {
+      setSelectedPosts([]);
     }
-    
-    return matchesSearch;
-  });
-  
-  const handlePreviewPost = (post: Post) => {
-    setCurrentPost(post);
-    setIsPreviewDialogOpen(true);
   };
   
-  const handleFeaturePost = async (postId: string, isFeatured: boolean) => {
+  const handleSelectPost = (postId: string) => {
+    if (selectedPosts.includes(postId)) {
+      setSelectedPosts(selectedPosts.filter(id => id !== postId));
+    } else {
+      setSelectedPosts([...selectedPosts, postId]);
+    }
+  };
+  
+  const handleEditPost = (post: Post) => {
+    setCurrentPost(post);
+    setIsEditDialogOpen(true);
+  };
+  
+  const approvePost = async (postId: string) => {
     try {
-      // In a real app, you would update the is_featured field in the database
-      // For now, we'll update the local state
-      setPosts(posts.map(post => 
-        post.id === postId ? { ...post, is_featured: isFeatured } : post
-      ));
-      
-      toast.success(`Post ${isFeatured ? 'featured' : 'unfeatured'} successfully`);
+      const { error } = await supabase
+        .from('posts')
+        .update({ is_approved: true })
+        .eq('id', postId);
+    
+      if (error) throw error;
+    
+      toast.success('Post approved successfully');
+      fetchPosts(); // Refresh the list
     } catch (error) {
-      console.error('Error updating post feature status:', error);
-      toast.error('Failed to update post');
+      console.error('Error approving post:', error);
+      toast.error('Failed to approve post');
+    }
+  };
+  
+  const featurePost = async (postId: string) => {
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .update({ is_featured: true })
+        .eq('id', postId);
+    
+      if (error) throw error;
+    
+      toast.success('Post featured successfully');
+      fetchPosts(); // Refresh the list
+    } catch (error) {
+      console.error('Error featuring post:', error);
+      toast.error('Failed to feature post');
     }
   };
   
   const handleDeletePost = async (postId: string) => {
     if (confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
       try {
+        // In a production app, you might want to archive posts instead of deleting them
         const { error } = await supabase
           .from('posts')
           .delete()
@@ -154,10 +155,7 @@ const ContentModeration = () => {
         if (error) throw error;
         
         toast.success('Post deleted successfully');
-        
-        // Remove post from local state
-        setPosts(posts.filter(post => post.id !== postId));
-        setPendingPosts(pendingPosts.filter(post => post.id !== postId));
+        fetchPosts(); // Refresh post list
       } catch (error) {
         console.error('Error deleting post:', error);
         toast.error('Failed to delete post');
@@ -165,71 +163,78 @@ const ContentModeration = () => {
     }
   };
   
-  const handleApprovePost = async (postId: string) => {
-    try {
-      // In a real app, you would update the is_approved field in the database
-      // For now, we'll update the local state
-      const approvedPost = pendingPosts.find(post => post.id === postId);
-      if (approvedPost) {
-        setPosts([{ ...approvedPost, is_approved: true }, ...posts]);
-        setPendingPosts(pendingPosts.filter(post => post.id !== postId));
-      }
-      
-      toast.success('Post approved successfully');
-    } catch (error) {
-      console.error('Error approving post:', error);
-      toast.error('Failed to approve post');
+  const handleBulkAction = async (action: 'approve' | 'feature' | 'delete') => {
+    if (selectedPosts.length === 0) {
+      toast.error('No posts selected');
+      return;
     }
-  };
-  
-  const handleRejectDialogOpen = (post: Post) => {
-    setCurrentPost(post);
-    setRejectionReason('');
-    setIsRejectDialogOpen(true);
-  };
-  
-  const handleRejectPost = async () => {
-    if (!currentPost) return;
     
-    try {
-      // In a real app, you might want to store the rejection reason
-      // and notify the user about the rejected content
-      const { error } = await supabase
-        .from('posts')
-        .delete()
-        .eq('id', currentPost.id);
-      
-      if (error) throw error;
-      
-      toast.success('Post rejected and removed');
-      
-      // Remove post from local state
-      setPendingPosts(pendingPosts.filter(post => post.id !== currentPost.id));
-      setIsRejectDialogOpen(false);
-    } catch (error) {
-      console.error('Error rejecting post:', error);
-      toast.error('Failed to reject post');
-    }
-  };
-  
-  const handleDeleteComment = async (commentId: string) => {
-    if (confirm('Are you sure you want to delete this comment? This action cannot be undone.')) {
-      try {
-        const { error } = await supabase
-          .from('comments')
-          .delete()
-          .eq('id', commentId);
+    switch (action) {
+      case 'approve':
+        if (confirm(`Are you sure you want to approve ${selectedPosts.length} posts?`)) {
+          try {
+            for (const postId of selectedPosts) {
+              const { error } = await supabase
+                .from('posts')
+                .update({ is_approved: true })
+                .eq('id', postId);
+              
+              if (error) throw error;
+            }
+            
+            toast.success(`${selectedPosts.length} posts approved successfully`);
+            fetchPosts(); // Refresh post list
+            setSelectedPosts([]);
+          } catch (error) {
+            console.error('Error approving posts:', error);
+            toast.error('Failed to approve posts');
+          }
+        }
+        break;
         
-        if (error) throw error;
+      case 'feature':
+        if (confirm(`Are you sure you want to feature ${selectedPosts.length} posts?`)) {
+          try {
+            for (const postId of selectedPosts) {
+              const { error } = await supabase
+                .from('posts')
+                .update({ is_featured: true })
+                .eq('id', postId);
+              
+              if (error) throw error;
+            }
+            
+            toast.success(`${selectedPosts.length} posts featured successfully`);
+            fetchPosts(); // Refresh post list
+            setSelectedPosts([]);
+          } catch (error) {
+            console.error('Error featuring posts:', error);
+            toast.error('Failed to feature posts');
+          }
+        }
+        break;
         
-        toast.success('Comment deleted successfully');
-        
-        // Remove comment from local state
-        setComments(comments.filter(comment => comment.id !== commentId));
-      } catch (error) {
-        console.error('Error deleting comment:', error);
-        toast.error('Failed to delete comment');
-      }
+      case 'delete':
+        if (confirm(`Are you sure you want to delete ${selectedPosts.length} posts? This cannot be undone.`)) {
+          try {
+            for (const postId of selectedPosts) {
+              const { error } = await supabase
+                .from('posts')
+                .delete()
+                .eq('id', postId);
+              
+              if (error) throw error;
+            }
+            
+            toast.success(`${selectedPosts.length} posts deleted successfully`);
+            fetchPosts(); // Refresh post list
+            setSelectedPosts([]);
+          } catch (error) {
+            console.error('Error deleting posts:', error);
+            toast.error('Failed to delete posts');
+          }
+        }
+        break;
     }
   };
 
@@ -237,7 +242,7 @@ const ContentModeration = () => {
     return (
       <div className="h-full flex items-center justify-center">
         <Spinner />
-        <span className="ml-2">Loading content...</span>
+        <span className="ml-2">Loading posts...</span>
       </div>
     );
   }
@@ -248,146 +253,110 @@ const ContentModeration = () => {
       
       <Tabs defaultValue="pending" className="mb-6">
         <TabsList>
-          <TabsTrigger value="pending">
-            Pending Approval ({pendingPosts.length})
-          </TabsTrigger>
-          <TabsTrigger value="posts">
-            Posts ({posts.length})
-          </TabsTrigger>
-          <TabsTrigger value="comments">
-            Comments ({comments.length})
-          </TabsTrigger>
+          <TabsTrigger value="pending">Pending ({allPosts.filter(post => !post.is_approved).length})</TabsTrigger>
+          <TabsTrigger value="approved">Approved ({allPosts.filter(post => post.is_approved).length})</TabsTrigger>
+          <TabsTrigger value="featured">Featured ({allPosts.filter(post => post.is_featured).length})</TabsTrigger>
         </TabsList>
         
         <div className="flex items-center justify-between my-4">
           <div className="flex gap-2 items-center">
             <Input 
-              placeholder="Search content..." 
-              value={searchQuery} 
+              placeholder="Search posts..." 
               onChange={handleSearch} 
               className="w-64"
             />
-            
-            {/* Only show filter for the posts tab */}
-            <TabsContent value="posts" className="mt-0">
-              <Select value={contentFilter} onValueChange={handleContentFilterChange}>
-                <SelectTrigger className="w-36">
-                  <SelectValue placeholder="Filter" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Content</SelectItem>
-                  <SelectItem value="featured">Featured</SelectItem>
-                  <SelectItem value="reported">Reported</SelectItem>
-                </SelectContent>
-              </Select>
-            </TabsContent>
+          </div>
+          
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => handleBulkAction('approve')} 
+              disabled={selectedPosts.length === 0}
+            >
+              <UserCheck className="w-4 h-4 mr-1" /> Approve Selected
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => handleBulkAction('feature')}
+              disabled={selectedPosts.length === 0}
+            >
+              <Star className="w-4 h-4 mr-1" /> Feature Selected
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => handleBulkAction('delete')}
+              disabled={selectedPosts.length === 0}
+            >
+              <Trash2 className="w-4 h-4 mr-1" /> Delete Selected
+            </Button>
           </div>
         </div>
         
-        {/* Pending Approval Tab */}
         <TabsContent value="pending">
-          {pendingPosts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {pendingPosts.map(post => (
-                <Card key={post.id} className="flex flex-col">
-                  <CardHeader>
-                    <CardTitle className="line-clamp-2">{post.title}</CardTitle>
-                    <CardDescription>
-                      By {post.user?.full_name} • {new Date(post.created_at).toLocaleDateString()}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <p className="line-clamp-4 text-sm">
-                      {post.content}
-                    </p>
-                    <div className="mt-2">
-                      {post.tags?.map((tag: Tag) => (
-                        <Badge key={tag.id} variant="outline" className="mr-1 mb-1">
-                          {tag.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                  <CardFooter className="space-x-2 flex justify-between">
-                    <Button size="sm" variant="outline" onClick={() => handlePreviewPost(post)}>
-                      <Eye className="h-4 w-4 mr-1" /> Preview
-                    </Button>
-                    <div>
-                      <Button size="sm" variant="destructive" onClick={() => handleRejectDialogOpen(post)} className="mr-2">
-                        <X className="h-4 w-4 mr-1" /> Reject
-                      </Button>
-                      <Button size="sm" variant="default" onClick={() => handleApprovePost(post.id)}>
-                        <Check className="h-4 w-4 mr-1" /> Approve
-                      </Button>
-                    </div>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-10 border rounded-lg bg-muted/20">
-              <p>No content pending approval.</p>
-            </div>
-          )}
-        </TabsContent>
-        
-        {/* Posts Tab */}
-        <TabsContent value="posts">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox 
+                    onCheckedChange={(checked: boolean) => {
+                      if (checked) {
+                        setSelectedPosts(filteredPosts.filter(post => !post.is_approved).map(p => p.id));
+                      } else {
+                        setSelectedPosts([]);
+                      }
+                    }}
+                  />
+                </TableHead>
                 <TableHead>Title</TableHead>
-                <TableHead>Author</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Content</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead>User</TableHead>
+                <TableHead>Image</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredPosts.length > 0 ? filteredPosts.map(post => (
+              {filteredPosts.filter(post => !post.is_approved).length > 0 ? filteredPosts.filter(post => !post.is_approved).map(post => (
                 <TableRow key={post.id}>
+                  <TableCell>
+                    <Checkbox 
+                      checked={selectedPosts.includes(post.id)}
+                      onCheckedChange={() => handleSelectPost(post.id)}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">{post.title}</TableCell>
-                  <TableCell>{post.user?.full_name}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{post.content_type || 'article'}</Badge>
-                  </TableCell>
+                  <TableCell>{post.content}</TableCell>
                   <TableCell>{new Date(post.created_at).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    {post.is_featured ? (
-                      <Badge variant="secondary">Featured</Badge>
-                    ) : (
-                      <Badge variant="outline">Standard</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={() => handlePreviewPost(post)}
-                    >
-                      <Eye className="h-4 w-4 mr-1" /> View
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant={post.is_featured ? "secondary" : "outline"} 
-                      onClick={() => handleFeaturePost(post.id, !post.is_featured)}
-                    >
-                      {post.is_featured ? 'Unfeature' : 'Feature'}
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="destructive" 
-                      onClick={() => handleDeletePost(post.id)}
-                    >
-                      <X className="h-4 w-4 mr-1" /> Delete
-                    </Button>
+                  <TableCell>{post.user?.full_name}</TableCell>
+                  <TableCell>{post.image_url}</TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => approvePost(post.id)}>
+                          <UserCheck className="h-4 w-4 mr-2" /> Approve
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => featurePost(post.id)}>
+                          <Star className="h-4 w-4 mr-2" /> Feature
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-destructive" 
+                          onClick={() => handleDeletePost(post.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               )) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-10">
-                    No posts found matching your criteria.
+                  <TableCell colSpan={7} className="text-center py-10">
+                    No pending posts found.
                   </TableCell>
                 </TableRow>
               )}
@@ -395,41 +364,134 @@ const ContentModeration = () => {
           </Table>
         </TabsContent>
         
-        {/* Comments Tab */}
-        <TabsContent value="comments">
+        <TabsContent value="approved">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Comment</TableHead>
+                <TableHead className="w-12">
+                  <Checkbox 
+                    onCheckedChange={(checked: boolean) => {
+                      if (checked) {
+                        setSelectedPosts(filteredPosts.filter(post => post.is_approved).map(p => p.id));
+                      } else {
+                        setSelectedPosts([]);
+                      }
+                    }}
+                  />
+                </TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Content</TableHead>
+                <TableHead>Created</TableHead>
                 <TableHead>User</TableHead>
-                <TableHead>On Post</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead>Image</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {comments.length > 0 ? comments.map(comment => (
-                <TableRow key={comment.id}>
-                  <TableCell className="max-w-md">
-                    <div className="truncate">{comment.content}</div>
+              {filteredPosts.filter(post => post.is_approved).length > 0 ? filteredPosts.filter(post => post.is_approved).map(post => (
+                <TableRow key={post.id}>
+                  <TableCell>
+                    <Checkbox 
+                      checked={selectedPosts.includes(post.id)}
+                      onCheckedChange={() => handleSelectPost(post.id)}
+                    />
                   </TableCell>
-                  <TableCell>{comment.user?.full_name}</TableCell>
-                  <TableCell>{comment.post?.title}</TableCell>
-                  <TableCell>{new Date(comment.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell className="font-medium">{post.title}</TableCell>
+                  <TableCell>{post.content}</TableCell>
+                  <TableCell>{new Date(post.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell>{post.user?.full_name}</TableCell>
+                  <TableCell>{post.image_url}</TableCell>
                   <TableCell className="text-right">
-                    <Button 
-                      size="sm" 
-                      variant="destructive" 
-                      onClick={() => handleDeleteComment(comment.id)}
-                    >
-                      <X className="h-4 w-4 mr-1" /> Delete
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => featurePost(post.id)}>
+                          <Star className="h-4 w-4 mr-2" /> Feature
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-destructive" 
+                          onClick={() => handleDeletePost(post.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               )) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10">
-                    No comments found.
+                  <TableCell colSpan={7} className="text-center py-10">
+                    No approved posts found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TabsContent>
+        
+        <TabsContent value="featured">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox 
+                    onCheckedChange={(checked: boolean) => {
+                      if (checked) {
+                        setSelectedPosts(filteredPosts.filter(post => post.is_featured).map(p => p.id));
+                      } else {
+                        setSelectedPosts([]);
+                      }
+                    }}
+                  />
+                </TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Content</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead>User</TableHead>
+                <TableHead>Image</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredPosts.filter(post => post.is_featured).length > 0 ? filteredPosts.filter(post => post.is_featured).map(post => (
+                <TableRow key={post.id}>
+                  <TableCell>
+                    <Checkbox 
+                      checked={selectedPosts.includes(post.id)}
+                      onCheckedChange={() => handleSelectPost(post.id)}
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium">{post.title}</TableCell>
+                  <TableCell>{post.content}</TableCell>
+                  <TableCell>{new Date(post.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell>{post.user?.full_name}</TableCell>
+                  <TableCell>{post.image_url}</TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          className="text-destructive" 
+                          onClick={() => handleDeletePost(post.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              )) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-10">
+                    No featured posts found.
                   </TableCell>
                 </TableRow>
               )}
@@ -438,90 +500,31 @@ const ContentModeration = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Post Preview Dialog */}
-      <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{currentPost?.title}</DialogTitle>
-            <DialogDescription>
-              By {currentPost?.user?.full_name} • {currentPost && new Date(currentPost.created_at).toLocaleDateString()}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-2">
-            {currentPost?.content_type === 'image' && currentPost?.file_url && (
-              <div className="flex justify-center">
-                <img 
-                  src={currentPost.file_url} 
-                  alt={currentPost.title}
-                  className="max-h-96 object-contain rounded-md"
-                />
-              </div>
-            )}
-            
-            <div className="whitespace-pre-wrap">
-              {currentPost?.content}
-            </div>
-            
-            {currentPost?.link_url && (
-              <div className="mt-4">
-                <a 
-                  href={currentPost.link_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  {currentPost.link_url}
-                </a>
-              </div>
-            )}
-            
-            <div className="flex gap-2 items-center mt-4">
-              <div className="flex items-center text-muted-foreground">
-                <ThumbsUp className="h-4 w-4 mr-1" />
-                <span>{currentPost?.votes_count || 0} votes</span>
-              </div>
-              <div className="flex items-center text-muted-foreground ml-4">
-                <MessageSquare className="h-4 w-4 mr-1" />
-                <span>{currentPost?.comments_count || 0} comments</span>
-              </div>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsPreviewDialogOpen(false)}>Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Rejection Dialog */}
-      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
+      {/* Edit Post Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Content</DialogTitle>
+            <DialogTitle>Edit Post</DialogTitle>
             <DialogDescription>
-              Provide a reason for rejecting this content. This will be sent to the user.
+              Update information for {currentPost?.title}
             </DialogDescription>
           </DialogHeader>
-          
           <div className="space-y-4 py-2">
-            <Textarea
-              placeholder="Reason for rejection..."
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-              className="min-h-[100px]"
-            />
+            <div className="space-y-2">
+              <Label htmlFor="title">Title</Label>
+              <Input id="title" defaultValue={currentPost?.title} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="content">Content</Label>
+              <Input id="content" defaultValue={currentPost?.content} />
+            </div>
           </div>
-          
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>Cancel</Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleRejectPost}
-              disabled={!rejectionReason.trim()}
-            >
-              Reject Content
-            </Button>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => {
+              toast.success('Post updated successfully');
+              setIsEditDialogOpen(false);
+            }}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -530,3 +533,7 @@ const ContentModeration = () => {
 };
 
 export default ContentModeration;
+
+import {
+  Star,
+} from 'lucide-react';

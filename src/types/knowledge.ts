@@ -22,4 +22,34 @@ export interface Post {
   comments_count?: number;
   is_approved?: boolean;
   is_featured?: boolean;
+  user_has_voted?: boolean;
+  user_has_bookmarked?: boolean;
+}
+
+export interface Comment {
+  id: string;
+  content: string;
+  post_id: string;
+  user_id: string;
+  created_at: string;
+  user?: {
+    full_name: string;
+    avatar_url?: string | null;
+  };
+}
+
+export type ContentType = 'article' | 'link' | 'file' | 'image';
+
+export interface PostFormData {
+  title: string;
+  content: string;
+  content_type: ContentType;
+  link_url?: string;
+  tags?: string[];
+}
+
+export interface SearchParams {
+  query?: string;
+  contentType?: ContentType | 'all';
+  tag?: string;
 }

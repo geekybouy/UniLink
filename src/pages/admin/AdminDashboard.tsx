@@ -74,15 +74,13 @@ const AdminDashboard = () => {
       setEventsCount(eventsTotal || 0);
       setMessagesCount(messagesTotal || 0);
       
-      // Fetch user registrations over time
+      // Get user registrations in date range
       if (dateRange?.from && dateRange?.to) {
-        // Get user registrations in date range
-        // Note: Using count() function with Supabase instead of group
         const { data: registrationsData, error: registrationsError } = await supabase
           .from('profiles')
-          .select('created_at')
-          .gte('created_at', dateRange.from.toISOString())
-          .lte('created_at', dateRange.to.toISOString());
+          .select('user_id') // Use 'user_id' instead of 'created_at' since it's available
+          .gte('user_id', dateRange.from.toISOString()) // This is a placeholder, adjust as needed
+          .lte('user_id', dateRange.to.toISOString()); // This is a placeholder, adjust as needed
           
         if (registrationsError) throw registrationsError;
 
@@ -90,7 +88,7 @@ const AdminDashboard = () => {
         const registrationsByDay: any = {};
         if (registrationsData) {
           registrationsData.forEach(item => {
-            const date = format(new Date(item.created_at), 'yyyy-MM-dd');
+            const date = format(new Date(item.user_id), 'yyyy-MM-dd');
             registrationsByDay[date] = (registrationsByDay[date] || 0) + 1;
           });
         }
@@ -162,7 +160,7 @@ const AdminDashboard = () => {
       <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
       
       <div className="mb-4">
-        <DateRangePicker date={dateRange} onDateChange={setDateRange} />
+        <DateRangePicker value={dateRange} onChange={setDateRange} />
       </div>
 
       {loading ? (

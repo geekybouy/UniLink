@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 
 // Define user role type
-export type UserRole = 'student' | 'alumni' | 'admin' | 'faculty' | 'moderator';
+export type UserRole = 'student' | 'alumni' | 'admin' | 'moderator' | 'faculty';
 
 interface AuthContextType {
   user: User | null;
