@@ -1,47 +1,67 @@
 
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
-import { supabase } from "@/integrations/supabase/client"
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
+/**
+ * Combines multiple class names into a single string, handling Tailwind conflicts
+ */
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 /**
- * Ensure the events storage bucket exists and is properly configured
+ * Formats a price in cents to a currency string
  */
-export const ensureEventsBucketExists = async () => {
-  try {
-    // Check if the bucket already exists
-    const { data: existingBuckets } = await supabase.storage.listBuckets();
-    const eventsBucket = existingBuckets?.find(bucket => bucket.name === 'events');
-    
-    // If the bucket doesn't exist, create it
-    if (!eventsBucket) {
-      await supabase.storage.createBucket('events', {
-        public: true,
-        fileSizeLimit: 5242880, // 5MB
-      });
-      
-      // Note: CORS policy is set via Supabase dashboard or API
-      // The updateBucketCORS method is not available in the client
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Failed to ensure events bucket exists:', error);
-    return false;
-  }
-};
+export function formatPrice(price: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(price / 100);
+}
 
 /**
- * Get initials from a name
+ * Formats a date to a human-readable string
  */
-export const getInitials = (name: string) => {
-  if (!name) return '';
+export function formatDate(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+/**
+ * Creates a debounced function that delays invoking the provided function
+ */
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
   
-  const parts = name.split(' ');
-  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-  
-  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
-};
+  return function(...args: Parameters<T>) {
+    const later = () => {
+      timeout = null;
+      func(...args);
+    };
+    
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+/**
+ * Truncates a string to the specified length and adds an ellipsis
+ */
+export function truncate(str: string, length: number): string {
+  if (str.length <= length) return str;
+  return str.slice(0, length) + '...';
+}
+
+/**
+ * Generates an array of numbers in the specified range
+ */
+export function range(start: number, end: number): number[] {
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+}

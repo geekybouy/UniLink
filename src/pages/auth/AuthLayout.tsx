@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Spinner } from '@/components/ui/spinner';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const AuthLayout = () => {
   const { user, isLoading } = useAuth();
@@ -44,12 +45,17 @@ const AuthLayout = () => {
 
   return (
     <div className="min-h-screen w-full max-w-full bg-gradient-to-b from-secondary/50 to-background flex flex-col items-center justify-center overflow-hidden">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md px-4 py-8">
-        <h1 className="text-4xl font-playfair text-primary text-center mb-8">
+        <h1 className="text-4xl font-playfair text-primary text-center mb-8 transition-colors">
           UniLink
         </h1>
         
-        <Outlet />
+        <div className="bg-card shadow-lg rounded-lg border border-border/60 animate-fade-in">
+          <Outlet />
+        </div>
         
         <p className="text-center mt-8 text-sm text-muted-foreground">
           © {new Date().getFullYear()} UniLink. All rights reserved.

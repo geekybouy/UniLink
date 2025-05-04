@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from '@/components/ui/theme-provider';
 
 // Import pages
 import Index from './pages/Index';
@@ -77,85 +78,91 @@ import './App.css';
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <ProfileProvider>
-          <ConnectionProvider>
-            <EventsProvider>
-              <JobsProvider>
-                <MessagingProvider>
-                  <KnowledgeProvider>
-                    <NotificationsProvider>
-                      <Routes>
-                        {/* Public routes */}
-                        <Route path="/" element={<Index />} />
-                        <Route path="/auth" element={<AuthLayout />}>
-                          <Route path="login" element={<LoginPage />} />
-                          <Route path="signup" element={<SignupPage />} />
-                          <Route path="forgot-password" element={<ForgotPasswordPage />} />
-                          <Route path="reset-password" element={<ResetPasswordPage />} />
-                          <Route path="verify-email" element={<VerifyEmailPage />} />
-                        </Route>
-                        <Route path="/auth/callback" element={<AuthCallback />} />
+    <ThemeProvider defaultTheme="system" storageKey="unilink-theme">
+      <BrowserRouter>
+        <AuthProvider>
+          <ProfileProvider>
+            <ConnectionProvider>
+              <EventsProvider>
+                <JobsProvider>
+                  <MessagingProvider>
+                    <KnowledgeProvider>
+                      <NotificationsProvider>
+                        {/* Skip link for accessibility */}
+                        <a href="#main-content" className="skip-link">
+                          Skip to main content
+                        </a>
+                        <Routes>
+                          {/* Public routes */}
+                          <Route path="/" element={<Index />} />
+                          <Route path="/auth" element={<AuthLayout />}>
+                            <Route path="login" element={<LoginPage />} />
+                            <Route path="signup" element={<SignupPage />} />
+                            <Route path="forgot-password" element={<ForgotPasswordPage />} />
+                            <Route path="reset-password" element={<ResetPasswordPage />} />
+                            <Route path="verify-email" element={<VerifyEmailPage />} />
+                          </Route>
+                          <Route path="/auth/callback" element={<AuthCallback />} />
 
-                        {/* Protected routes */}
-                        <Route element={<ProtectedRoute />}>
-                          <Route path="/dashboard" element={<Dashboard />} />
-                          <Route path="/feed" element={<Feed />} />
-                          <Route path="/credential-wallet" element={<CredentialWallet />} />
-                          <Route path="/share-credentials" element={<ShareCredentials />} />
-                          <Route path="/shared-credentials/:shareId" element={<SharedCredentials />} />
-                          <Route path="/alumni-directory" element={<AlumniDirectory />} />
-                          <Route path="/profile/:userId" element={<AlumniProfile />} />
-                          <Route path="/profile" element={<ProfilePage />} />
-                          <Route path="/profile-setup" element={<ProfileSetup />} />
-                          <Route path="/complete-profile" element={<CompleteProfile />} />
-                          <Route path="/events" element={<EventsPage />} />
-                          <Route path="/events/:id" element={<EventDetailPage />} />
-                          <Route path="/events/create" element={<CreateEventPage />} />
-                          <Route path="/events/edit/:id" element={<EditEventPage />} />
-                          <Route path="/knowledge" element={<KnowledgeHub />} />
-                          <Route path="/knowledge/:postId" element={<KnowledgePostDetail />} />
-                          <Route path="/knowledge/new" element={<NewPost />} />
-                          <Route path="/jobs" element={<JobsListingPage />} />
-                          <Route path="/jobs/:id" element={<JobDetailPage />} />
-                          <Route path="/jobs/post" element={<PostJobPage />} />
-                          <Route path="/jobs/edit/:id" element={<EditJobPage />} />
-                          <Route path="/my-applications" element={<MyApplicationsPage />} />
-                          <Route path="/cv-maker" element={<CVMaker />} />
-                          <Route path="/network" element={<MyNetwork />} />
-                          <Route path="/messages" element={<MessagingPage />} />
-                          <Route path="/messages/:conversationId" element={<MessagingPage />} />
-                          <Route path="/privacy-settings" element={<PrivacySettings />} />
-                          <Route path="/more" element={<MorePage />} />
-                          
-                          {/* Notification routes */}
-                          <Route path="/notifications" element={<NotificationsPage />} />
-                          <Route path="/notification-settings" element={<NotificationSettingsPage />} />
+                          {/* Protected routes */}
+                          <Route element={<ProtectedRoute />}>
+                            <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/feed" element={<Feed />} />
+                            <Route path="/credential-wallet" element={<CredentialWallet />} />
+                            <Route path="/share-credentials" element={<ShareCredentials />} />
+                            <Route path="/shared-credentials/:shareId" element={<SharedCredentials />} />
+                            <Route path="/alumni-directory" element={<AlumniDirectory />} />
+                            <Route path="/profile/:userId" element={<AlumniProfile />} />
+                            <Route path="/profile" element={<ProfilePage />} />
+                            <Route path="/profile-setup" element={<ProfileSetup />} />
+                            <Route path="/complete-profile" element={<CompleteProfile />} />
+                            <Route path="/events" element={<EventsPage />} />
+                            <Route path="/events/:id" element={<EventDetailPage />} />
+                            <Route path="/events/create" element={<CreateEventPage />} />
+                            <Route path="/events/edit/:id" element={<EditEventPage />} />
+                            <Route path="/knowledge" element={<KnowledgeHub />} />
+                            <Route path="/knowledge/:postId" element={<KnowledgePostDetail />} />
+                            <Route path="/knowledge/new" element={<NewPost />} />
+                            <Route path="/jobs" element={<JobsListingPage />} />
+                            <Route path="/jobs/:id" element={<JobDetailPage />} />
+                            <Route path="/jobs/post" element={<PostJobPage />} />
+                            <Route path="/jobs/edit/:id" element={<EditJobPage />} />
+                            <Route path="/my-applications" element={<MyApplicationsPage />} />
+                            <Route path="/cv-maker" element={<CVMaker />} />
+                            <Route path="/network" element={<MyNetwork />} />
+                            <Route path="/messages" element={<MessagingPage />} />
+                            <Route path="/messages/:conversationId" element={<MessagingPage />} />
+                            <Route path="/privacy-settings" element={<PrivacySettings />} />
+                            <Route path="/more" element={<MorePage />} />
+                            
+                            {/* Notification routes */}
+                            <Route path="/notifications" element={<NotificationsPage />} />
+                            <Route path="/notification-settings" element={<NotificationSettingsPage />} />
 
-                          {/* Admin routes */}
-                          <Route path="/admin" element={<AdminDashboard />} />
-                          <Route path="/admin/users" element={<UserManagement />} />
-                          <Route path="/admin/content" element={<ContentModeration />} />
-                          <Route path="/admin/roles" element={<RoleManagement />} />
-                          <Route path="/admin/announcements" element={<Announcements />} />
-                          <Route path="/admin/audit" element={<AuditLogs />} />
-                          <Route path="/admin/settings" element={<Settings />} />
-                        </Route>
+                            {/* Admin routes */}
+                            <Route path="/admin" element={<AdminDashboard />} />
+                            <Route path="/admin/users" element={<UserManagement />} />
+                            <Route path="/admin/content" element={<ContentModeration />} />
+                            <Route path="/admin/roles" element={<RoleManagement />} />
+                            <Route path="/admin/announcements" element={<Announcements />} />
+                            <Route path="/admin/audit" element={<AuditLogs />} />
+                            <Route path="/admin/settings" element={<Settings />} />
+                          </Route>
 
-                        {/* 404 - Not found */}
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                      <Toaster />
-                    </NotificationsProvider>
-                  </KnowledgeProvider>
-                </MessagingProvider>
-              </JobsProvider>
-            </EventsProvider>
-          </ConnectionProvider>
-        </ProfileProvider>
-      </AuthProvider>
-    </BrowserRouter>
+                          {/* 404 - Not found */}
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                        <Toaster />
+                      </NotificationsProvider>
+                    </KnowledgeProvider>
+                  </MessagingProvider>
+                </JobsProvider>
+              </EventsProvider>
+            </ConnectionProvider>
+          </ProfileProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 
