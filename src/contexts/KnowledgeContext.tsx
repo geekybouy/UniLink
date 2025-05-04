@@ -249,7 +249,8 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         votes_count: voteCounts[post.id] || 0,
         comments_count: commentCounts[post.id] || 0,
         user_has_voted: userVotes[post.id] || false,
-        user_has_bookmarked: userBookmarks[post.id] || false
+        user_has_bookmarked: userBookmarks[post.id] || false,
+        tags: post.tags || []
       };
     });
   };
