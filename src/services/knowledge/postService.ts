@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Post, Tag, ContentType, PostFormData } from '@/types/knowledge';
@@ -6,7 +5,7 @@ import {
   hasNewPostsSchema, 
   processPost 
 } from './dbSchemaService';
-import { customSupabase } from '@/integrations/supabase/customClient';
+import { customSupabase, typedSupabaseClient } from '@/integrations/supabase/customClient';
 
 // Check schema support when initializing
 let schemaSupport = {

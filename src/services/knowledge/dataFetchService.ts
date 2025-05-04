@@ -7,6 +7,7 @@ import {
   hasNewPostsSchema, 
   processPost 
 } from './dbSchemaService';
+import { typedSupabaseClient } from '@/integrations/supabase/customClient';
 
 // Check schema support when initializing
 let schemaSupport = {
@@ -28,28 +29,19 @@ export const fetchPosts = async (): Promise<Post[]> => {
     // Check if we have the new schema
     const hasNewSchema = await getSchemaSupport();
 
-    // Start building the query
-    let query = supabase
-      .from('posts')
-      .select(`
-        *,
-        user:profiles (
-          full_name,
-          avatar_url
-        )
-      `);
-
+    // Use the typedSupabaseClient to avoid type instantiation errors
+    const postsQuery = typedSupabaseClient.posts.selectWithUser();
+    
     // Add is_approved filter if the schema supports it
     if (hasNewSchema) {
-      query = query.eq('is_approved', true);
+      postsQuery.eq('is_approved', true);
     }
     
-    // Execute the query with explicit type assertion
-    const result = await query.order('created_at', { ascending: false });
-    const { data, error } = result as unknown as { 
-      data: any[]; 
-      error: any; 
-    };
+    // Execute the query with order
+    postsQuery.order('created_at', { ascending: false });
+    
+    // Get the result
+    const { data, error } = await postsQuery;
 
     if (error) throw error;
     
@@ -81,24 +73,13 @@ export const fetchFeaturedPosts = async (): Promise<Post[]> => {
       return [];
     }
 
-    // Execute the query with explicit type assertion
-    const result = await supabase
-      .from('posts')
-      .select(`
-        *,
-        user:profiles (
-          full_name,
-          avatar_url
-        )
-      `)
+    // Use the typedSupabaseClient to avoid type instantiation issues
+    const postsQuery = typedSupabaseClient.posts.selectWithUser()
       .eq('is_approved', true)
       .eq('is_featured', true)
       .order('created_at', { ascending: false });
-
-    const { data, error } = result as unknown as {
-      data: any[];
-      error: any;
-    };
+    
+    const { data, error } = await postsQuery;
 
     if (error) throw error;
     
@@ -123,23 +104,12 @@ export const fetchUserPosts = async (userId: string | undefined): Promise<Post[]
   if (!userId) return [];
   
   try {
-    // Execute the query with explicit type assertion
-    const result = await supabase
-      .from('posts')
-      .select(`
-        *,
-        user:profiles (
-          full_name,
-          avatar_url
-        )
-      `)
+    // Use the typedSupabaseClient for user posts
+    const postsQuery = typedSupabaseClient.posts.selectWithUser()
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
-
-    const { data, error } = result as unknown as {
-      data: any[];
-      error: any;
-    };
+    
+    const { data, error } = await postsQuery;
 
     if (error) throw error;
     
@@ -167,33 +137,20 @@ export const fetchBookmarkedPosts = async (userId: string | undefined): Promise<
   if (!userId) return [];
   
   try {
-    const { data: bookmarksData, error: bookmarksError } = await supabase
-      .from('bookmarks')
-      .select('post_id')
-      .eq('user_id', userId);
+    // Get bookmarks using typedSupabaseClient
+    const { data: bookmarksData, error: bookmarksError } = await typedSupabaseClient.bookmarks.getByUser(userId);
 
     if (bookmarksError) throw bookmarksError;
 
     if (bookmarksData && bookmarksData.length > 0) {
       const bookmarkedPostIds = bookmarksData.map(bookmark => bookmark.post_id);
       
-      // Execute the query with explicit type assertion
-      const result = await supabase
-        .from('posts')
-        .select(`
-          *,
-          user:profiles (
-            full_name,
-            avatar_url
-          )
-        `)
+      // Use typedSupabaseClient to fetch bookmarked posts
+      const postsQuery = typedSupabaseClient.posts.selectWithUser()
         .in('id', bookmarkedPostIds)
         .order('created_at', { ascending: false });
-
-      const { data: bookmarkedPostsData, error: bookmarkedPostsError } = result as unknown as {
-        data: any[];
-        error: any;
-      };
+      
+      const { data: bookmarkedPostsData, error: bookmarkedPostsError } = await postsQuery;
 
       if (bookmarkedPostsError) throw bookmarkedPostsError;
       
