@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -46,32 +45,53 @@ const ContentModeration = () => {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      // Adjust the query to handle all required fields for the Post type
+      // Adjust the query to fetch all required fields for the Post type
       const { data, error } = await supabase
         .from('posts')
-        .select('*, user:profiles(full_name, avatar_url)');
+        .select(`
+          id, 
+          title, 
+          content, 
+          created_at, 
+          user_id, 
+          content_type,
+          file_url, 
+          link_url,
+          is_approved, 
+          is_featured,
+          votes_count, 
+          comments_count,
+          image_url,
+          user:profiles (full_name, avatar_url)
+        `);
     
       if (error) throw error;
     
       if (data) {
         // Transform the data to match the Post interface
-        const formattedPosts = data.map(post => ({
-          id: post.id,
-          title: post.title || '',
-          content: post.content || '',
-          created_at: post.created_at,
-          user_id: post.user_id,
-          user: post.user,
-          content_type: post.content_type || 'article',
-          file_url: post.file_url,
-          link_url: post.link_url,
-          is_approved: post.is_approved || false,
-          is_featured: post.is_featured || false,
-          votes_count: post.votes_count || 0,
-          comments_count: post.comments_count || 0,
-          user_has_voted: false,
-          user_has_bookmarked: false
-        } as Post));
+        const formattedPosts = data.map(post => {
+          // Handle potential null values and ensure all required fields are present
+          const formattedPost: Post = {
+            id: post.id,
+            title: post.title || '',
+            content: post.content || '',
+            created_at: post.created_at,
+            user_id: post.user_id,
+            user: post.user || { full_name: 'Unknown User' },
+            content_type: post.content_type || 'article',
+            file_url: post.file_url,
+            link_url: post.link_url,
+            is_approved: post.is_approved || false,
+            is_featured: post.is_featured || false,
+            votes_count: post.votes_count || 0,
+            comments_count: post.comments_count || 0,
+            user_has_voted: false,
+            user_has_bookmarked: false,
+            image_url: post.image_url
+          };
+          
+          return formattedPost;
+        });
       
         setAllPosts(formattedPosts);
         setFilteredPosts(formattedPosts);
