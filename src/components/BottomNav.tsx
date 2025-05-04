@@ -1,92 +1,96 @@
 
 import { useLocation, Link } from 'react-router-dom';
-import { Home, Users, BookOpen, MessageCircle, Shield, Calendar, Briefcase } from 'lucide-react';
+import { Home, Users, BookOpen, MessageCircle, Shield, Calendar, Briefcase, Menu } from 'lucide-react';
 import { MessagingBadge } from './messaging/MessagingBadge';
+import { cn } from '@/lib/utils';
 
 const BottomNav = () => {
   const location = useLocation();
   
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
   return (
-    <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 h-16 md:hidden z-50">
+    <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 h-16 md:hidden z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
       <div className="flex justify-around items-center h-full px-4">
-        <Link
+        <NavItem
           to="/dashboard"
-          className={`flex flex-col items-center justify-center space-y-1 ${
-            isActive('/dashboard')
-              ? 'text-primary'
-              : 'text-gray-500 hover:text-primary'
-          }`}
-        >
-          <Home className="h-5 w-5" />
-          <span className="text-xs">Home</span>
-        </Link>
+          icon={Home}
+          label="Home"
+          active={isActive('/dashboard')}
+        />
 
-        <Link
+        <NavItem
           to="/alumni-directory"
-          className={`flex flex-col items-center justify-center space-y-1 ${
-            isActive('/alumni-directory')
-              ? 'text-primary'
-              : 'text-gray-500 hover:text-primary'
-          }`}
-        >
-          <Users className="h-5 w-5" />
-          <span className="text-xs">Alumni</span>
-        </Link>
+          icon={Users}
+          label="Alumni"
+          active={isActive('/alumni-directory')}
+        />
 
-        <Link
+        <NavItem
           to="/jobs"
-          className={`flex flex-col items-center justify-center space-y-1 ${
-            location.pathname.includes('/jobs')
-              ? 'text-primary'
-              : 'text-gray-500 hover:text-primary'
-          }`}
-        >
-          <Briefcase className="h-5 w-5" />
-          <span className="text-xs">Jobs</span>
-        </Link>
+          icon={Briefcase}
+          label="Jobs"
+          active={location.pathname.includes('/jobs')}
+        />
 
-        <Link
+        <NavItem
           to="/events"
-          className={`flex flex-col items-center justify-center space-y-1 ${
-            location.pathname.includes('/events')
-              ? 'text-primary'
-              : 'text-gray-500 hover:text-primary'
-          }`}
-        >
-          <Calendar className="h-5 w-5" />
-          <span className="text-xs">Events</span>
-        </Link>
+          icon={Calendar}
+          label="Events"
+          active={location.pathname.includes('/events')}
+        />
 
-        <Link
+        <NavItem
           to="/messages"
-          className={`flex flex-col items-center justify-center space-y-1 relative ${
-            isActive('/messages')
-              ? 'text-primary'
-              : 'text-gray-500 hover:text-primary'
-          }`}
-        >
-          <div className="relative">
-            <MessageCircle className="h-5 w-5" />
-            <MessagingBadge />
-          </div>
-          <span className="text-xs">Messages</span>
-        </Link>
+          icon={MessageCircle}
+          label="Messages"
+          active={isActive('/messages')}
+          badge={<MessagingBadge />}
+        />
 
-        <Link
-          to="/credential-wallet"
-          className={`flex flex-col items-center justify-center space-y-1 ${
-            isActive('/credential-wallet') || isActive('/credentials')
-              ? 'text-primary'
-              : 'text-gray-500 hover:text-primary'
-          }`}
-        >
-          <Shield className="h-5 w-5" />
-          <span className="text-xs">Credentials</span>
-        </Link>
+        <NavItem
+          to="/more"
+          icon={Menu}
+          label="More"
+          active={isActive('/more') || 
+                 isActive('/credential-wallet') || 
+                 isActive('/cv-maker') || 
+                 isActive('/knowledge') || 
+                 isActive('/my-applications') || 
+                 isActive('/privacy-settings') || 
+                 isActive('/profile')}
+        />
       </div>
     </div>
+  );
+};
+
+type NavItemProps = {
+  to: string;
+  icon: React.ElementType;
+  label: string;
+  active: boolean;
+  badge?: React.ReactNode;
+};
+
+const NavItem = ({ to, icon: Icon, label, active, badge }: NavItemProps) => {
+  return (
+    <Link
+      to={to}
+      className={cn(
+        "flex flex-col items-center justify-center space-y-1 relative",
+        active ? "text-primary" : "text-gray-500 hover:text-primary"
+      )}
+    >
+      <div className="relative">
+        <Icon className="h-5 w-5" />
+        {badge}
+      </div>
+      <span className="text-xs">{label}</span>
+      {active && (
+        <span className="absolute -bottom-4 h-1 w-8 bg-primary rounded-t-lg" />
+      )}
+    </Link>
   );
 };
 

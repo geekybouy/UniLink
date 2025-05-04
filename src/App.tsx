@@ -22,6 +22,7 @@ import EventsPage from "@/pages/EventsPage";
 import EventDetailPage from "@/pages/EventDetailPage";
 import CreateEventPage from "@/pages/CreateEventPage";
 import EditEventPage from "@/pages/EditEventPage";
+import MorePage from "@/pages/MorePage";
 
 // Job board pages
 import JobsListingPage from "@/pages/JobsListingPage";
@@ -174,6 +175,11 @@ function App() {
                         <Route path="/messages" element={
                           <ProtectedRoute>
                             <MessagingPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/more" element={
+                          <ProtectedRoute>
+                            <MorePage />
                           </ProtectedRoute>
                         } />
                         
