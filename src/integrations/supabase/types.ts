@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      companies: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          industry: string | null
+          logo_url: string | null
+          name: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          logo_url?: string | null
+          name: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          logo_url?: string | null
+          name?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       connections: {
         Row: {
           created_at: string
@@ -327,6 +360,177 @@ export type Database = {
           virtual_link?: string | null
         }
         Relationships: []
+      }
+      job_alerts: {
+        Row: {
+          created_at: string
+          frequency: string
+          id: string
+          is_active: boolean | null
+          job_type: string[] | null
+          keywords: string[] | null
+          locations: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean | null
+          job_type?: string[] | null
+          keywords?: string[] | null
+          locations?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean | null
+          job_type?: string[] | null
+          keywords?: string[] | null
+          locations?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      job_applications: {
+        Row: {
+          applicant_id: string
+          cover_letter: string | null
+          created_at: string
+          id: string
+          job_id: string
+          resume_url: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          applicant_id: string
+          cover_letter?: string | null
+          created_at?: string
+          id?: string
+          job_id: string
+          resume_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          applicant_id?: string
+          cover_letter?: string | null
+          created_at?: string
+          id?: string
+          job_id?: string
+          resume_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_bookmarks: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_bookmarks_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          application_deadline: string | null
+          benefits: string | null
+          company_id: string | null
+          created_at: string
+          description: string
+          experience_level: string | null
+          id: string
+          job_type: string
+          location: string
+          posted_by: string
+          requirements: string | null
+          salary_range: string | null
+          skills: string[] | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          application_deadline?: string | null
+          benefits?: string | null
+          company_id?: string | null
+          created_at?: string
+          description: string
+          experience_level?: string | null
+          id?: string
+          job_type: string
+          location: string
+          posted_by: string
+          requirements?: string | null
+          salary_range?: string | null
+          skills?: string[] | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          application_deadline?: string | null
+          benefits?: string | null
+          company_id?: string | null
+          created_at?: string
+          description?: string
+          experience_level?: string | null
+          id?: string
+          job_type?: string
+          location?: string
+          posted_by?: string
+          requirements?: string | null
+          salary_range?: string | null
+          skills?: string[] | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {

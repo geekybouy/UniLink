@@ -1,6 +1,6 @@
 
 import { useLocation, Link } from 'react-router-dom';
-import { Home, Users, BookOpen, MessageCircle, Shield, Calendar } from 'lucide-react';
+import { Home, Users, BookOpen, MessageCircle, Shield, Calendar, Briefcase } from 'lucide-react';
 import { MessagingBadge } from './messaging/MessagingBadge';
 
 const BottomNav = () => {
@@ -33,6 +33,18 @@ const BottomNav = () => {
         >
           <Users className="h-5 w-5" />
           <span className="text-xs">Alumni</span>
+        </Link>
+
+        <Link
+          to="/jobs"
+          className={`flex flex-col items-center justify-center space-y-1 ${
+            location.pathname.includes('/jobs')
+              ? 'text-primary'
+              : 'text-gray-500 hover:text-primary'
+          }`}
+        >
+          <Briefcase className="h-5 w-5" />
+          <span className="text-xs">Jobs</span>
         </Link>
 
         <Link

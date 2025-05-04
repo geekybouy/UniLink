@@ -185,7 +185,7 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
       const creatorData = data.creator;
       
       // Fix with proper null checks and type assertions
-      if (creatorData !== null && creatorData !== undefined && typeof creatorData === 'object') {
+      if (creatorData !== null && typeof creatorData === 'object') {
         // Type guard to check if full_name property exists in creatorData
         if ('full_name' in creatorData && 
             typeof creatorData.full_name === 'string') {

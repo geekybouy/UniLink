@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Search, User, UserPlus, Users, BookOpen, Shield, UserCog, MessageCircle } from 'lucide-react';
+import { Menu, Search, User, UserPlus, Users, BookOpen, Shield, UserCog, MessageCircle, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -63,6 +63,12 @@ const Header = () => {
                     <UserPlus className="h-4 w-4" /> My Network
                   </Link>
                   <Link 
+                    to="/jobs" 
+                    className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors"
+                  >
+                    <Briefcase className="h-4 w-4" /> Jobs
+                  </Link>
+                  <Link 
                     to="/messages" 
                     className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors"
                   >
@@ -120,6 +126,12 @@ const Header = () => {
             className={`text-sm font-medium ${location.pathname === '/alumni-directory' ? 'text-primary' : 'text-gray-600 hover:text-primary'} transition-colors`}
           >
             Alumni Directory
+          </Link>
+          <Link 
+            to="/jobs" 
+            className={`text-sm font-medium ${location.pathname.includes('/jobs') ? 'text-primary' : 'text-gray-600 hover:text-primary'} transition-colors`}
+          >
+            Jobs
           </Link>
           <Link 
             to="/network" 
@@ -197,6 +209,12 @@ const Header = () => {
                   <Link to="/network" className="w-full cursor-pointer">
                     <Users className="mr-2 h-4 w-4" />
                     My Network
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/my-applications" className="w-full cursor-pointer">
+                    <Briefcase className="mr-2 h-4 w-4" />
+                    My Applications
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
