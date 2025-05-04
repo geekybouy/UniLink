@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -16,11 +17,17 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { MoreHorizontal, UserCheck, Ban, Trash2, Edit, Download } from 'lucide-react';
+import { MoreHorizontal, UserCheck, Ban, Trash2, Edit, Star } from 'lucide-react';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Post } from '@/types/knowledge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 
 const ContentModeration = () => {
   const [allPosts, setAllPosts] = useState<Post[]>([]);
@@ -55,7 +62,6 @@ const ContentModeration = () => {
           created_at: post.created_at,
           user_id: post.user_id,
           user: post.user,
-          image_url: post.image_url,
           content_type: post.content_type || 'article',
           file_url: post.file_url,
           link_url: post.link_url,
@@ -70,7 +76,6 @@ const ContentModeration = () => {
         setAllPosts(formattedPosts);
         setFilteredPosts(formattedPosts);
       }
-    }
     } catch (error) {
       console.error('Error fetching posts:', error);
       toast.error('Failed to load posts');
@@ -328,7 +333,7 @@ const ContentModeration = () => {
                   <TableCell>{post.content}</TableCell>
                   <TableCell>{new Date(post.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>{post.user?.full_name}</TableCell>
-                  <TableCell>{post.image_url}</TableCell>
+                  <TableCell>{post.file_url}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -400,7 +405,7 @@ const ContentModeration = () => {
                   <TableCell>{post.content}</TableCell>
                   <TableCell>{new Date(post.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>{post.user?.full_name}</TableCell>
-                  <TableCell>{post.image_url}</TableCell>
+                  <TableCell>{post.file_url}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -469,7 +474,7 @@ const ContentModeration = () => {
                   <TableCell>{post.content}</TableCell>
                   <TableCell>{new Date(post.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>{post.user?.full_name}</TableCell>
-                  <TableCell>{post.image_url}</TableCell>
+                  <TableCell>{post.file_url}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -533,7 +538,3 @@ const ContentModeration = () => {
 };
 
 export default ContentModeration;
-
-import {
-  Star,
-} from 'lucide-react';
