@@ -5,8 +5,7 @@ import { Post } from '@/types/knowledge';
 import { enrichPostsWithCounts } from './postService';
 import { 
   hasNewPostsSchema, 
-  transformLegacyPost, 
-  extractUserInfo 
+  processPost 
 } from './dbSchemaService';
 
 // Check schema support when initializing
@@ -21,37 +20,6 @@ const getSchemaSupport = async () => {
     schemaSupport.hasChecked = true;
   }
   return schemaSupport.hasNewSchema;
-};
-
-// Process a post from the database to the expected Post format
-const processPost = (post: any, hasNewSchema: boolean): Post => {
-  // For legacy schema, transform the post
-  const processedPost = hasNewSchema ? post : transformLegacyPost(post);
-  
-  // Extract user info safely
-  const userInfo = extractUserInfo(processedPost);
-  
-  // Return a properly formatted Post object
-  return {
-    id: processedPost.id,
-    title: processedPost.title || 'Untitled Post',
-    content: processedPost.content || '',
-    user_id: processedPost.user_id,
-    content_type: processedPost.content_type || 'article',
-    file_url: processedPost.file_url || processedPost.image_url || null,
-    link_url: processedPost.link_url || null,
-    image_url: processedPost.image_url || null,
-    created_at: processedPost.created_at,
-    updated_at: processedPost.updated_at || processedPost.created_at,
-    is_featured: processedPost.is_featured || false,
-    is_approved: processedPost.is_approved || true,
-    user: userInfo,
-    tags: [],
-    votes_count: 0,
-    comments_count: 0,
-    user_has_voted: false,
-    user_has_bookmarked: false
-  } as Post;
 };
 
 // Fetch all approved posts

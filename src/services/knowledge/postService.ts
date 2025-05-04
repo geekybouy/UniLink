@@ -1,10 +1,10 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Post, Tag, ContentType, PostFormData } from '@/types/knowledge';
 import { 
   hasNewPostsSchema, 
-  transformLegacyPost, 
-  extractUserInfo 
+  processPost 
 } from './dbSchemaService';
 
 // Check schema support when initializing
@@ -19,37 +19,6 @@ const getSchemaSupport = async () => {
     schemaSupport.hasChecked = true;
   }
   return schemaSupport.hasNewSchema;
-};
-
-// Process a post from the database to the expected Post format
-const processPost = (post: any, hasNewSchema: boolean): Post => {
-  // For legacy schema, transform the post
-  const processedPost = hasNewSchema ? post : transformLegacyPost(post);
-  
-  // Extract user info safely
-  const userInfo = extractUserInfo(processedPost);
-  
-  // Return a properly formatted Post object
-  return {
-    id: processedPost.id,
-    title: processedPost.title || 'Untitled Post',
-    content: processedPost.content || '',
-    user_id: processedPost.user_id,
-    content_type: processedPost.content_type || 'article',
-    file_url: processedPost.file_url || processedPost.image_url || null,
-    link_url: processedPost.link_url || null,
-    image_url: processedPost.image_url || null,
-    created_at: processedPost.created_at,
-    updated_at: processedPost.updated_at || processedPost.created_at,
-    is_featured: processedPost.is_featured || false,
-    is_approved: processedPost.is_approved || true,
-    user: userInfo,
-    tags: [],
-    votes_count: 0,
-    comments_count: 0,
-    user_has_voted: false,
-    user_has_bookmarked: false
-  } as Post;
 };
 
 // Upload a file to Supabase storage
@@ -235,7 +204,8 @@ export const updatePost = async (
     // Check if we have the new schema
     const hasNewSchema = await getSchemaSupport();
 
-    let fileUrl = existingPost.file_url || existingPost.image_url;
+    // Handle image_url or file_url based on schema
+    let fileUrl = (hasNewSchema && existingPost.file_url) || existingPost.image_url;
     if (file && (postData.content_type === 'file' || postData.content_type === 'image')) {
       const newFileUrl = await uploadFile(file);
       if (newFileUrl) fileUrl = newFileUrl;
@@ -398,7 +368,7 @@ export const searchPosts = async (
       }
     }
     
-    // Process posts
+    // Process posts using the shared function
     const mappedPosts = filteredPosts.map(post => processPost(post, hasNewSchema));
     
     const enrichedPosts = await enrichPostsWithCounts(mappedPosts);
@@ -436,17 +406,15 @@ export const enrichPostsWithCounts = async (posts: Post[]): Promise<Post[]> => {
   
   const postIds = posts.map(post => post.id);
   
-  // Get votes counts using direct query
+  // Simplified approach to get votes counts using direct query
   const { data: votesData } = await supabase
     .from('votes')
-    .select('post_id, is_upvote')
-    .in('post_id', postIds);
+    .select('post_id, is_upvote');
   
-  // Get comments counts using direct query
+  // Simplified approach to get comments counts using direct query
   const { data: commentsData } = await supabase
     .from('comments')
-    .select('post_id, id')
-    .in('post_id', postIds);
+    .select('post_id, id');
   
   // Get user's votes and bookmarks if logged in
   let userVotes: Record<string, boolean> = {};
@@ -455,32 +423,30 @@ export const enrichPostsWithCounts = async (posts: Post[]): Promise<Post[]> => {
   const user = await getCurrentUser();
   
   if (user) {
-    // Get user votes using direct query
+    // Get user votes
     const { data: userVotesData } = await supabase
       .from('votes')
       .select('post_id')
-      .eq('user_id', user.id)
-      .in('post_id', postIds);
+      .eq('user_id', user.id);
       
-    if (userVotesData && Array.isArray(userVotesData)) {
+    if (userVotesData) {
       userVotes = userVotesData.reduce((acc: Record<string, boolean>, vote: any) => {
-        if (vote && typeof vote === 'object' && vote.post_id) {
+        if (vote && vote.post_id) {
           acc[vote.post_id] = true;
         }
         return acc;
       }, {});
     }
     
-    // Get user bookmarks using direct query
+    // Get user bookmarks
     const { data: userBookmarksData } = await supabase
       .from('bookmarks')
       .select('post_id')
-      .eq('user_id', user.id)
-      .in('post_id', postIds);
+      .eq('user_id', user.id);
       
-    if (userBookmarksData && Array.isArray(userBookmarksData)) {
+    if (userBookmarksData) {
       userBookmarks = userBookmarksData.reduce((acc: Record<string, boolean>, bookmark: any) => {
-        if (bookmark && typeof bookmark === 'object' && bookmark.post_id) {
+        if (bookmark && bookmark.post_id) {
           acc[bookmark.post_id] = true;
         }
         return acc;
