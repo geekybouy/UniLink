@@ -4,7 +4,7 @@ import AdminLayout from '@/layouts/AdminLayout';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 const UserManagement = () => {
@@ -15,6 +15,7 @@ const UserManagement = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const usersPerPage = 10;
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchUsers();
@@ -90,20 +91,19 @@ const UserManagement = () => {
       setIsSubmitting(true);
       
       if (action === 'add') {
-        const { error } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: userId,
-            role,
-          });
+        // Use a raw SQL query via rpc to add role
+        const { error } = await supabase.rpc('add_user_role', { 
+          user_id_param: userId, 
+          role_param: role 
+        });
           
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from('user_roles')
-          .delete()
-          .eq('user_id', userId)
-          .eq('role', role);
+        // Use a raw SQL query via rpc to delete role
+        const { error } = await supabase.rpc('remove_user_role', { 
+          user_id_param: userId, 
+          role_param: role 
+        });
           
         if (error) throw error;
       }
@@ -115,7 +115,7 @@ const UserManagement = () => {
         title: 'Success',
         description: `Role ${action === 'add' ? 'assigned' : 'removed'} successfully`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating user role:', error);
       toast({
         title: 'Error',

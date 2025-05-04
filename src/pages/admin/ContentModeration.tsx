@@ -3,12 +3,13 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/layouts/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 const ContentModeration = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchPosts();

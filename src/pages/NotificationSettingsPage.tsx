@@ -12,7 +12,7 @@ const NotificationSettingsPage = () => {
   const { preferences, updatePreference, savePreferences } = useNotifications();
   const { toast } = useToast();
 
-  const getNotificationTypeName = (type: NotificationType): string => {
+  const getNotificationTypeName = (type: NotificationType | string): string => {
     switch (type) {
       case 'connection_request': return 'Connection Requests';
       case 'connection_accepted': return 'Connection Accepted';
@@ -38,6 +38,10 @@ const NotificationSettingsPage = () => {
 
   const handleSave = async () => {
     await savePreferences();
+    toast({
+      title: "Settings saved",
+      description: "Your notification preferences have been updated"
+    });
   };
 
   return (
@@ -74,7 +78,7 @@ const NotificationSettingsPage = () => {
                 <div className="divide-y">
                   {preferences.map((pref) => (
                     <div key={pref.id} className="grid grid-cols-4 p-4 items-center">
-                      <div>{getNotificationTypeName(pref.type as NotificationType)}</div>
+                      <div>{getNotificationTypeName(pref.type)}</div>
                       <div className="text-center">
                         <Switch 
                           checked={pref.in_app}

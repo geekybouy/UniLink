@@ -6,13 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { resetPassword } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -21,7 +20,12 @@ const ForgotPasswordPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      await resetPassword(email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+      
+      if (error) throw error;
+      
       toast({
         title: "Reset link sent",
         description: "Check your email for a link to reset your password.",
