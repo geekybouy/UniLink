@@ -6,15 +6,14 @@ import { NotificationType } from '@/types/notifications';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 const NotificationSettingsPage = () => {
   const { preferences, updatePreference, savePreferences } = useNotifications();
+  const { toast } = useToast();
 
   const getNotificationTypeName = (type: NotificationType): string => {
-    const typeString = String(type);
-    
-    switch (typeString) {
+    switch (type) {
       case 'connection_request': return 'Connection Requests';
       case 'connection_accepted': return 'Connection Accepted';
       case 'message': return 'New Messages';
@@ -25,7 +24,7 @@ const NotificationSettingsPage = () => {
       case 'content_mention': return 'Content Mentions';
       case 'post_liked': return 'Post Likes';
       case 'comment_added': return 'New Comments';
-      default: return typeString.charAt(0).toUpperCase() + typeString.slice(1).replace('_', ' ');
+      default: return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
   };
 

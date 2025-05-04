@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
+// Import pages
 import Index from './pages/Index';
 import Feed from './pages/Feed';
 import Dashboard from './pages/Dashboard';
@@ -97,7 +99,7 @@ function App() {
                         <Route path="/auth/callback" element={<AuthCallback />} />
 
                         {/* Protected routes */}
-                        <Route element={<ProtectedRoute>{''}</ProtectedRoute>}>
+                        <Route element={<ProtectedRoute />}>
                           <Route path="/dashboard" element={<Dashboard />} />
                           <Route path="/feed" element={<Feed />} />
                           <Route path="/credential-wallet" element={<CredentialWallet />} />
