@@ -25,6 +25,17 @@ export const typedSupabaseClient = {
     getByUserId: (userId: string) => customSupabase.from('education').select('*').eq('user_id', userId)
   },
   
+  // Posts table with specific methods for schema-aware operations
+  posts: {
+    select: () => customSupabase.from('posts').select('*'),
+    selectWithUser: () => customSupabase.from('posts').select('*, user:profiles (full_name, avatar_url)'),
+    insert: (data: any) => customSupabase.from('posts').insert(data),
+    update: (id: string, data: any) => customSupabase.from('posts').update(data).eq('id', id),
+    delete: (id: string) => customSupabase.from('posts').delete().eq('id', id),
+    getById: (id: string) => customSupabase.from('posts').select('*').eq('id', id).single(),
+    getByUserId: (userId: string) => customSupabase.from('posts').select('*').eq('user_id', userId),
+  },
+  
   // Skills table
   skills: {
     insert: (data: any) => customSupabase.from('skills').insert(data),

@@ -44,7 +44,8 @@ export const fetchPosts = async (): Promise<Post[]> => {
       query = query.eq('is_approved', true);
     }
     
-    const { data, error } = await query.order('created_at', { ascending: false });
+    // Execute the query with type assertion to avoid deep instantiation
+    const { data, error } = await query.order('created_at', { ascending: false }) as any;
 
     if (error) throw error;
     
@@ -53,7 +54,7 @@ export const fetchPosts = async (): Promise<Post[]> => {
     }
     
     // Process posts to add tags, vote counts, etc.
-    const mappedPosts = data.map(post => processPost(post, hasNewSchema));
+    const mappedPosts = data.map((post: any) => processPost(post, hasNewSchema));
     
     // Get votes counts
     const postsWithCounts = await enrichPostsWithCounts(mappedPosts);
@@ -76,6 +77,7 @@ export const fetchFeaturedPosts = async (): Promise<Post[]> => {
       return [];
     }
 
+    // Execute the query with type assertion to avoid deep instantiation
     const { data, error } = await supabase
       .from('posts')
       .select(`
@@ -87,7 +89,7 @@ export const fetchFeaturedPosts = async (): Promise<Post[]> => {
       `)
       .eq('is_approved', true)
       .eq('is_featured', true)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }) as any;
 
     if (error) throw error;
     
@@ -96,7 +98,7 @@ export const fetchFeaturedPosts = async (): Promise<Post[]> => {
     }
     
     // Process posts
-    const mappedPosts = data.map(post => processPost(post, true));
+    const mappedPosts = data.map((post: any) => processPost(post, true));
     
     const featuredWithCounts = await enrichPostsWithCounts(mappedPosts);
     return featuredWithCounts;
@@ -112,6 +114,7 @@ export const fetchUserPosts = async (userId: string | undefined): Promise<Post[]
   if (!userId) return [];
   
   try {
+    // Execute the query with type assertion to avoid deep instantiation
     const { data, error } = await supabase
       .from('posts')
       .select(`
@@ -122,7 +125,7 @@ export const fetchUserPosts = async (userId: string | undefined): Promise<Post[]
         )
       `)
       .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }) as any;
 
     if (error) throw error;
     
@@ -134,7 +137,7 @@ export const fetchUserPosts = async (userId: string | undefined): Promise<Post[]
     const hasNewSchema = await getSchemaSupport();
     
     // Process posts
-    const mappedPosts = data.map(post => processPost(post, hasNewSchema));
+    const mappedPosts = data.map((post: any) => processPost(post, hasNewSchema));
     
     const userPostsWithCounts = await enrichPostsWithCounts(mappedPosts);
     return userPostsWithCounts;
@@ -159,6 +162,8 @@ export const fetchBookmarkedPosts = async (userId: string | undefined): Promise<
 
     if (bookmarksData && bookmarksData.length > 0) {
       const bookmarkedPostIds = bookmarksData.map(bookmark => bookmark.post_id);
+      
+      // Execute the query with type assertion to avoid deep instantiation
       const { data: bookmarkedPostsData, error: bookmarkedPostsError } = await supabase
         .from('posts')
         .select(`
@@ -169,7 +174,7 @@ export const fetchBookmarkedPosts = async (userId: string | undefined): Promise<
           )
         `)
         .in('id', bookmarkedPostIds)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as any;
 
       if (bookmarkedPostsError) throw bookmarkedPostsError;
       
@@ -181,7 +186,7 @@ export const fetchBookmarkedPosts = async (userId: string | undefined): Promise<
       const hasNewSchema = await getSchemaSupport();
       
       // Process posts
-      const mappedPosts = bookmarkedPostsData.map(post => processPost(post, hasNewSchema));
+      const mappedPosts = bookmarkedPostsData.map((post: any) => processPost(post, hasNewSchema));
       
       const bookmarkedWithCounts = await enrichPostsWithCounts(mappedPosts);
       return bookmarkedWithCounts;

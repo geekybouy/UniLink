@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { customSupabase } from '@/integrations/supabase/customClient';
 
 export interface TableColumn {
   column_name: string;
@@ -9,28 +10,23 @@ export interface TableColumn {
 // Safe check if a column exists in a table
 export const columnExists = async (tableName: string, columnName: string): Promise<boolean> => {
   try {
-    // Instead of querying information_schema directly (which causes typing issues),
-    // we'll use a simple client-side approach by trying to select from the table with a filter
-    // This is less accurate but avoids TypeScript errors with information_schema
-    const { data, error } = await supabase.rpc('get_table_columns', { p_table_name: tableName })
-      .then(response => {
-        if (response.error) {
-          console.error('Error fetching table columns:', response.error);
-          return { data: null, error: response.error };
-        }
-        
-        // Filter columns locally
-        const columns = response.data as TableColumn[] || [];
-        const foundColumn = columns.find(col => col.column_name === columnName);
-        return { data: foundColumn || null, error: null };
-      });
+    // Use a direct SQL query via a custom fetch function instead of RPC
+    const { data, error } = await customSupabase
+      .from(tableName)
+      .select()
+      .limit(1);
     
     if (error) {
-      console.error(`Error checking for column ${columnName}:`, error);
+      console.error(`Error checking table ${tableName}:`, error);
       return false;
     }
     
-    return data !== null;
+    // If we get a result, check if the column exists in the returned object
+    if (data && data.length > 0) {
+      return columnName in data[0];
+    }
+    
+    return false;
   } catch (error) {
     console.error(`Error checking for column ${columnName} in table ${tableName}:`, error);
     return false;

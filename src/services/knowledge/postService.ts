@@ -6,6 +6,7 @@ import {
   hasNewPostsSchema, 
   processPost 
 } from './dbSchemaService';
+import { customSupabase } from '@/integrations/supabase/customClient';
 
 // Check schema support when initializing
 let schemaSupport = {
@@ -52,6 +53,7 @@ export const fetchPostById = async (id: string): Promise<Post | null> => {
     // Check if we have the new schema
     const hasNewSchema = await getSchemaSupport();
 
+    // Use type assertion to avoid excessive type instantiation
     const { data, error } = await supabase
       .from('posts')
       .select(`
@@ -62,7 +64,7 @@ export const fetchPostById = async (id: string): Promise<Post | null> => {
         )
       `)
       .eq('id', id)
-      .single();
+      .single() as any;
 
     if (error) throw error;
 
@@ -142,11 +144,12 @@ export const createPost = async (
       console.warn('Using legacy posts table schema for insert');
     }
 
+    // Use type assertion to avoid excessive type instantiation
     const { data, error } = await supabase
       .from('posts')
       .insert([newPost])
       .select()
-      .single();
+      .single() as any;
 
     if (error) throw error;
 
@@ -188,12 +191,13 @@ export const updatePost = async (
   }
 
   try {
+    // Use type assertion to avoid excessive type instantiation
     const { data: existingPost, error: fetchError } = await supabase
       .from('posts')
       .select('*')
       .eq('id', id)
       .eq('user_id', userId)
-      .single();
+      .single() as any;
 
     if (fetchError) throw fetchError;
     if (!existingPost) {
@@ -205,7 +209,10 @@ export const updatePost = async (
     const hasNewSchema = await getSchemaSupport();
 
     // Handle image_url or file_url based on schema
-    let fileUrl = (hasNewSchema && existingPost.file_url) || existingPost.image_url;
+    let fileUrl = hasNewSchema ? 
+      existingPost.file_url || existingPost.image_url : 
+      existingPost.image_url;
+      
     if (file && (postData.content_type === 'file' || postData.content_type === 'image')) {
       const newFileUrl = await uploadFile(file);
       if (newFileUrl) fileUrl = newFileUrl;
@@ -336,9 +343,9 @@ export const searchPosts = async (
       }
     }
     
-    // Execute the query
+    // Execute the query with type assertion to avoid deep instantiation
     const { data, error } = await supabaseQuery
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }) as any;
 
     if (error) throw error;
     
@@ -369,7 +376,7 @@ export const searchPosts = async (
     }
     
     // Process posts using the shared function
-    const mappedPosts = filteredPosts.map(post => processPost(post, hasNewSchema));
+    const mappedPosts = filteredPosts.map((post: any) => processPost(post, hasNewSchema));
     
     const enrichedPosts = await enrichPostsWithCounts(mappedPosts);
     
@@ -409,12 +416,12 @@ export const enrichPostsWithCounts = async (posts: Post[]): Promise<Post[]> => {
   // Simplified approach to get votes counts using direct query
   const { data: votesData } = await supabase
     .from('votes')
-    .select('post_id, is_upvote');
+    .select('post_id, is_upvote') as any;
   
   // Simplified approach to get comments counts using direct query
   const { data: commentsData } = await supabase
     .from('comments')
-    .select('post_id, id');
+    .select('post_id, id') as any;
   
   // Get user's votes and bookmarks if logged in
   let userVotes: Record<string, boolean> = {};
