@@ -672,21 +672,37 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
         // Handle potentially missing applicant data
         const applicantData = application.applicant || {};
         
-        // Create properly typed applicant object
+        // Create properly typed applicant object with safe property access
         const applicant = {
-          full_name: typeof applicantData.full_name === 'string' ? applicantData.full_name : 'Unknown',
-          avatar_url: applicantData.avatar_url as string | undefined,
-          email: typeof applicantData.email === 'string' ? applicantData.email : undefined
+          full_name: 'Unknown',
+          avatar_url: undefined as string | undefined,
+          email: undefined as string | undefined
         };
+        
+        // Only try to access properties if applicantData is a non-empty object
+        if (typeof applicantData === 'object' && applicantData !== null) {
+          // Use optional chaining and type checking for safer property access
+          if ('full_name' in applicantData && typeof applicantData.full_name === 'string') {
+            applicant.full_name = applicantData.full_name;
+          }
+          
+          if ('avatar_url' in applicantData) {
+            applicant.avatar_url = applicantData.avatar_url as string | undefined;
+          }
+          
+          if ('email' in applicantData && typeof applicantData.email === 'string') {
+            applicant.email = applicantData.email;
+          }
+        }
         
         return {
           ...application,
           status: application.status as ApplicationStatus,
           applicant
-        };
+        } as JobApplication;
       }) as JobApplication[];
       
-      return typedApplications;
+      return typedApplications || [];
     } catch (error) {
       console.error('Error fetching applications for job:', error);
       toast.error('Failed to load applications');

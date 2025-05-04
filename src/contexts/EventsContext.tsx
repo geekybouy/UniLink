@@ -185,11 +185,11 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
       const creatorData = data.creator;
       
       // Fix with proper null checks
-      if (creatorData !== null && typeof creatorData === 'object') {
-        // Use optional chaining to safely access properties
+      if (creatorData && typeof creatorData === 'object') {
+        // Use optional chaining for safely accessing properties
         creator = {
           full_name: typeof creatorData?.full_name === 'string' ? creatorData.full_name : 'Unknown',
-          avatar_url: creatorData?.avatar_url
+          avatar_url: creatorData?.avatar_url as string | undefined
         };
       }
 
