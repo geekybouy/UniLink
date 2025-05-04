@@ -28,6 +28,7 @@ export interface Post {
   comments_count?: number;
   user_has_voted?: boolean;
   user_has_bookmarked?: boolean;
+  image_url?: string; // Added for compatibility with existing posts table
 }
 
 export interface Comment {

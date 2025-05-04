@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -235,16 +234,17 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // Make sure the returned object matches the Post interface
       return {
         id: post.id,
-        title: post.title,
+        title: post.title || '',
         content: post.content,
         user_id: post.user_id,
-        content_type: post.content_type as ContentType,
+        content_type: post.content_type as ContentType || 'article',
         file_url: post.file_url,
         link_url: post.link_url,
+        image_url: post.image_url,
         created_at: post.created_at,
-        updated_at: post.updated_at,
-        is_featured: post.is_featured,
-        is_approved: post.is_approved,
+        updated_at: post.updated_at || post.created_at,
+        is_featured: post.is_featured || false,
+        is_approved: post.is_approved || true,
         user: post.user,
         votes_count: voteCounts[post.id] || 0,
         comments_count: commentCounts[post.id] || 0,
@@ -493,7 +493,19 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
       // Create a post object with the correct shape
       const post: Post = {
-        ...data,
+        id: data.id,
+        title: data.title || '',
+        content: data.content,
+        user_id: data.user_id,
+        content_type: data.content_type as ContentType || 'article',
+        file_url: data.file_url,
+        link_url: data.link_url,
+        image_url: data.image_url,
+        created_at: data.created_at,
+        updated_at: data.updated_at || data.created_at,
+        is_featured: data.is_featured || false,
+        is_approved: data.is_approved || true,
+        user: data.user,
         tags,
         votes_count: 0,
         comments_count: 0,
@@ -517,7 +529,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         .from('comments')
         .select(`
           *,
-          profiles!inner (
+          user:profiles (
             full_name,
             avatar_url
           )
@@ -535,10 +547,10 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         post_id: item.post_id,
         created_at: item.created_at,
         updated_at: item.updated_at,
-        user: {
-          full_name: item.profiles.full_name,
-          avatar_url: item.profiles.avatar_url
-        }
+        user: item.user ? {
+          full_name: item.user.full_name,
+          avatar_url: item.user.avatar_url
+        } : undefined
       }));
       
       return comments;
@@ -581,11 +593,16 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
       // Transform to match Comment interface
       const comment: Comment = {
-        ...rawData,
-        user: {
+        id: rawData.id,
+        content: rawData.content,
+        user_id: rawData.user_id,
+        post_id: rawData.post_id,
+        created_at: rawData.created_at,
+        updated_at: rawData.updated_at,
+        user: userData ? {
           full_name: userData.full_name,
           avatar_url: userData.avatar_url
-        }
+        } : undefined
       };
       
       toast.success('Comment added');
