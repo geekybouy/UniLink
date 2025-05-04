@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -72,8 +71,8 @@ const ContentModeration = () => {
             // Handle the possibility of user being null or an error object safely
             user: post.user && typeof post.user === 'object' && !('error' in post.user) 
               ? { 
-                  full_name: post.user?.full_name || 'Unknown User', 
-                  avatar_url: post.user?.avatar_url 
+                  full_name: post.user?.full_name || 'Unknown User',
+                  avatar_url: post.user?.avatar_url || null
                 }
               : { full_name: 'Unknown User' },
             // Add default values for fields that might not exist in the database
@@ -142,17 +141,19 @@ const ContentModeration = () => {
   
   const approvePost = async (postId: string) => {
     try {
-      // Check if column exists before updating
-      const { error } = await supabase
-        .from('posts')
-        .update({ 
-          // Just update content directly without trying to use RPC
-          content: `[APPROVED] ${allPosts.find(p => p.id === postId)?.content || ''}` 
-        })
-        .eq('id', postId);
-    
-      if (error) throw error;
-    
+      // Update the post content directly
+      const post = allPosts.find(p => p.id === postId);
+      if (post) {
+        const { error } = await supabase
+          .from('posts')
+          .update({ 
+            content: `[APPROVED] ${post.content}`
+          })
+          .eq('id', postId);
+        
+        if (error) throw error;
+      }
+      
       toast.success('Post approved successfully');
       fetchPosts(); // Refresh the list
     } catch (error) {
@@ -163,17 +164,19 @@ const ContentModeration = () => {
   
   const featurePost = async (postId: string) => {
     try {
-      // Check if column exists before updating
-      const { error } = await supabase
-        .from('posts')
-        .update({ 
-          // Just update content directly without trying to use RPC
-          content: `[FEATURED] ${allPosts.find(p => p.id === postId)?.content || ''}`
-        })
-        .eq('id', postId);
-    
-      if (error) throw error;
-    
+      // Update the post content directly
+      const post = allPosts.find(p => p.id === postId);
+      if (post) {
+        const { error } = await supabase
+          .from('posts')
+          .update({ 
+            content: `[FEATURED] ${post.content}`
+          })
+          .eq('id', postId);
+        
+        if (error) throw error;
+      }
+      
       toast.success('Post featured successfully');
       fetchPosts(); // Refresh the list
     } catch (error) {
