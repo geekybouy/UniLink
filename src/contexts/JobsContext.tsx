@@ -1,10 +1,9 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Job, JobFormData, JobApplication, JobBookmark, 
-  JobAlert, Company, JobFilters 
+  JobAlert, Company, JobFilters, JobType, ApplicationStatus, AlertFrequency
 } from '@/types/jobs';
 import { useAuth } from './AuthContext';
 import { useProfile } from './ProfileContext';
@@ -232,7 +231,7 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
       
       toast.success('Job posted successfully');
       await fetchJobs(); // Refresh jobs list
-      return data;
+      return data as unknown as Job;
     } catch (error) {
       console.error('Error creating job:', error);
       toast.error('Failed to post job');
@@ -286,7 +285,7 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
       
       toast.success('Job updated successfully');
       await fetchJobs(); // Refresh jobs list
-      return data;
+      return data as unknown as Job;
     } catch (error) {
       console.error('Error updating job:', error);
       toast.error('Failed to update job');
@@ -544,7 +543,7 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
       
       toast.success('Application submitted successfully');
       await fetchUserApplications(); // Refresh applications
-      return data;
+      return data as unknown as JobApplication;
     } catch (error) {
       console.error('Error applying to job:', error);
       toast.error('Failed to submit application');
@@ -567,8 +566,17 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
         
       if (error) throw error;
       
-      setUserApplications(data || []);
-      return data || [];
+      const typedApplications = data?.map(app => ({
+        ...app,
+        status: app.status as ApplicationStatus,
+        job: app.job ? {
+          ...app.job,
+          job_type: app.job.job_type as JobType,
+        } : undefined
+      })) as JobApplication[];
+      
+      setUserApplications(typedApplications);
+      return typedApplications;
     } catch (error) {
       console.error('Error fetching applications:', error);
       toast.error('Failed to load applications');
@@ -659,7 +667,26 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
         
       if (error) throw error;
       
-      return data || [];
+      // Transform and add proper typing to the response data
+      const typedApplications = data?.map(application => {
+        // Handle potentially missing applicant data
+        const applicantData = application.applicant || {};
+        
+        // Create properly typed applicant object
+        const applicant = {
+          full_name: typeof applicantData.full_name === 'string' ? applicantData.full_name : 'Unknown',
+          avatar_url: applicantData.avatar_url as string | undefined,
+          email: typeof applicantData.email === 'string' ? applicantData.email : undefined
+        };
+        
+        return {
+          ...application,
+          status: application.status as ApplicationStatus,
+          applicant
+        };
+      }) as JobApplication[];
+      
+      return typedApplications;
     } catch (error) {
       console.error('Error fetching applications for job:', error);
       toast.error('Failed to load applications');
@@ -692,7 +719,11 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       
       toast.success('Job alert created successfully');
-      return data;
+      return {
+        ...data,
+        job_type: data.job_type as JobType[],
+        frequency: data.frequency as AlertFrequency
+      };
     } catch (error) {
       console.error('Error creating job alert:', error);
       toast.error('Failed to create job alert');
@@ -711,7 +742,13 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
         
       if (error) throw error;
       
-      return data || [];
+      const typedAlerts = data?.map(alert => ({
+        ...alert,
+        job_type: alert.job_type as JobType[],
+        frequency: alert.frequency as AlertFrequency
+      })) as JobAlert[];
+      
+      return typedAlerts;
     } catch (error) {
       console.error('Error fetching job alerts:', error);
       toast.error('Failed to load job alerts');

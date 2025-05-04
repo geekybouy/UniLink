@@ -184,19 +184,13 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
       // Create a temporary local variable to make TypeScript happy
       const creatorData = data.creator;
       
-      // Fix with proper null checks and type assertions
+      // Fix with proper null checks
       if (creatorData !== null && typeof creatorData === 'object') {
-        // Type guard to check if full_name property exists in creatorData
-        if ('full_name' in creatorData && 
-            typeof creatorData.full_name === 'string') {
-          creator.full_name = creatorData.full_name;
-        }
-        
-        // Type guard to check if avatar_url property exists in creatorData
-        if ('avatar_url' in creatorData) {
-          // avatar_url can be undefined or string
-          creator.avatar_url = creatorData.avatar_url as string | undefined;
-        }
+        // Use optional chaining to safely access properties
+        creator = {
+          full_name: typeof creatorData?.full_name === 'string' ? creatorData.full_name : 'Unknown',
+          avatar_url: creatorData?.avatar_url
+        };
       }
 
       const eventWithTypes: Event = {

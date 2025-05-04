@@ -46,7 +46,7 @@ const JOB_TYPES: { value: JobType; label: string }[] = [
 ];
 
 const formSchema = z.object({
-  job_type: z.array(z.string()),
+  job_type: z.array(z.string()).transform(arr => arr as JobType[]),
   keywords: z.array(z.string()),
   locations: z.array(z.string()),
   frequency: z.enum(['daily', 'weekly']),
@@ -74,7 +74,13 @@ export default function JobAlertForm({ isOpen, onClose, onSubmit }: JobAlertForm
   const handleSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      await onSubmit(values);
+      await onSubmit({
+        job_type: values.job_type as JobType[],
+        keywords: values.keywords,
+        locations: values.locations,
+        frequency: values.frequency as AlertFrequency,
+        is_active: values.is_active
+      });
       form.reset();
       onClose();
     } catch (error) {
