@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -62,7 +63,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         .from('posts')
         .select(`
           *,
-          user:user_id (
+          user:profiles!inner (
             full_name,
             avatar_url
           )
@@ -81,7 +82,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         .from('posts')
         .select(`
           *,
-          user:user_id (
+          user:profiles!inner (
             full_name,
             avatar_url
           )
@@ -102,7 +103,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           .from('posts')
           .select(`
             *,
-            user:user_id (
+            user:profiles!inner (
               full_name,
               avatar_url
             )
@@ -129,7 +130,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             .from('posts')
             .select(`
               *,
-              user:user_id (
+              user:profiles!inner (
                 full_name,
                 avatar_url
               )
@@ -159,13 +160,13 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     
     const postIds = posts.map(post => post.id);
     
-    // Get votes counts using direct query instead of RPC
+    // Get votes counts using direct query
     const { data: votesData } = await supabase
       .from('votes')
       .select('post_id, is_upvote')
       .in('post_id', postIds);
     
-    // Get comments counts using direct query instead of RPC
+    // Get comments counts using direct query
     const { data: commentsData } = await supabase
       .from('comments')
       .select('post_id, id')
@@ -176,7 +177,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     let userBookmarks: Record<string, boolean> = {};
     
     if (user) {
-      // Get user votes using direct query instead of RPC
+      // Get user votes using direct query
       const { data: userVotesData } = await supabase
         .from('votes')
         .select('post_id')
@@ -192,7 +193,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }, {});
       }
       
-      // Get user bookmarks using direct query instead of RPC
+      // Get user bookmarks using direct query
       const { data: userBookmarksData } = await supabase
         .from('bookmarks')
         .select('post_id')
@@ -229,14 +230,28 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
     }
     
-    // Add counts to posts
-    return posts.map((post: any) => ({
-      ...post,
-      votes_count: voteCounts[post.id] || 0,
-      comments_count: commentCounts[post.id] || 0,
-      user_has_voted: userVotes[post.id] || false,
-      user_has_bookmarked: userBookmarks[post.id] || false
-    }));
+    // Add counts to posts and ensure proper typing
+    return posts.map((post: any) => {
+      // Make sure the returned object matches the Post interface
+      return {
+        id: post.id,
+        title: post.title,
+        content: post.content,
+        user_id: post.user_id,
+        content_type: post.content_type as ContentType,
+        file_url: post.file_url,
+        link_url: post.link_url,
+        created_at: post.created_at,
+        updated_at: post.updated_at,
+        is_featured: post.is_featured,
+        is_approved: post.is_approved,
+        user: post.user,
+        votes_count: voteCounts[post.id] || 0,
+        comments_count: commentCounts[post.id] || 0,
+        user_has_voted: userVotes[post.id] || false,
+        user_has_bookmarked: userBookmarks[post.id] || false
+      };
+    });
   };
 
   const fetchTags = async () => {
@@ -298,6 +313,8 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         content_type: postData.content_type,
         file_url: fileUrl,
         link_url: postData.link_url || null,
+        is_featured: false,
+        is_approved: true
       };
 
       const { data, error } = await supabase
@@ -315,7 +332,6 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           tag_id: tagId
         }));
 
-        // Use the typedSupabaseClient for post_tags
         const { error: tagError } = await supabase
           .from('post_tags')
           .insert(tagInserts);
@@ -325,7 +341,18 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       toast.success('Post created successfully');
       await fetchPosts(); // Refresh posts
-      return data;
+      
+      // Ensure the returned data matches the Post interface
+      const post: Post = {
+        ...data,
+        tags: [],
+        votes_count: 0,
+        comments_count: 0,
+        user_has_voted: false,
+        user_has_bookmarked: false
+      };
+      
+      return post;
     } catch (error: any) {
       toast.error('Error creating post: ' + error.message);
       console.error('Error creating post:', error);
@@ -389,7 +416,6 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           tag_id: tagId
         }));
 
-        // Use direct insert instead of through typedClient
         const { error: tagError } = await supabase
           .from('post_tags')
           .insert(tagInserts);
@@ -438,15 +464,9 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         .from('posts')
         .select(`
           *,
-          user:user_id (
+          user:profiles!inner (
             full_name,
             avatar_url
-          ),
-          post_tags!inner (
-            tag:tag_id (
-              id,
-              name
-            )
           )
         `)
         .eq('id', id)
@@ -454,9 +474,31 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       if (error) throw error;
 
-      // Transform post_tags to tags array
-      const tags = data.post_tags.map((pt: any) => pt.tag);
-      const post = { ...data, tags, post_tags: undefined };
+      // Fetch tags for the post
+      const { data: tagData, error: tagError } = await supabase
+        .from('post_tags')
+        .select(`
+          tag:tags (
+            id,
+            name
+          )
+        `)
+        .eq('post_id', id);
+      
+      if (tagError) throw tagError;
+      
+      // Extract tags from the join result
+      const tags = tagData?.map(item => item.tag as Tag) || [];
+      
+      // Create a post object with the correct shape
+      const post: Post = {
+        ...data,
+        tags,
+        votes_count: 0,
+        comments_count: 0,
+        user_has_voted: false,
+        user_has_bookmarked: false
+      };
 
       // Add votes and comments counts
       const enrichedPosts = await enrichPostsWithCounts([post]);
@@ -474,7 +516,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         .from('comments')
         .select(`
           *,
-          user:user_id (
+          profiles!inner (
             full_name,
             avatar_url
           )
@@ -483,7 +525,22 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      // Transform the data to match the Comment interface
+      const comments: Comment[] = data.map((item: any) => ({
+        id: item.id,
+        content: item.content,
+        user_id: item.user_id,
+        post_id: item.post_id,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        user: {
+          full_name: item.profiles.full_name,
+          avatar_url: item.profiles.avatar_url
+        }
+      }));
+      
+      return comments;
     } catch (error: any) {
       toast.error('Error fetching comments: ' + error.message);
       console.error('Error fetching comments:', error);
@@ -498,7 +555,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
 
     try {
-      const { data, error } = await supabase
+      const { data: rawData, error } = await supabase
         .from('comments')
         .insert([
           {
@@ -507,18 +564,31 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             user_id: user.id
           }
         ])
-        .select(`
-          *,
-          user:user_id (
-            full_name,
-            avatar_url
-          )
-        `)
+        .select()
         .single();
 
       if (error) throw error;
+
+      // Get user info for the comment
+      const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (userError) throw userError;
+      
+      // Transform to match Comment interface
+      const comment: Comment = {
+        ...rawData,
+        user: {
+          full_name: userData.full_name,
+          avatar_url: userData.avatar_url
+        }
+      };
+      
       toast.success('Comment added');
-      return data;
+      return comment;
     } catch (error: any) {
       toast.error('Error adding comment: ' + error.message);
       console.error('Error adding comment:', error);
@@ -648,19 +718,14 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const searchPosts = async ({ query, contentType, tag, featured }: SearchParams): Promise<Post[]> => {
     try {
+      // Start building the query
       let supabaseQuery = supabase
         .from('posts')
         .select(`
           *,
-          user:user_id (
+          user:profiles!inner (
             full_name,
             avatar_url
-          ),
-          post_tags!inner (
-            tag:tag_id (
-              id,
-              name
-            )
           )
         `)
         .eq('is_approved', true);
@@ -668,12 +733,6 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // Add content_type filter if specified
       if (contentType && contentType !== 'all') {
         supabaseQuery = supabaseQuery.eq('content_type', contentType);
-      }
-      
-      // Add tag filter if specified
-      if (tag) {
-        supabaseQuery = supabaseQuery
-          .eq('post_tags.tag.id', tag);
       }
       
       // Add featured filter if specified
@@ -686,23 +745,60 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         supabaseQuery = supabaseQuery.or(`title.ilike.%${query}%,content.ilike.%${query}%`);
       }
       
+      // Execute the query
       const { data, error } = await supabaseQuery
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      // Process the results to transform post_tags to tags array
-      const processedPosts = (data || []).map((post: any) => {
-        const tags = post.post_tags.map((pt: any) => pt.tag);
-        return { ...post, tags, post_tags: undefined };
-      });
+      if (!data || data.length === 0) {
+        return [];
+      }
       
-      // Remove duplicates (can happen due to joining with post_tags)
-      const uniquePosts = Array.from(
-        new Map(processedPosts.map((post: Post) => [post.id, post])).values()
-      );
+      // Handle tag filtering separately after getting initial results
+      let filteredPosts = [...data];
       
-      const enrichedPosts = await enrichPostsWithCounts(uniquePosts);
+      if (tag) {
+        // Get post IDs that have the specified tag
+        const { data: taggedPostsData, error: tagError } = await supabase
+          .from('post_tags')
+          .select('post_id')
+          .eq('tag_id', tag);
+          
+        if (tagError) throw tagError;
+        
+        if (taggedPostsData && taggedPostsData.length > 0) {
+          const taggedPostIds = taggedPostsData.map(item => item.post_id);
+          // Filter posts that match the tagged post IDs
+          filteredPosts = filteredPosts.filter(post => taggedPostIds.includes(post.id));
+        } else {
+          // If no posts with this tag, return empty array
+          return [];
+        }
+      }
+      
+      // Process posts to add tags, vote counts, etc.
+      const enrichedPosts = await enrichPostsWithCounts(filteredPosts);
+      
+      // Now fetch tags for each post
+      for (const post of enrichedPosts) {
+        const { data: tagData } = await supabase
+          .from('post_tags')
+          .select(`
+            tag:tags (
+              id,
+              name
+            )
+          `)
+          .eq('post_id', post.id);
+          
+        if (tagData && tagData.length > 0) {
+          post.tags = tagData.map(item => item.tag as Tag);
+        } else {
+          post.tags = [];
+        }
+      }
+      
       return enrichedPosts;
     } catch (error: any) {
       toast.error('Error searching posts: ' + error.message);
@@ -727,7 +823,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (error) throw error;
       
       await fetchTags(); // Refresh tags
-      return data;
+      return data as Tag;
     } catch (error: any) {
       // Check if it's a duplicate tag error
       if (error.code === '23505') {
