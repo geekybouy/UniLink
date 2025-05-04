@@ -3,21 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Post } from '@/types/knowledge';
 import { enrichPostsWithCounts } from './postService';
+import { hasNewPostsSchema, transformLegacyPost, extractUserInfo } from './dbSchemaService';
 
 // Fetch all approved posts
 export const fetchPosts = async (): Promise<Post[]> => {
   try {
-    // First check if we have a posts table with the expanded schema
-    const { data: tableInfo, error: schemaError } = await supabase
-      .rpc('get_table_columns', { table_name: 'posts' });
-      
-    if (schemaError) {
-      console.error('Error checking table schema:', schemaError);
-    }
-
-    // Determine if we have the new schema or old schema
-    const hasNewSchema = tableInfo && Array.isArray(tableInfo) && 
-      tableInfo.some(col => col.column_name === 'is_approved');
+    // Check if we have the new schema
+    const hasNewSchema = await hasNewPostsSchema();
 
     // Start building the query
     const query = supabase
@@ -44,37 +36,29 @@ export const fetchPosts = async (): Promise<Post[]> => {
     }
     
     // Process posts to add tags, vote counts, etc.
-    // First, map all posts to the correct format based on schema
     const mappedPosts = data.map(post => {
-      let titleContent = post.content;
-      let actualContent = '';
-      
-      // For legacy schema, extract title from the content (first line)
-      if (!hasNewSchema && post.content) {
-        const lines = post.content.split('\n');
-        if (lines.length > 0) {
-          titleContent = lines[0];
-          actualContent = lines.slice(1).join('\n').trim();
-        }
+      // For legacy schema, transform the post
+      if (!hasNewSchema) {
+        post = transformLegacyPost(post);
       }
+      
+      // Extract user info safely
+      const userInfo = extractUserInfo(post);
       
       return {
         id: post.id,
-        title: post.title || titleContent || 'Untitled Post',
-        content: hasNewSchema ? post.content : actualContent,
+        title: post.title || 'Untitled Post',
+        content: post.content || '',
         user_id: post.user_id,
-        content_type: (post.content_type as any) || 'article',
-        file_url: post.file_url || null,
+        content_type: post.content_type || 'article',
+        file_url: post.file_url || post.image_url || null,
         link_url: post.link_url || null,
         image_url: post.image_url || null,
         created_at: post.created_at,
         updated_at: post.updated_at || post.created_at,
         is_featured: post.is_featured || false,
         is_approved: post.is_approved || true,
-        user: post.user ? {
-          full_name: post.user.full_name || 'Unknown User',
-          avatar_url: post.user.avatar_url || null,
-        } : { full_name: 'Unknown User', avatar_url: null },
+        user: userInfo,
         tags: [],
         votes_count: 0,
         comments_count: 0,
@@ -96,17 +80,8 @@ export const fetchPosts = async (): Promise<Post[]> => {
 // Fetch featured posts
 export const fetchFeaturedPosts = async (): Promise<Post[]> => {
   try {
-    // First check if we have a posts table with the expanded schema
-    const { data: tableInfo, error: schemaError } = await supabase
-      .rpc('get_table_columns', { table_name: 'posts' });
-      
-    if (schemaError) {
-      console.error('Error checking table schema:', schemaError);
-    }
-
-    // Determine if we have the new schema or old schema
-    const hasNewSchema = tableInfo && Array.isArray(tableInfo) && 
-      tableInfo.some(col => col.column_name === 'is_featured');
+    // Check if we have the new schema
+    const hasNewSchema = await hasNewPostsSchema();
       
     if (!hasNewSchema) {
       console.warn("Featured posts not supported with current schema");
@@ -133,29 +108,31 @@ export const fetchFeaturedPosts = async (): Promise<Post[]> => {
     }
     
     // Map and transform the posts
-    const mappedPosts = data.map(post => ({
-      id: post.id,
-      title: post.title || 'Untitled Post',
-      content: post.content || '',
-      user_id: post.user_id,
-      content_type: (post.content_type as any) || 'article',
-      file_url: post.file_url || null,
-      link_url: post.link_url || null,
-      image_url: post.image_url || null,
-      created_at: post.created_at,
-      updated_at: post.updated_at || post.created_at,
-      is_featured: post.is_featured || false,
-      is_approved: post.is_approved || true,
-      user: post.user ? {
-        full_name: post.user.full_name || 'Unknown User',
-        avatar_url: post.user.avatar_url || null,
-      } : { full_name: 'Unknown User', avatar_url: null },
-      tags: [],
-      votes_count: 0,
-      comments_count: 0,
-      user_has_voted: false,
-      user_has_bookmarked: false
-    } as Post));
+    const mappedPosts = data.map(post => {
+      // Extract user info safely
+      const userInfo = extractUserInfo(post);
+
+      return {
+        id: post.id,
+        title: post.title || 'Untitled Post',
+        content: post.content || '',
+        user_id: post.user_id,
+        content_type: post.content_type || 'article',
+        file_url: post.file_url || null,
+        link_url: post.link_url || null,
+        image_url: post.image_url || null,
+        created_at: post.created_at,
+        updated_at: post.updated_at || post.created_at,
+        is_featured: post.is_featured || false,
+        is_approved: post.is_approved || true,
+        user: userInfo,
+        tags: [],
+        votes_count: 0,
+        comments_count: 0,
+        user_has_voted: false,
+        user_has_bookmarked: false
+      } as Post;
+    });
     
     const featuredWithCounts = await enrichPostsWithCounts(mappedPosts);
     return featuredWithCounts;
@@ -189,49 +166,33 @@ export const fetchUserPosts = async (userId: string | undefined): Promise<Post[]
       return [];
     }
     
-    // First check if we have a posts table with the expanded schema
-    const { data: tableInfo, error: schemaError } = await supabase
-      .rpc('get_table_columns', { table_name: 'posts' });
-      
-    if (schemaError) {
-      console.error('Error checking table schema:', schemaError);
-    }
-
-    // Determine if we have the new schema or old schema
-    const hasNewSchema = tableInfo && Array.isArray(tableInfo) && 
-      tableInfo.some(col => col.column_name === 'title');
+    // Check if we have the new schema
+    const hasNewSchema = await hasNewPostsSchema();
     
     // Map and transform the posts
     const mappedPosts = data.map(post => {
-      let titleContent = post.content;
-      let actualContent = '';
-      
-      // For legacy schema, extract title from the content (first line)
-      if (!hasNewSchema && post.content) {
-        const lines = post.content.split('\n');
-        if (lines.length > 0) {
-          titleContent = lines[0];
-          actualContent = lines.slice(1).join('\n').trim();
-        }
+      // For legacy schema, transform the post
+      if (!hasNewSchema) {
+        post = transformLegacyPost(post);
       }
+      
+      // Extract user info safely
+      const userInfo = extractUserInfo(post);
       
       return {
         id: post.id,
-        title: post.title || titleContent || 'Untitled Post',
-        content: hasNewSchema ? post.content : actualContent,
+        title: post.title || 'Untitled Post',
+        content: post.content || '',
         user_id: post.user_id,
-        content_type: (post.content_type as any) || 'article',
-        file_url: post.file_url || null,
+        content_type: post.content_type || 'article',
+        file_url: post.file_url || post.image_url || null,
         link_url: post.link_url || null,
         image_url: post.image_url || null,
         created_at: post.created_at,
         updated_at: post.updated_at || post.created_at,
         is_featured: post.is_featured || false,
         is_approved: post.is_approved || true,
-        user: post.user ? {
-          full_name: post.user.full_name || 'Unknown User',
-          avatar_url: post.user.avatar_url || null,
-        } : { full_name: 'Unknown User', avatar_url: null },
+        user: userInfo,
         tags: [],
         votes_count: 0,
         comments_count: 0,
@@ -281,49 +242,33 @@ export const fetchBookmarkedPosts = async (userId: string | undefined): Promise<
         return [];
       }
       
-      // First check if we have a posts table with the expanded schema
-      const { data: tableInfo, error: schemaError } = await supabase
-        .rpc('get_table_columns', { table_name: 'posts' });
-        
-      if (schemaError) {
-        console.error('Error checking table schema:', schemaError);
-      }
-
-      // Determine if we have the new schema or old schema
-      const hasNewSchema = tableInfo && Array.isArray(tableInfo) && 
-        tableInfo.some(col => col.column_name === 'title');
+      // Check if we have the new schema
+      const hasNewSchema = await hasNewPostsSchema();
       
       // Map and transform the posts
       const mappedPosts = bookmarkedPostsData.map(post => {
-        let titleContent = post.content;
-        let actualContent = '';
-        
-        // For legacy schema, extract title from the content (first line)
-        if (!hasNewSchema && post.content) {
-          const lines = post.content.split('\n');
-          if (lines.length > 0) {
-            titleContent = lines[0];
-            actualContent = lines.slice(1).join('\n').trim();
-          }
+        // For legacy schema, transform the post
+        if (!hasNewSchema) {
+          post = transformLegacyPost(post);
         }
+        
+        // Extract user info safely
+        const userInfo = extractUserInfo(post);
         
         return {
           id: post.id,
-          title: post.title || titleContent || 'Untitled Post',
-          content: hasNewSchema ? post.content : actualContent,
+          title: post.title || 'Untitled Post',
+          content: post.content || '',
           user_id: post.user_id,
-          content_type: (post.content_type as any) || 'article',
-          file_url: post.file_url || null,
+          content_type: post.content_type || 'article',
+          file_url: post.file_url || post.image_url || null,
           link_url: post.link_url || null,
           image_url: post.image_url || null,
           created_at: post.created_at,
           updated_at: post.updated_at || post.created_at,
           is_featured: post.is_featured || false,
           is_approved: post.is_approved || true,
-          user: post.user ? {
-            full_name: post.user.full_name || 'Unknown User',
-            avatar_url: post.user.avatar_url || null,
-          } : { full_name: 'Unknown User', avatar_url: null },
+          user: userInfo,
           tags: [],
           votes_count: 0,
           comments_count: 0,

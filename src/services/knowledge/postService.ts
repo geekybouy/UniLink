@@ -1,7 +1,7 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Post, Tag, ContentType, PostFormData } from '@/types/knowledge';
+import { hasNewPostsSchema, transformLegacyPost, extractUserInfo } from './dbSchemaService';
 
 // Upload a file to Supabase storage
 export const uploadFile = async (file: File): Promise<string | null> => {
@@ -31,40 +31,20 @@ export const uploadFile = async (file: File): Promise<string | null> => {
 // Fetch a post by ID
 export const fetchPostById = async (id: string): Promise<Post | null> => {
   try {
-    // First check if we have a posts table with the expanded schema
-    const { data: tableInfo, error: schemaError } = await supabase
-      .rpc('get_table_columns', { table_name: 'posts' });
-      
-    if (schemaError) {
-      console.error('Error checking table schema:', schemaError);
-    }
+    // Check if we have the new schema
+    const hasNewSchema = await hasNewPostsSchema();
 
-    // Determine if we have the new schema or old schema
-    const hasNewSchema = tableInfo && Array.isArray(tableInfo) && 
-      tableInfo.some(col => col.column_name === 'title');
-
-    let query = supabase.from('posts').select('*');
-    
-    if (hasNewSchema) {
-      query = supabase.from('posts').select(`
+    const { data, error } = await supabase
+      .from('posts')
+      .select(`
         *,
         user:profiles (
           full_name,
           avatar_url
         )
-      `);
-    } else {
-      console.warn('Using legacy posts table schema');
-      query = supabase.from('posts').select(`
-        *,
-        user:profiles (
-          full_name,
-          avatar_url
-        )
-      `);
-    }
-    
-    const { data, error } = await query.eq('id', id).single();
+      `)
+      .eq('id', id)
+      .single();
 
     if (error) throw error;
 
@@ -84,25 +64,30 @@ export const fetchPostById = async (id: string): Promise<Post | null> => {
     // Extract tags from the join result
     const tags = tagData?.map(item => item.tag as Tag) || [];
     
+    // For legacy schema, transform the post
+    let postData = { ...data };
+    if (!hasNewSchema) {
+      postData = transformLegacyPost(postData);
+    }
+    
+    // Extract user info safely
+    const userInfo = extractUserInfo(postData);
+    
     // Create a post object with the correct shape
-    // Ensure we handle both old and new schema
     const post: Post = {
-      id: data.id,
-      title: data.title || 'Untitled Post',
-      content: data.content || '',
-      user_id: data.user_id,
-      content_type: (data.content_type as ContentType) || 'article',
-      file_url: data.file_url || null,
-      link_url: data.link_url || null,
-      image_url: data.image_url || null,
-      created_at: data.created_at,
-      updated_at: data.updated_at || data.created_at,
-      is_featured: data.is_featured || false,
-      is_approved: data.is_approved || true,
-      user: data.user ? {
-        full_name: data.user.full_name || 'Unknown User',
-        avatar_url: data.user.avatar_url || null,
-      } : { full_name: 'Unknown User', avatar_url: null },
+      id: postData.id,
+      title: postData.title || 'Untitled Post',
+      content: postData.content || '',
+      user_id: postData.user_id,
+      content_type: (postData.content_type as ContentType) || 'article',
+      file_url: postData.file_url || postData.image_url || null,
+      link_url: postData.link_url || null,
+      image_url: postData.image_url || null,
+      created_at: postData.created_at,
+      updated_at: postData.updated_at || postData.created_at,
+      is_featured: postData.is_featured || false,
+      is_approved: postData.is_approved || true,
+      user: userInfo,
       tags,
       votes_count: 0,
       comments_count: 0,
@@ -468,10 +453,7 @@ export const searchPosts = async (
         updated_at: post.updated_at || post.created_at,
         is_featured: post.is_featured || false,
         is_approved: post.is_approved || true,
-        user: post.user ? {
-          full_name: post.user.full_name || 'Unknown User',
-          avatar_url: post.user.avatar_url || null,
-        } : { full_name: 'Unknown User', avatar_url: null },
+        user: undefined,
         tags: [],
         votes_count: 0,
         comments_count: 0,

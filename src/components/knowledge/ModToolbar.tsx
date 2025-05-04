@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { hasNewPostsSchema } from '@/services/knowledge/dbSchemaService';
 
 interface ModToolbarProps {
   postId: string;
@@ -30,18 +31,9 @@ interface ModToolbarProps {
 const ModToolbar: React.FC<ModToolbarProps> = ({ postId, isFeatured, onPostUpdated }) => {
   const toggleFeatured = async () => {
     try {
-      // First check if we have a posts table with the expanded schema
-      const { data: tableInfo, error: schemaError } = await supabase
-        .rpc('get_table_columns', { table_name: 'posts' });
+      // Check if we have a posts table with the expanded schema
+      const hasNewSchema = await hasNewPostsSchema();
         
-      if (schemaError) {
-        console.error('Error checking table schema:', schemaError);
-      }
-
-      // Determine if we have the new schema or old schema
-      const hasNewSchema = tableInfo && Array.isArray(tableInfo) && 
-        tableInfo.some(col => col.column_name === 'is_featured');
-
       if (hasNewSchema) {
         const { error } = await supabase
           .from('posts')

@@ -55,9 +55,5 @@ export const typedSupabaseClient = {
     select: () => customSupabase.from('profiles').select('*'),
     update: (userId: string, data: any) => customSupabase.from('profiles').update(data).eq('user_id', userId),
     getByUserId: (userId: string) => customSupabase.from('profiles').select('*').eq('user_id', userId).single()
-  },
-  // Database functions - useful for schema checks
-  rpc: {
-    getTableColumns: (tableName: string) => customSupabase.rpc('get_table_columns', { table_name: tableName }),
   }
 };
