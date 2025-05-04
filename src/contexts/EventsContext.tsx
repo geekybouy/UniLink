@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -184,15 +185,18 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
       // Create a temporary local variable to make TypeScript happy
       const creatorData = data.creator;
       
-      // Fix with proper null checks - ensure creatorData isn't null before accessing its properties
+      // Fix with proper type assertions and null checks
       if (creatorData && typeof creatorData === 'object') {
-        // For full_name, provide a default if it doesn't exist or isn't a string
-        const fullName = creatorData && 'full_name' in creatorData && 
-          typeof creatorData.full_name === 'string' ? creatorData.full_name : 'Unknown';
+        // Explicitly cast creatorData to a record type to avoid 'never' type errors
+        const typedCreatorData = creatorData as Record<string, unknown>;
         
-        // For avatar_url, it can be undefined but ensure we access it safely
-        const avatarUrl = creatorData && 'avatar_url' in creatorData ? 
-          creatorData.avatar_url as string | undefined : undefined;
+        // Now safely check if properties exist and use type guards
+        const fullName = typedCreatorData.hasOwnProperty('full_name') && 
+          typeof typedCreatorData.full_name === 'string' ? typedCreatorData.full_name : 'Unknown';
+        
+        // For avatar_url, safely check and cast
+        const avatarUrl = typedCreatorData.hasOwnProperty('avatar_url') ? 
+          typedCreatorData.avatar_url as string | undefined : undefined;
         
         creator = {
           full_name: fullName,
