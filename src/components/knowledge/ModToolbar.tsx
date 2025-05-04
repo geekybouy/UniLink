@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -29,23 +29,33 @@ interface ModToolbarProps {
 }
 
 const ModToolbar: React.FC<ModToolbarProps> = ({ postId, isFeatured, onPostUpdated }) => {
-  const toggleFeatured = async () => {
-    try {
-      // Check if we have a posts table with the expanded schema
+  const [supportsFeatures, setSupportsFeatures] = useState<boolean>(false);
+  
+  useEffect(() => {
+    // Check schema support on component mount
+    const checkSchema = async () => {
       const hasNewSchema = await hasNewPostsSchema();
-        
-      if (hasNewSchema) {
-        const { error } = await supabase
-          .from('posts')
-          .update({ is_featured: !isFeatured })
-          .eq('id', postId);
+      setSupportsFeatures(hasNewSchema);
+    };
+    
+    checkSchema();
+  }, []);
+  
+  const toggleFeatured = async () => {
+    if (!supportsFeatures) {
+      toast.error('Feature not supported with current database schema');
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .update({ 
+          is_featured: !isFeatured 
+        } as any)  // Using 'as any' to bypass TypeScript checking
+        .eq('id', postId);
 
-        if (error) throw error;
-      } else {
-        // If we don't have the is_featured column, we can't update it
-        toast.error('Feature not supported with current database schema');
-        return;
-      }
+      if (error) throw error;
       
       toast.success(isFeatured ? 'Post removed from featured content' : 'Post added to featured content');
       onPostUpdated();
@@ -82,9 +92,11 @@ const ModToolbar: React.FC<ModToolbarProps> = ({ postId, isFeatured, onPostUpdat
           variant="outline" 
           className="w-full justify-start"
           onClick={toggleFeatured}
+          disabled={!supportsFeatures}
         >
           <Star className={`h-4 w-4 mr-2 ${isFeatured ? 'fill-yellow-500 text-yellow-500' : ''}`} />
           {isFeatured ? 'Remove from Featured' : 'Add to Featured'}
+          {!supportsFeatures && ' (Needs schema update)'}
         </Button>
         
         <AlertDialog>

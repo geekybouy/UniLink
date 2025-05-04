@@ -38,26 +38,24 @@ export const fetchPosts = async (): Promise<Post[]> => {
     // Process posts to add tags, vote counts, etc.
     const mappedPosts = data.map(post => {
       // For legacy schema, transform the post
-      if (!hasNewSchema) {
-        post = transformLegacyPost(post);
-      }
+      const processedPost = hasNewSchema ? post : transformLegacyPost(post);
       
       // Extract user info safely
-      const userInfo = extractUserInfo(post);
+      const userInfo = extractUserInfo(processedPost);
       
       return {
-        id: post.id,
-        title: post.title || 'Untitled Post',
-        content: post.content || '',
-        user_id: post.user_id,
-        content_type: post.content_type || 'article',
-        file_url: post.file_url || post.image_url || null,
-        link_url: post.link_url || null,
-        image_url: post.image_url || null,
-        created_at: post.created_at,
-        updated_at: post.updated_at || post.created_at,
-        is_featured: post.is_featured || false,
-        is_approved: post.is_approved || true,
+        id: processedPost.id,
+        title: processedPost.title || 'Untitled Post',
+        content: processedPost.content || '',
+        user_id: processedPost.user_id,
+        content_type: processedPost.content_type || 'article',
+        file_url: processedPost.file_url || processedPost.image_url || null,
+        link_url: processedPost.link_url || null,
+        image_url: processedPost.image_url || null,
+        created_at: processedPost.created_at,
+        updated_at: processedPost.updated_at || processedPost.created_at,
+        is_featured: processedPost.is_featured || false,
+        is_approved: processedPost.is_approved || true,
         user: userInfo,
         tags: [],
         votes_count: 0,
@@ -172,26 +170,24 @@ export const fetchUserPosts = async (userId: string | undefined): Promise<Post[]
     // Map and transform the posts
     const mappedPosts = data.map(post => {
       // For legacy schema, transform the post
-      if (!hasNewSchema) {
-        post = transformLegacyPost(post);
-      }
+      const processedPost = hasNewSchema ? post : transformLegacyPost(post);
       
       // Extract user info safely
-      const userInfo = extractUserInfo(post);
+      const userInfo = extractUserInfo(processedPost);
       
       return {
-        id: post.id,
-        title: post.title || 'Untitled Post',
-        content: post.content || '',
-        user_id: post.user_id,
-        content_type: post.content_type || 'article',
-        file_url: post.file_url || post.image_url || null,
-        link_url: post.link_url || null,
-        image_url: post.image_url || null,
-        created_at: post.created_at,
-        updated_at: post.updated_at || post.created_at,
-        is_featured: post.is_featured || false,
-        is_approved: post.is_approved || true,
+        id: processedPost.id,
+        title: processedPost.title || 'Untitled Post',
+        content: processedPost.content || '',
+        user_id: processedPost.user_id,
+        content_type: processedPost.content_type || 'article',
+        file_url: processedPost.file_url || processedPost.image_url || null,
+        link_url: processedPost.link_url || null,
+        image_url: processedPost.image_url || null,
+        created_at: processedPost.created_at,
+        updated_at: processedPost.updated_at || processedPost.created_at,
+        is_featured: processedPost.is_featured || false,
+        is_approved: processedPost.is_approved || true,
         user: userInfo,
         tags: [],
         votes_count: 0,
@@ -248,26 +244,24 @@ export const fetchBookmarkedPosts = async (userId: string | undefined): Promise<
       // Map and transform the posts
       const mappedPosts = bookmarkedPostsData.map(post => {
         // For legacy schema, transform the post
-        if (!hasNewSchema) {
-          post = transformLegacyPost(post);
-        }
+        const processedPost = hasNewSchema ? post : transformLegacyPost(post);
         
         // Extract user info safely
-        const userInfo = extractUserInfo(post);
+        const userInfo = extractUserInfo(processedPost);
         
         return {
-          id: post.id,
-          title: post.title || 'Untitled Post',
-          content: post.content || '',
-          user_id: post.user_id,
-          content_type: post.content_type || 'article',
-          file_url: post.file_url || post.image_url || null,
-          link_url: post.link_url || null,
-          image_url: post.image_url || null,
-          created_at: post.created_at,
-          updated_at: post.updated_at || post.created_at,
-          is_featured: post.is_featured || false,
-          is_approved: post.is_approved || true,
+          id: processedPost.id,
+          title: processedPost.title || 'Untitled Post',
+          content: processedPost.content || '',
+          user_id: processedPost.user_id,
+          content_type: processedPost.content_type || 'article',
+          file_url: processedPost.file_url || processedPost.image_url || null,
+          link_url: processedPost.link_url || null,
+          image_url: processedPost.image_url || null,
+          created_at: processedPost.created_at,
+          updated_at: processedPost.updated_at || processedPost.created_at,
+          is_featured: processedPost.is_featured || false,
+          is_approved: processedPost.is_approved || true,
           user: userInfo,
           tags: [],
           votes_count: 0,
