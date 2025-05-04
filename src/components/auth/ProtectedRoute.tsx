@@ -3,7 +3,7 @@ import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Spinner } from '@/components/ui/spinner';
-import { UserRole } from '@/contexts/AuthContext';
+import { UserRole } from '@/types/roles';
 
 interface ProtectedRouteProps {
   children?: React.ReactNode;

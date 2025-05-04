@@ -1,8 +1,10 @@
-
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole } from '@/types/roles';
+
+// Export UserRole to be used in other components
+export type { UserRole };
 
 // Define the context type
 export interface AuthContextType {
