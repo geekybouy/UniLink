@@ -1,5 +1,4 @@
 
-
 export interface Tag {
   id: string;
   name: string;
@@ -57,3 +56,5 @@ export interface SearchParams {
   tag?: string;
 }
 
+// Add UserRole type here to ensure consistency across the application
+export type UserRole = 'student' | 'alumni' | 'admin' | 'moderator' | 'faculty';

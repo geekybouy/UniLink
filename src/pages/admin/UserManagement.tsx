@@ -183,7 +183,7 @@ const UserManagement = () => {
             .from('user_roles')
             .insert({
               user_id: currentUser.id,
-              role: role as any // Type casting to work with Supabase's expected types
+              role: role
             });
           
           if (error) throw error;

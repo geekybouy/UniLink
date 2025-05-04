@@ -71,8 +71,8 @@ const ContentModeration = () => {
             // Handle the possibility of user being null or an error object safely
             user: post.user && typeof post.user === 'object' && !('error' in post.user) 
               ? { 
-                  full_name: post.user?.full_name || 'Unknown User',
-                  avatar_url: post.user?.avatar_url || null
+                  full_name: post.user && post.user.full_name ? post.user.full_name : 'Unknown User',
+                  avatar_url: post.user && post.user.avatar_url ? post.user.avatar_url : null
                 }
               : { full_name: 'Unknown User' },
             // Add default values for fields that might not exist in the database
