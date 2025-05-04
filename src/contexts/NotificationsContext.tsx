@@ -25,7 +25,7 @@ interface NotificationsContextType {
 const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
 
 // Define default notification preferences for new users
-const DEFAULT_NOTIFICATION_PREFERENCES: Omit<NotificationPreference, 'id' | 'user_id'>[] = [
+const DEFAULT_NOTIFICATION_PREFERENCES: Array<Omit<NotificationPreference, 'id' | 'user_id'>> = [
   { type: 'connection_request', email: true, push: true, in_app: true },
   { type: 'connection_accepted', email: true, push: true, in_app: true },
   { type: 'message', email: true, push: true, in_app: true },
@@ -106,7 +106,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     try {
-      // Check if the notifications table exists in Supabase
+      // Check if preferences exist in the database
       const { data: existingPrefs, error: fetchError } = await supabase
         .from('notification_preferences')
         .select('*')
@@ -231,16 +231,18 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 
     try {
       // Use upsert to handle both insert and update cases
-      const { error } = await supabase.from('notification_preferences').upsert(
-        preferences.map((pref) => ({
-          id: pref.id,
-          user_id: user.id,
-          type: pref.type,
-          email: pref.email,
-          push: pref.push,
-          in_app: pref.in_app,
-        }))
-      );
+      const { error } = await supabase
+        .from('notification_preferences')
+        .upsert(
+          preferences.map((pref) => ({
+            id: pref.id,
+            user_id: user.id,
+            type: pref.type,
+            email: pref.email,
+            push: pref.push,
+            in_app: pref.in_app,
+          }))
+        );
 
       if (error) throw error;
 

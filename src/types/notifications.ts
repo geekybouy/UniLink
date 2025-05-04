@@ -27,8 +27,10 @@ export interface Notification {
 export interface NotificationPreference {
   id: string;
   user_id: string;
-  type: NotificationType;
+  type: NotificationType | string;
   email: boolean;
   push: boolean;
   in_app: boolean;
+  created_at?: string;
+  updated_at?: string;
 }

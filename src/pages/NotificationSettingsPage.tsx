@@ -24,7 +24,15 @@ const NotificationSettingsPage = () => {
       case 'content_mention': return 'Content Mentions';
       case 'post_liked': return 'Post Likes';
       case 'comment_added': return 'New Comments';
-      default: return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      default: 
+        // Safely handle string manipulation for unknown types
+        if (typeof type === 'string') {
+          return type
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+        }
+        return String(type);
     }
   };
 
@@ -66,23 +74,23 @@ const NotificationSettingsPage = () => {
                 <div className="divide-y">
                   {preferences.map((pref) => (
                     <div key={pref.id} className="grid grid-cols-4 p-4 items-center">
-                      <div>{getNotificationTypeName(pref.type)}</div>
+                      <div>{getNotificationTypeName(pref.type as NotificationType)}</div>
                       <div className="text-center">
                         <Switch 
                           checked={pref.in_app}
-                          onCheckedChange={(checked) => updatePreference(pref.type, 'in_app', checked)}
+                          onCheckedChange={(checked) => updatePreference(pref.type as NotificationType, 'in_app', checked)}
                         />
                       </div>
                       <div className="text-center">
                         <Switch 
                           checked={pref.email}
-                          onCheckedChange={(checked) => updatePreference(pref.type, 'email', checked)}
+                          onCheckedChange={(checked) => updatePreference(pref.type as NotificationType, 'email', checked)}
                         />
                       </div>
                       <div className="text-center">
                         <Switch 
                           checked={pref.push}
-                          onCheckedChange={(checked) => updatePreference(pref.type, 'push', checked)}
+                          onCheckedChange={(checked) => updatePreference(pref.type as NotificationType, 'push', checked)}
                         />
                       </div>
                     </div>
