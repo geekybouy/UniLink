@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -185,11 +184,9 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
       // Create a temporary local variable to make TypeScript happy
       const creatorData = data.creator;
       
-      // Enhanced null checks with more specific property access
-      if (creatorData !== null && typeof creatorData === 'object') {
-        // Now use property existence checks with type guards
+      // Fix with proper null checks using optional chaining and nullish coalescing
+      if (creatorData && typeof creatorData === 'object') {
         if ('full_name' in creatorData && 
-            creatorData.full_name !== null && 
             typeof creatorData.full_name === 'string') {
           creator.full_name = creatorData.full_name;
         }
