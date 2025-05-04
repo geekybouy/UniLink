@@ -44,8 +44,12 @@ export const fetchPosts = async (): Promise<Post[]> => {
       query = query.eq('is_approved', true);
     }
     
-    // Execute the query with type assertion to avoid deep instantiation
-    const { data, error } = await query.order('created_at', { ascending: false }) as any;
+    // Execute the query with explicit type assertion
+    const result = await query.order('created_at', { ascending: false });
+    const { data, error } = result as unknown as { 
+      data: any[]; 
+      error: any; 
+    };
 
     if (error) throw error;
     
@@ -77,8 +81,8 @@ export const fetchFeaturedPosts = async (): Promise<Post[]> => {
       return [];
     }
 
-    // Execute the query with type assertion to avoid deep instantiation
-    const { data, error } = await supabase
+    // Execute the query with explicit type assertion
+    const result = await supabase
       .from('posts')
       .select(`
         *,
@@ -89,7 +93,12 @@ export const fetchFeaturedPosts = async (): Promise<Post[]> => {
       `)
       .eq('is_approved', true)
       .eq('is_featured', true)
-      .order('created_at', { ascending: false }) as any;
+      .order('created_at', { ascending: false });
+
+    const { data, error } = result as unknown as {
+      data: any[];
+      error: any;
+    };
 
     if (error) throw error;
     
@@ -114,8 +123,8 @@ export const fetchUserPosts = async (userId: string | undefined): Promise<Post[]
   if (!userId) return [];
   
   try {
-    // Execute the query with type assertion to avoid deep instantiation
-    const { data, error } = await supabase
+    // Execute the query with explicit type assertion
+    const result = await supabase
       .from('posts')
       .select(`
         *,
@@ -125,7 +134,12 @@ export const fetchUserPosts = async (userId: string | undefined): Promise<Post[]
         )
       `)
       .eq('user_id', userId)
-      .order('created_at', { ascending: false }) as any;
+      .order('created_at', { ascending: false });
+
+    const { data, error } = result as unknown as {
+      data: any[];
+      error: any;
+    };
 
     if (error) throw error;
     
@@ -163,8 +177,8 @@ export const fetchBookmarkedPosts = async (userId: string | undefined): Promise<
     if (bookmarksData && bookmarksData.length > 0) {
       const bookmarkedPostIds = bookmarksData.map(bookmark => bookmark.post_id);
       
-      // Execute the query with type assertion to avoid deep instantiation
-      const { data: bookmarkedPostsData, error: bookmarkedPostsError } = await supabase
+      // Execute the query with explicit type assertion
+      const result = await supabase
         .from('posts')
         .select(`
           *,
@@ -174,7 +188,12 @@ export const fetchBookmarkedPosts = async (userId: string | undefined): Promise<
           )
         `)
         .in('id', bookmarkedPostIds)
-        .order('created_at', { ascending: false }) as any;
+        .order('created_at', { ascending: false });
+
+      const { data: bookmarkedPostsData, error: bookmarkedPostsError } = result as unknown as {
+        data: any[];
+        error: any;
+      };
 
       if (bookmarkedPostsError) throw bookmarkedPostsError;
       

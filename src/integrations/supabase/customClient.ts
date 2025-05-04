@@ -34,6 +34,7 @@ export const typedSupabaseClient = {
     delete: (id: string) => customSupabase.from('posts').delete().eq('id', id),
     getById: (id: string) => customSupabase.from('posts').select('*').eq('id', id).single(),
     getByUserId: (userId: string) => customSupabase.from('posts').select('*').eq('user_id', userId),
+    getFeatured: () => customSupabase.from('posts').select('*').eq('is_featured', true),
   },
   
   // Skills table
@@ -69,5 +70,23 @@ export const typedSupabaseClient = {
     select: () => customSupabase.from('profiles').select('*'),
     update: (userId: string, data: any) => customSupabase.from('profiles').update(data).eq('user_id', userId),
     getByUserId: (userId: string) => customSupabase.from('profiles').select('*').eq('user_id', userId).single()
+  },
+  
+  // Votes, comments, and other interactive tables
+  votes: {
+    select: () => customSupabase.from('votes').select('*'),
+    count: (postId: string) => customSupabase.from('votes').select('id', { count: 'exact' }).eq('post_id', postId),
+    getByUser: (userId: string) => customSupabase.from('votes').select('post_id').eq('user_id', userId),
+  },
+  
+  comments: {
+    select: () => customSupabase.from('comments').select('*'),
+    count: (postId: string) => customSupabase.from('comments').select('id', { count: 'exact' }).eq('post_id', postId),
+    getByPostId: (postId: string) => customSupabase.from('comments').select('*').eq('post_id', postId),
+  },
+  
+  bookmarks: {
+    select: () => customSupabase.from('bookmarks').select('*'),
+    getByUser: (userId: string) => customSupabase.from('bookmarks').select('post_id').eq('user_id', userId),
   }
 };

@@ -53,8 +53,8 @@ export const fetchPostById = async (id: string): Promise<Post | null> => {
     // Check if we have the new schema
     const hasNewSchema = await getSchemaSupport();
 
-    // Use type assertion to avoid excessive type instantiation
-    const { data, error } = await supabase
+    // Use explicit type assertion to avoid excessive type instantiation
+    const result = await supabase
       .from('posts')
       .select(`
         *,
@@ -64,7 +64,12 @@ export const fetchPostById = async (id: string): Promise<Post | null> => {
         )
       `)
       .eq('id', id)
-      .single() as any;
+      .single();
+
+    const { data, error } = result as unknown as {
+      data: any;
+      error: any;
+    };
 
     if (error) throw error;
 
@@ -144,12 +149,17 @@ export const createPost = async (
       console.warn('Using legacy posts table schema for insert');
     }
 
-    // Use type assertion to avoid excessive type instantiation
-    const { data, error } = await supabase
+    // Use explicit type assertion to avoid excessive type instantiation
+    const result = await supabase
       .from('posts')
       .insert([newPost])
       .select()
-      .single() as any;
+      .single();
+
+    const { data, error } = result as unknown as {
+      data: any;
+      error: any;
+    };
 
     if (error) throw error;
 
@@ -191,13 +201,18 @@ export const updatePost = async (
   }
 
   try {
-    // Use type assertion to avoid excessive type instantiation
-    const { data: existingPost, error: fetchError } = await supabase
+    // Use explicit type assertion to avoid excessive type instantiation
+    const result = await supabase
       .from('posts')
       .select('*')
       .eq('id', id)
       .eq('user_id', userId)
-      .single() as any;
+      .single();
+
+    const { data: existingPost, error: fetchError } = result as unknown as {
+      data: any;
+      error: any;
+    };
 
     if (fetchError) throw fetchError;
     if (!existingPost) {
@@ -209,9 +224,11 @@ export const updatePost = async (
     const hasNewSchema = await getSchemaSupport();
 
     // Handle image_url or file_url based on schema
-    let fileUrl = hasNewSchema ? 
-      existingPost.file_url || existingPost.image_url : 
-      existingPost.image_url;
+    // For legacy schema (image_url), or new schema (file_url or image_url)
+    let fileUrl = existingPost.image_url;
+    if (hasNewSchema && existingPost.file_url) {
+      fileUrl = existingPost.file_url;
+    }
       
     if (file && (postData.content_type === 'file' || postData.content_type === 'image')) {
       const newFileUrl = await uploadFile(file);
@@ -343,9 +360,13 @@ export const searchPosts = async (
       }
     }
     
-    // Execute the query with type assertion to avoid deep instantiation
-    const { data, error } = await supabaseQuery
-      .order('created_at', { ascending: false }) as any;
+    // Execute the query with explicit type assertion
+    const result = await supabaseQuery.order('created_at', { ascending: false });
+    
+    const { data, error } = result as unknown as {
+      data: any[];
+      error: any;
+    };
 
     if (error) throw error;
     
@@ -413,15 +434,13 @@ export const enrichPostsWithCounts = async (posts: Post[]): Promise<Post[]> => {
   
   const postIds = posts.map(post => post.id);
   
-  // Simplified approach to get votes counts using direct query
-  const { data: votesData } = await supabase
-    .from('votes')
-    .select('post_id, is_upvote') as any;
+  // Simplified approach to get votes counts using direct query with explicit type assertion
+  const votesResult = await supabase.from('votes').select('post_id, is_upvote');
+  const { data: votesData } = votesResult as unknown as { data: any[]; error: any; };
   
-  // Simplified approach to get comments counts using direct query
-  const { data: commentsData } = await supabase
-    .from('comments')
-    .select('post_id, id') as any;
+  // Simplified approach to get comments counts using direct query with explicit type assertion
+  const commentsResult = await supabase.from('comments').select('post_id, id');
+  const { data: commentsData } = commentsResult as unknown as { data: any[]; error: any; };
   
   // Get user's votes and bookmarks if logged in
   let userVotes: Record<string, boolean> = {};

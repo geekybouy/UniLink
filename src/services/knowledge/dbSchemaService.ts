@@ -14,7 +14,7 @@ export const columnExists = async (tableName: string, columnName: string): Promi
     const { data, error } = await customSupabase
       .from(tableName)
       .select()
-      .limit(1);
+      .limit(1) as any; // Use type assertion to avoid deep instantiation
     
     if (error) {
       console.error(`Error checking table ${tableName}:`, error);
