@@ -1,1 +1,45 @@
+
+# This is the project configuration file.
 project_id = "tchudsedvmebjqzewlyb"
+
+[api]
+enabled = true
+port = 8080
+schemas = ["public", "storage"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 5432
+shadow_port = 5433
+major_version = 15
+
+[studio]
+port = 8082
+
+[inbucket]
+port = 8084
+smtp_port = 8085
+pop3_port = 8086
+
+[auth]
+site_url = "http://localhost:8000"
+additional_redirect_urls = ["https://localhost:3000", "http://localhost:9000/auth/login", "http://localhost:4200/auth/login", "http://localhost:1234/auth/login"]
+hook_timeout_ms = 10000
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+
+[scripts]
+template_script = "echo \"Running migration scripts\""
+
+[storage]
+file_size_limit = "50MiB"
+
+[auth.external.discord]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+url = ""

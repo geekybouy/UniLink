@@ -91,18 +91,18 @@ const UserManagement = () => {
       setIsSubmitting(true);
       
       if (action === 'add') {
-        // Use a raw SQL query via rpc to add role
-        const { error } = await supabase.rpc('add_user_role', { 
-          user_id_param: userId, 
-          role_param: role 
+        // Use a RPC call to add role
+        const { error } = await supabase.rpc('add_user_role', {
+          user_id_param: userId,
+          role_param: role
         });
           
         if (error) throw error;
       } else {
-        // Use a raw SQL query via rpc to delete role
-        const { error } = await supabase.rpc('remove_user_role', { 
-          user_id_param: userId, 
-          role_param: role 
+        // Use a RPC call to remove role
+        const { error } = await supabase.rpc('remove_user_role', {
+          user_id_param: userId,
+          role_param: role
         });
           
         if (error) throw error;
@@ -178,8 +178,8 @@ const UserManagement = () => {
 
                       <div className="flex gap-2">
                         <div className="flex flex-wrap gap-2">
-                          {['admin', 'moderator', 'student', 'alumni', 'faculty'].map((role) => {
-                            const userHasRole = hasRole(user.user_id, role as UserRole);
+                          {(['admin', 'moderator', 'student', 'alumni', 'faculty'] as UserRole[]).map((role) => {
+                            const userHasRole = hasRole(user.user_id, role);
                             return (
                               <Button
                                 key={role}
@@ -187,7 +187,7 @@ const UserManagement = () => {
                                 size="sm"
                                 onClick={() => handleRoleChange(
                                   user.user_id, 
-                                  role as UserRole, 
+                                  role, 
                                   userHasRole ? 'remove' : 'add'
                                 )}
                                 disabled={isSubmitting}

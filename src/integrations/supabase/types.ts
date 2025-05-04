@@ -737,6 +737,7 @@ export type Database = {
           created_at: string
           id: string
           image_url: string | null
+          status: string | null
           user_id: string
         }
         Insert: {
@@ -744,6 +745,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          status?: string | null
           user_id: string
         }
         Update: {
@@ -751,6 +753,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          status?: string | null
           user_id?: string
         }
         Relationships: []
@@ -1103,6 +1106,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_user_role: {
+        Args: { user_id_param: string; role_param: string }
+        Returns: undefined
+      }
       get_all_tags: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1154,9 +1161,13 @@ export type Database = {
         Args: { event_id: string }
         Returns: boolean
       }
+      remove_user_role: {
+        Args: { user_id_param: string; role_param: string }
+        Returns: undefined
+      }
     }
     Enums: {
-      user_role: "admin" | "moderator" | "student" | "alumni"
+      user_role: "admin" | "moderator" | "student" | "alumni" | "faculty"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1272,7 +1283,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      user_role: ["admin", "moderator", "student", "alumni"],
+      user_role: ["admin", "moderator", "student", "alumni", "faculty"],
     },
   },
 } as const

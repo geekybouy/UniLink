@@ -50,7 +50,9 @@ const ContentModeration = () => {
     try {
       const { error } = await supabase
         .from('posts')
-        .update({ status: 'approved' })
+        .update({ 
+          status: 'approved' 
+        })
         .eq('id', postId);
 
       if (error) {
@@ -81,7 +83,9 @@ const ContentModeration = () => {
     try {
       const { error } = await supabase
         .from('posts')
-        .update({ status: 'rejected' })
+        .update({ 
+          status: 'rejected' 
+        })
         .eq('id', postId);
 
       if (error) {
