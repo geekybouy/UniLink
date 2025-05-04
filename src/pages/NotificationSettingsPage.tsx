@@ -12,7 +12,9 @@ const NotificationSettingsPage = () => {
   const { preferences, updatePreference, savePreferences } = useNotifications();
 
   const getNotificationTypeName = (type: NotificationType): string => {
-    switch (type) {
+    const typeString = String(type);
+    
+    switch (typeString) {
       case 'connection_request': return 'Connection Requests';
       case 'connection_accepted': return 'Connection Accepted';
       case 'message': return 'New Messages';
@@ -23,7 +25,7 @@ const NotificationSettingsPage = () => {
       case 'content_mention': return 'Content Mentions';
       case 'post_liked': return 'Post Likes';
       case 'comment_added': return 'New Comments';
-      default: return type.replace('_', ' ');
+      default: return typeString.charAt(0).toUpperCase() + typeString.slice(1).replace('_', ' ');
     }
   };
 

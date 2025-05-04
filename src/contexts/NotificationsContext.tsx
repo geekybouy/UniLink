@@ -104,22 +104,44 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     
     try {
       setPreferencesLoading(true);
-      
-      const { data, error } = await supabase
+
+      // First check if the table exists to avoid errors
+      const { data: prefData, error: prefError } = await supabase
         .from('notification_preferences')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .limit(1);
       
-      if (error) throw error;
+      if (prefError) {
+        // If the table doesn't exist yet, proceed with default preferences
+        console.log('Notification preferences not available yet, using defaults');
+        await createDefaultPreferences();
+        return;
+      }
       
-      if (data && data.length > 0) {
-        setPreferences(data as NotificationPreference[]);
+      if (prefData && prefData.length > 0) {
+        // Get all preferences for the user
+        const { data, error } = await supabase
+          .from('notification_preferences')
+          .select('*')
+          .eq('user_id', user.id);
+          
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          // Cast the result to the correct type
+          setPreferences(data as unknown as NotificationPreference[]);
+        } else {
+          await createDefaultPreferences();
+        }
       } else {
         // If no preferences exist, create default ones
         await createDefaultPreferences();
       }
     } catch (error) {
       console.error('Error fetching notification preferences:', error);
+      // Create defaults in case of error
+      await createDefaultPreferences();
     } finally {
       setPreferencesLoading(false);
     }
@@ -143,7 +165,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     ];
     
     // Create default preferences (all enabled)
-    const defaultPreferences = defaultTypes.map(type => ({
+    const defaultPreferences: Omit<NotificationPreference, 'id'>[] = defaultTypes.map(type => ({
       user_id: user.id,
       type,
       email: type !== 'post_liked' && type !== 'comment_added', // Less important notifications don't email by default
@@ -152,18 +174,52 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }));
     
     try {
+      // Check if table exists by using a raw query
+      const { data: prefData, error: prefError } = await supabase
+        .from('notification_preferences')
+        .select('*')
+        .limit(1);
+      
+      if (prefError) {
+        console.error('Error checking notification_preferences table:', prefError);
+        // Table doesn't exist yet, use local defaults
+        const localDefaults = defaultTypes.map(type => ({
+          id: `local-${type}`,
+          user_id: user.id,
+          type,
+          email: type !== 'post_liked' && type !== 'comment_added',
+          push: true, 
+          in_app: true
+        }));
+        
+        setPreferences(localDefaults);
+        return;
+      }
+      
+      // Table exists, proceed with insert
       const { data, error } = await supabase
         .from('notification_preferences')
-        .insert(defaultPreferences)
+        .upsert(defaultPreferences as any)
         .select();
       
       if (error) throw error;
       
       if (data) {
-        setPreferences(data as NotificationPreference[]);
+        setPreferences(data as unknown as NotificationPreference[]);
       }
     } catch (error) {
       console.error('Error creating default notification preferences:', error);
+      // Use local defaults in case of error
+      const localDefaults = defaultTypes.map(type => ({
+        id: `local-${type}`,
+        user_id: user.id,
+        type,
+        email: type !== 'post_liked' && type !== 'comment_added',
+        push: true, 
+        in_app: true
+      }));
+      
+      setPreferences(localDefaults);
     }
   };
 
@@ -246,10 +302,31 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     if (!user) return;
     
     try {
+      // First check if table exists
+      const { data: checkData, error: checkError } = await supabase
+        .from('notification_preferences')
+        .select('*')
+        .limit(1);
+      
+      if (checkError) {
+        console.error('notification_preferences table not available:', checkError);
+        toast({
+          title: "Error",
+          description: "Notification preferences cannot be saved - service not yet available",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Filter out any local temporary ids
+      const prefsToSave = preferences
+        .filter(p => !p.id.toString().startsWith('local-'))
+        .map(({ id, ...rest }) => rest);
+      
       // Update all preferences in batch
       const { error } = await supabase
         .from('notification_preferences')
-        .upsert(preferences);
+        .upsert(prefsToSave as any);
       
       if (error) throw error;
       

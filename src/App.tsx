@@ -97,7 +97,7 @@ function App() {
                         <Route path="/auth/callback" element={<AuthCallback />} />
 
                         {/* Protected routes */}
-                        <Route element={<ProtectedRoute />}>
+                        <Route element={<ProtectedRoute>{''}</ProtectedRoute>}>
                           <Route path="/dashboard" element={<Dashboard />} />
                           <Route path="/feed" element={<Feed />} />
                           <Route path="/credential-wallet" element={<CredentialWallet />} />

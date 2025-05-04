@@ -15,7 +15,7 @@ export interface Notification {
   id: string;
   user_id: string;
   from_user_id: string | null;
-  type: NotificationType;
+  type: NotificationType | string;
   content: string;
   is_read: boolean;
   created_at: string;
