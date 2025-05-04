@@ -329,43 +329,30 @@ export const searchPosts = async (
     // Check if we have the new schema
     const hasNewSchema = await getSchemaSupport();
 
-    // Start building the query
-    let supabaseQuery = supabase
-      .from('posts')
-      .select(`
-        *,
-        user:profiles (
-          full_name,
-          avatar_url
-        )
-      `);
+    // Start building the query using typedSupabaseClient
+    let postsQuery = typedSupabaseClient.posts.selectWithUser();
       
     // Add content_type filter if specified and if we have the new schema
     if (hasNewSchema && params.contentType && params.contentType !== 'all') {
-      supabaseQuery = supabaseQuery.eq('content_type', params.contentType);
+      postsQuery = postsQuery.eq('content_type', params.contentType);
     }
     
     // Add featured filter if specified and if we have the new schema
     if (hasNewSchema && params.featured) {
-      supabaseQuery = supabaseQuery.eq('is_featured', true);
+      postsQuery = postsQuery.eq('is_featured', true);
     }
     
     // Add search query if specified
     if (params.query) {
       if (hasNewSchema) {
-        supabaseQuery = supabaseQuery.or(`title.ilike.%${params.query}%,content.ilike.%${params.query}%`);
+        postsQuery = postsQuery.or(`title.ilike.%${params.query}%,content.ilike.%${params.query}%`);
       } else {
-        supabaseQuery = supabaseQuery.ilike('content', `%${params.query}%`);
+        postsQuery = postsQuery.ilike('content', `%${params.query}%`);
       }
     }
     
-    // Execute the query with explicit type assertion
-    const result = await supabaseQuery.order('created_at', { ascending: false });
-    
-    const { data, error } = result as unknown as {
-      data: any[];
-      error: any;
-    };
+    // Execute the query
+    const { data, error } = await postsQuery.order('created_at', { ascending: false });
 
     if (error) throw error;
     
@@ -433,13 +420,11 @@ export const enrichPostsWithCounts = async (posts: Post[]): Promise<Post[]> => {
   
   const postIds = posts.map(post => post.id);
   
-  // Simplified approach to get votes counts using direct query with explicit type assertion
-  const votesResult = await supabase.from('votes').select('post_id, is_upvote');
-  const { data: votesData } = votesResult as unknown as { data: any[]; error: any; };
+  // Get votes counts using typedSupabaseClient
+  const { data: votesData } = await typedSupabaseClient.votes.select();
   
-  // Simplified approach to get comments counts using direct query with explicit type assertion
-  const commentsResult = await supabase.from('comments').select('post_id, id');
-  const { data: commentsData } = commentsResult as unknown as { data: any[]; error: any; };
+  // Get comments counts using typedSupabaseClient
+  const { data: commentsData } = await typedSupabaseClient.comments.select();
   
   // Get user's votes and bookmarks if logged in
   let userVotes: Record<string, boolean> = {};
@@ -448,11 +433,8 @@ export const enrichPostsWithCounts = async (posts: Post[]): Promise<Post[]> => {
   const user = await getCurrentUser();
   
   if (user) {
-    // Get user votes
-    const { data: userVotesData } = await supabase
-      .from('votes')
-      .select('post_id')
-      .eq('user_id', user.id);
+    // Get user votes using typedSupabaseClient
+    const { data: userVotesData } = await typedSupabaseClient.votes.getByUser(user.id);
       
     if (userVotesData) {
       userVotes = userVotesData.reduce((acc: Record<string, boolean>, vote: any) => {
@@ -463,11 +445,8 @@ export const enrichPostsWithCounts = async (posts: Post[]): Promise<Post[]> => {
       }, {});
     }
     
-    // Get user bookmarks
-    const { data: userBookmarksData } = await supabase
-      .from('bookmarks')
-      .select('post_id')
-      .eq('user_id', user.id);
+    // Get user bookmarks using typedSupabaseClient
+    const { data: userBookmarksData } = await typedSupabaseClient.bookmarks.getByUser(user.id);
       
     if (userBookmarksData) {
       userBookmarks = userBookmarksData.reduce((acc: Record<string, boolean>, bookmark: any) => {
