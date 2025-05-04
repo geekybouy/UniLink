@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -68,11 +69,11 @@ const ContentModeration = () => {
             content: post.content || '',
             created_at: post.created_at || new Date().toISOString(),
             user_id: post.user_id || '',
-            // Handle the possibility of user being null or an error object
+            // Handle the possibility of user being null or an error object safely
             user: post.user && typeof post.user === 'object' && !('error' in post.user) 
               ? { 
-                  full_name: post.user.full_name || 'Unknown User', 
-                  avatar_url: post.user.avatar_url 
+                  full_name: post.user?.full_name || 'Unknown User', 
+                  avatar_url: post.user?.avatar_url 
                 }
               : { full_name: 'Unknown User' },
             // Add default values for fields that might not exist in the database

@@ -222,7 +222,7 @@ const UserManagement = () => {
         const { error } = await supabase
           .from('profiles')
           .delete()
-          .eq('id', userId.toString());
+          .eq('id', userId);
         
         if (error) throw error;
         
@@ -257,7 +257,7 @@ const UserManagement = () => {
               const { error } = await supabase
                 .from('profiles')
                 .delete()
-                .eq('id', userId.toString());
+                .eq('id', userId);
               
               if (error) throw error;
             }
