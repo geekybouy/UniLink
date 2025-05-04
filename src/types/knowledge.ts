@@ -24,7 +24,7 @@ export interface Post {
   is_featured?: boolean;
   user_has_voted?: boolean;
   user_has_bookmarked?: boolean;
-  image_url?: string; // Adding this to maintain compatibility with existing code
+  image_url?: string;
 }
 
 export interface Comment {
@@ -33,7 +33,7 @@ export interface Comment {
   post_id: string;
   user_id: string;
   created_at: string;
-  updated_at?: string; // Added to make it compatible with commentService
+  updated_at?: string;
   user?: {
     full_name: string;
     avatar_url?: string | null;
