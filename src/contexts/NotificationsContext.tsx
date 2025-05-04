@@ -84,12 +84,12 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       
       // Convert the JSON metadata to proper type
-      const typedNotifications: Notification[] = data?.map(notification => ({
+      const typedNotifications = data ? data.map((notification: any) => ({
         ...notification,
         metadata: typeof notification.metadata === 'string' 
           ? JSON.parse(notification.metadata) 
           : notification.metadata as Record<string, any>
-      })) || [];
+      })) as Notification[] : [];
       
       setNotifications(typedNotifications);
     } catch (error) {
