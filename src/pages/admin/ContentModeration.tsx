@@ -45,24 +45,15 @@ const ContentModeration = () => {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      // Adjust the query to fetch all required fields for the Post type
+      // Simplify the query to match the actual posts table structure
       const { data, error } = await supabase
         .from('posts')
         .select(`
-          id, 
-          title, 
-          content, 
-          created_at, 
-          user_id, 
-          content_type,
-          file_url, 
-          link_url,
-          is_approved, 
-          is_featured,
-          votes_count, 
-          comments_count,
-          image_url,
-          user:profiles (full_name, avatar_url)
+          *,
+          user:profiles (
+            full_name,
+            avatar_url
+          )
         `);
     
       if (error) throw error;
@@ -73,7 +64,7 @@ const ContentModeration = () => {
           // Handle potential null values and ensure all required fields are present
           const formattedPost: Post = {
             id: post.id,
-            title: post.title || '',
+            title: post.title || extractTitle(post.content) || '',
             content: post.content || '',
             created_at: post.created_at,
             user_id: post.user_id,
@@ -102,6 +93,13 @@ const ContentModeration = () => {
     } finally {
       setLoading(false);
     }
+  };
+  
+  // Helper function to extract title from content for legacy posts
+  const extractTitle = (content: string): string => {
+    if (!content) return '';
+    const lines = content.split('\n');
+    return lines[0] || '';
   };
   
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -138,7 +136,9 @@ const ContentModeration = () => {
     try {
       const { error } = await supabase
         .from('posts')
-        .update({ is_approved: true })
+        .update({ 
+          is_approved: true 
+        })
         .eq('id', postId);
     
       if (error) throw error;
@@ -155,7 +155,9 @@ const ContentModeration = () => {
     try {
       const { error } = await supabase
         .from('posts')
-        .update({ is_featured: true })
+        .update({ 
+          is_featured: true 
+        })
         .eq('id', postId);
     
       if (error) throw error;
@@ -201,7 +203,9 @@ const ContentModeration = () => {
             for (const postId of selectedPosts) {
               const { error } = await supabase
                 .from('posts')
-                .update({ is_approved: true })
+                .update({ 
+                  is_approved: true 
+                })
                 .eq('id', postId);
               
               if (error) throw error;
@@ -223,7 +227,9 @@ const ContentModeration = () => {
             for (const postId of selectedPosts) {
               const { error } = await supabase
                 .from('posts')
-                .update({ is_featured: true })
+                .update({ 
+                  is_featured: true 
+                })
                 .eq('id', postId);
               
               if (error) throw error;
