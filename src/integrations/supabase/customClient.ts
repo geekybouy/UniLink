@@ -123,5 +123,43 @@ export const typedSupabaseClient = {
         .eq('user_id', userId)
         .single();
     }
+  },
+  // Knowledge Hub tables
+  posts: {
+    insert: (data: any) => customSupabase.from('posts').insert(data),
+    select: () => customSupabase.from('posts').select('*'),
+    getById: (id: string) => customSupabase.from('posts').select('*').eq('id', id).single(),
+    update: (id: string, data: any) => customSupabase.from('posts').update(data).eq('id', id),
+    delete: (id: string) => customSupabase.from('posts').delete().eq('id', id),
+    getByUserId: (userId: string) => customSupabase.from('posts').select('*').eq('user_id', userId),
+    getFeatured: () => customSupabase.from('posts').select('*').eq('is_featured', true)
+  },
+  comments: {
+    insert: (data: any) => customSupabase.from('comments').insert(data),
+    select: () => customSupabase.from('comments').select('*'),
+    getByPostId: (postId: string) => customSupabase.from('comments').select('*').eq('post_id', postId),
+    delete: (id: string) => customSupabase.from('comments').delete().eq('id', id)
+  },
+  votes: {
+    insert: (data: any) => customSupabase.from('votes').insert(data),
+    select: () => customSupabase.from('votes').select('*'),
+    delete: (userId: string, postId: string) => customSupabase.from('votes').delete().eq('user_id', userId).eq('post_id', postId),
+    getByPostId: (postId: string) => customSupabase.from('votes').select('*').eq('post_id', postId),
+    getUserVote: (userId: string, postId: string) => customSupabase.from('votes').select('*').eq('user_id', userId).eq('post_id', postId).single()
+  },
+  bookmarks: {
+    insert: (data: any) => customSupabase.from('bookmarks').insert(data),
+    select: () => customSupabase.from('bookmarks').select('*'),
+    delete: (userId: string, postId: string) => customSupabase.from('bookmarks').delete().eq('user_id', userId).eq('post_id', postId),
+    getByUserId: (userId: string) => customSupabase.from('bookmarks').select('*').eq('user_id', userId)
+  },
+  tags: {
+    insert: (data: any) => customSupabase.from('tags').insert(data),
+    select: () => customSupabase.from('tags').select('*')
+  },
+  postTags: {
+    insert: (data: any) => customSupabase.from('post_tags').insert(data),
+    select: () => customSupabase.from('post_tags').select('*'),
+    deleteByPostId: (postId: string) => customSupabase.from('post_tags').delete().eq('post_id', postId)
   }
 };

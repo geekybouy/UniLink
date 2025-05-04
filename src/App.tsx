@@ -38,6 +38,10 @@ import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 import VerifyEmailPage from "@/pages/auth/VerifyEmailPage";
 
+// Knowledge Hub Pages
+import KnowledgeHub from "@/pages/KnowledgeHub";
+import KnowledgePostDetail from "@/pages/KnowledgePostDetail";
+
 // Auth context and protected route
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
@@ -182,6 +186,10 @@ function App() {
                           <EditEventPage />
                         </ProtectedRoute>
                       } />
+                      
+                      {/* Knowledge Hub routes */}
+                      <Route path="/knowledge" element={<KnowledgeHub />} />
+                      <Route path="/knowledge/:id" element={<KnowledgePostDetail />} />
                       
                       {/* Job Board routes */}
                       <Route path="/jobs" element={
