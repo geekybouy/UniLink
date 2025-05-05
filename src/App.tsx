@@ -1,3 +1,4 @@
+
 import { Routes, Route, useLocation } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { useNetworkStatus } from "./hooks/use-network-status";
@@ -19,6 +20,9 @@ import SignupPage from "./pages/auth/SignupPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
+
+// Lazy load the AuthCallback component
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 
 // Lazy load other pages
 const Index = lazy(() => import("./pages/Index"));
@@ -122,7 +126,7 @@ function App() {
           {/* Core app routes */}
           <Route path="/auth-callback" element={
             <Suspense fallback={<div className="flex h-screen items-center justify-center"><Spinner size="lg" /></div>}>
-              {lazy(() => import("./pages/AuthCallback"))}
+              <AuthCallback />
             </Suspense>
           } />
           <Route path="/dashboard" element={<Dashboard />} />
