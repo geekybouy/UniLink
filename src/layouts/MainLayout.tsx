@@ -7,6 +7,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import UpdatePrompt from '@/components/pwa/UpdatePrompt';
 import InstallPrompt from '@/components/pwa/InstallPrompt';
 import NetworkStatus from '@/components/NetworkStatus';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 type MainLayoutProps = {
   children: ReactNode;

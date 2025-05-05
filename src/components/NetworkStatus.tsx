@@ -37,7 +37,7 @@ export function NetworkStatus() {
     }
   }, [online, previousOnline]);
 
-  // Don't render anything if online
+  // Don't render anything if online - simplified return
   if (online) return null;
 
   return (

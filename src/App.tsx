@@ -1,4 +1,3 @@
-
 import { Routes, Route, useLocation } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { useNetworkStatus } from "./hooks/use-network-status";
@@ -86,7 +85,7 @@ function App() {
     }
   }, []);
 
-  // Redirect users to offline page when they lose connection
+  // Handle offline state - use window.location instead of useNavigate
   useEffect(() => {
     if (!online && location.pathname !== '/offline') {
       // Save the last route to sessionStorage to redirect back when online
