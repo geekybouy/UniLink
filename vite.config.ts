@@ -63,6 +63,76 @@ export default defineConfig(async ({ mode }) => {
         VitePWA({
           registerType: 'autoUpdate',
           includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+          workbox: {
+            globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}'],
+            runtimeCaching: [
+              {
+                urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+                handler: 'CacheFirst',
+                options: {
+                  cacheName: 'google-fonts-cache',
+                  expiration: {
+                    maxEntries: 10,
+                    maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+                  },
+                  cacheableResponse: {
+                    statuses: [0, 200],
+                  },
+                },
+              },
+              {
+                urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+                handler: 'CacheFirst',
+                options: {
+                  cacheName: 'gstatic-fonts-cache',
+                  expiration: {
+                    maxEntries: 10,
+                    maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+                  },
+                  cacheableResponse: {
+                    statuses: [0, 200],
+                  },
+                },
+              },
+              {
+                urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+                handler: 'CacheFirst',
+                options: {
+                  cacheName: 'images-cache',
+                  expiration: {
+                    maxEntries: 50,
+                    maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+                  },
+                },
+              },
+              {
+                urlPattern: /\.(?:js|css)$/,
+                handler: 'StaleWhileRevalidate',
+                options: {
+                  cacheName: 'static-resources',
+                  expiration: {
+                    maxEntries: 30,
+                    maxAgeSeconds: 60 * 60 * 24, // 1 day
+                  },
+                },
+              },
+              {
+                urlPattern: /^https:\/\/tchudsedvmebjqzewlyb\.supabase\.co\/.*/i,
+                handler: 'NetworkFirst',
+                options: {
+                  cacheName: 'api-cache',
+                  networkTimeoutSeconds: 10,
+                  expiration: {
+                    maxEntries: 50,
+                    maxAgeSeconds: 60 * 10, // 10 minutes
+                  },
+                  cacheableResponse: {
+                    statuses: [0, 200],
+                  },
+                },
+              },
+            ],
+          },
           manifest: {
             name: 'UniLink',
             short_name: 'UniLink',
@@ -85,7 +155,42 @@ export default defineConfig(async ({ mode }) => {
                 type: 'image/png',
                 purpose: 'maskable',
               }
-            ]
+            ],
+            screenshots: [
+              {
+                src: '/screenshots/dashboard.png',
+                sizes: '1280x720',
+                type: 'image/png',
+                form_factor: 'wide',
+              },
+              {
+                src: '/screenshots/dashboard-mobile.png',
+                sizes: '750x1334',
+                type: 'image/png',
+                form_factor: 'narrow',
+              }
+            ],
+            shortcuts: [
+              {
+                name: 'Dashboard',
+                short_name: 'Dashboard',
+                description: 'View your dashboard',
+                url: '/dashboard',
+                icons: [{ src: '/shortcuts/dashboard.png', sizes: '192x192' }]
+              },
+              {
+                name: 'Find Mentors',
+                short_name: 'Mentors',
+                description: 'Find mentors in your field',
+                url: '/mentorship/find-mentors',
+                icons: [{ src: '/shortcuts/mentors.png', sizes: '192x192' }]
+              }
+            ],
+            display: 'standalone',
+            start_url: '/?source=pwa',
+            background_color: '#f8fafc',
+            orientation: 'portrait',
+            categories: ['social', 'education', 'networking']
           }
         })
       );

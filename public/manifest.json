@@ -47,6 +47,40 @@
       "description": "Find mentors in your field",
       "url": "/mentorship/find-mentors",
       "icons": [{ "src": "/shortcuts/mentors.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Messages",
+      "short_name": "Messages",
+      "description": "Check your messages",
+      "url": "/messages",
+      "icons": [{ "src": "/shortcuts/messages.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Events",
+      "short_name": "Events",
+      "description": "See upcoming events",
+      "url": "/events",
+      "icons": [{ "src": "/shortcuts/events.png", "sizes": "192x192" }]
     }
-  ]
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png"
+    },
+    {
+      "src": "/screenshots/mentorship.png",
+      "sizes": "1280x720",
+      "type": "image/png"
+    },
+    {
+      "src": "/screenshots/events.png",
+      "sizes": "1280x720", 
+      "type": "image/png"
+    }
+  ],
+  "categories": ["social", "education", "networking", "productivity"],
+  "lang": "en-US",
+  "dir": "ltr"
 }

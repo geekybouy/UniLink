@@ -80,3 +80,47 @@ export const getOptimizedImageUrl = (
   
   return optimizedUrl;
 };
+
+/**
+ * Determines image quality based on network connection
+ */
+export const getConnectionBasedQuality = (): number => {
+  // Check if Network Information API is available
+  if ('connection' in navigator) {
+    const connection = (navigator as any).connection;
+    
+    if (connection) {
+      // Use data saver preference if available
+      if (connection.saveData) {
+        return LOW_QUALITY;
+      }
+      
+      // Adjust quality based on connection type
+      switch (connection.effectiveType) {
+        case 'slow-2g':
+        case '2g':
+          return LOW_QUALITY;
+        case '3g':
+          return MEDIUM_QUALITY;
+        case '4g':
+          return HIGH_QUALITY;
+        default:
+          return MEDIUM_QUALITY;
+      }
+    }
+  }
+  
+  // Default to medium quality if Network Information API is not available
+  return MEDIUM_QUALITY;
+};
+
+/**
+ * Determines if an image should be lazy loaded based on its position
+ * @param position Position of the image in a list (0-based index)
+ * @param isVisible Whether the image container is in viewport
+ */
+export const shouldLazyLoad = (position: number = 0, isVisible: boolean = false): boolean => {
+  // Always eager-load the first few images or visible images
+  return position > 2 && !isVisible;
+};
+

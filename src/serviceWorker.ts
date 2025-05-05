@@ -1,21 +1,27 @@
-
 /// <reference lib="webworker" />
 
-// This service worker is registered by vite-plugin-pwa
-// It's minimal since most functionality is handled by the plugin
+// This service worker can be customized with various caching strategies
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
 
 // Cache name with version
 const CACHE_NAME = 'unilink-cache-v1';
 
-// Assets to cache on install
+// Core app shell assets to cache immediately
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/favicon.ico',
-  '/offline.html'
+  '/offline.html',
+  '/robots.txt'
+];
+
+// Content that should be available offline
+const CONTENT_CACHE_URLS = [
+  '/dashboard',
+  '/alumni-directory',
+  // Add more frequently accessed content URLs here
 ];
 
 // Install event - precache key resources
@@ -26,7 +32,7 @@ sw.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('[ServiceWorker] Pre-caching assets');
-        return cache.addAll(PRECACHE_ASSETS);
+        return cache.addAll([...PRECACHE_ASSETS, ...CONTENT_CACHE_URLS]);
       })
       .then(() => {
         // Force waiting service worker to become active
@@ -58,7 +64,7 @@ sw.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - serve from cache, falling back to network
+// Fetch event - implement stale-while-revalidate strategy for most requests
 sw.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
@@ -70,9 +76,9 @@ sw.addEventListener('fetch', (event) => {
   if (event.request.url.includes('browser-sync') || 
       event.request.url.includes('socket.io')) return;
   
-  // Network first for API requests
+  // API requests - Network first, fallback to cache
   if (event.request.url.includes('/api/')) {
-    return event.respondWith(
+    event.respondWith(
       fetch(event.request)
         .then(response => {
           // Clone response for cache
@@ -80,31 +86,88 @@ sw.addEventListener('fetch', (event) => {
           
           caches.open(CACHE_NAME)
             .then(cache => {
-              cache.put(event.request, responseToCache);
+              // Only cache successful responses
+              if (response.status === 200) {
+                cache.put(event.request, responseToCache);
+              }
             });
             
           return response;
         })
         .catch(() => {
-          return caches.match(event.request);
+          // If network fails, try to get from cache
+          return caches.match(event.request).then(cachedResponse => {
+            // If we have a cached response, return it
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            
+            // If no cached response, return offline page for HTML requests
+            if (event.request.headers.get('accept')?.includes('text/html')) {
+              return caches.match('/offline.html');
+            }
+            
+            // Return empty response for other assets
+            return new Response(null, { 
+              status: 503, 
+              statusText: 'Service Unavailable' 
+            });
+          });
         })
     );
+    return;
   }
   
-  // Cache first for assets
+  // HTML pages (navigation) - Network first, fallback to cache or offline page
+  if (event.request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request).then(cachedResponse => {
+            // If we have a cached version of this page, return it
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            // Otherwise return the offline page
+            return caches.match('/offline.html');
+          });
+        })
+    );
+    return;
+  }
+  
+  // For assets (JS, CSS, images) - Cache first, then network
   event.respondWith(
     caches.match(event.request)
       .then(cachedResponse => {
+        // Return cached response immediately if available
         if (cachedResponse) {
+          // Refresh cache in background (stale-while-revalidate)
+          fetch(event.request).then(response => {
+            if (response.status === 200) {
+              caches.open(CACHE_NAME).then(cache => {
+                cache.put(event.request, response);
+              });
+            }
+          }).catch(err => console.log('[ServiceWorker] Error updating cache:', err));
+          
           return cachedResponse;
         }
         
-        // Not in cache, get from network
+        // If not in cache, get from network
         return fetch(event.request)
           .then(response => {
             // Return the response and cache it for later
+            const responseToCache = response.clone();
+            
             if (response.status === 200) {
-              const responseToCache = response.clone();
               caches.open(CACHE_NAME)
                 .then(cache => {
                   cache.put(event.request, responseToCache);
@@ -114,10 +177,7 @@ sw.addEventListener('fetch', (event) => {
             return response;
           })
           .catch(() => {
-            // Network failed, show offline page
-            if (event.request.headers.get('accept')?.includes('text/html')) {
-              return caches.match('/offline.html');
-            }
+            // Network failed
             
             // Return a placeholder for images
             if (event.request.headers.get('accept')?.includes('image/')) {
@@ -134,6 +194,54 @@ sw.addEventListener('fetch', (event) => {
             });
           });
       })
+  );
+});
+
+// Handle push notifications
+sw.addEventListener('push', (event) => {
+  if (!event.data) return;
+  
+  try {
+    const data = event.data.json();
+    
+    const options = {
+      body: data.body || 'New notification from UniLink',
+      icon: '/logo192.png',
+      badge: '/badge.png',
+      data: data.data || {},
+    };
+    
+    event.waitUntil(
+      sw.registration.showNotification(data.title || 'UniLink Notification', options)
+    );
+  } catch (err) {
+    console.error('[ServiceWorker] Push notification error:', err);
+  }
+});
+
+// Notification click event handler
+sw.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  
+  const urlToOpen = event.notification.data?.url || '/notifications';
+  
+  event.waitUntil(
+    sw.clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true
+    }).then((clientList) => {
+      // If a tab is already open, focus it
+      for (const client of clientList) {
+        if (client.url === urlToOpen && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      
+      // Otherwise open a new tab
+      if (sw.clients.openWindow) {
+        return sw.clients.openWindow(urlToOpen);
+      }
+    })
   );
 });
 
