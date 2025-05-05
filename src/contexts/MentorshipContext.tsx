@@ -126,22 +126,38 @@ export const MentorshipProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const targetUserId = userId || user?.id;
       if (!targetUserId) return null;
 
-      const { data, error } = await supabase
+      // First get the mentor record
+      const { data: mentorData, error: mentorError } = await supabase
         .from('mentors')
-        .select(`
-          *,
-          profile:profiles!inner(
-            full_name,
-            avatar_url,
-            current_company,
-            job_title
-          )
-        `)
+        .select('*')
         .eq('user_id', targetUserId)
         .single();
 
-      if (error) throw error;
-      return data;
+      if (mentorError) throw mentorError;
+      
+      if (!mentorData) return null;
+      
+      // Then get the profile data
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url, current_company, job_title')
+        .eq('user_id', targetUserId)
+        .single();
+        
+      if (profileError) throw profileError;
+      
+      // Combine the data
+      const mentorWithProfile: MentorWithProfile = {
+        ...mentorData,
+        profile: profileData || {
+          full_name: 'Unknown User',
+          avatar_url: undefined,
+          current_company: undefined,
+          job_title: undefined
+        }
+      };
+      
+      return mentorWithProfile;
     } catch (error) {
       console.error('Error getting mentor profile:', error);
       return null;
@@ -150,21 +166,48 @@ export const MentorshipProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const getAllMentors = async (): Promise<MentorWithProfile[]> => {
     try {
-      const { data, error } = await supabase
+      // First get all active mentors
+      const { data: mentorsData, error: mentorsError } = await supabase
         .from('mentors')
-        .select(`
-          *,
-          profile:profiles!inner(
-            full_name,
-            avatar_url,
-            current_company,
-            job_title
-          )
-        `)
+        .select('*')
         .eq('is_active', true);
 
-      if (error) throw error;
-      return data || [];
+      if (mentorsError) throw mentorsError;
+      
+      if (!mentorsData || mentorsData.length === 0) return [];
+      
+      // Get all user_ids to fetch profiles
+      const userIds = mentorsData.map(mentor => mentor.user_id);
+      
+      // Fetch all profiles in one query
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, avatar_url, current_company, job_title')
+        .in('user_id', userIds);
+        
+      if (profilesError) throw profilesError;
+      
+      // Map profiles to mentors
+      const mentorsWithProfiles: MentorWithProfile[] = mentorsData.map(mentor => {
+        const profile = profilesData?.find(p => p.user_id === mentor.user_id);
+        
+        return {
+          ...mentor,
+          profile: profile ? {
+            full_name: profile.full_name || 'Unknown User',
+            avatar_url: profile.avatar_url,
+            current_company: profile.current_company,
+            job_title: profile.job_title
+          } : {
+            full_name: 'Unknown User',
+            avatar_url: undefined,
+            current_company: undefined,
+            job_title: undefined
+          }
+        };
+      });
+      
+      return mentorsWithProfiles;
     } catch (error) {
       console.error('Error getting mentors:', error);
       return [];
