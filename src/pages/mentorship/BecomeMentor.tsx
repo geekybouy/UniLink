@@ -1,10 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMentorship } from '@/contexts/MentorshipContext';
 import MainLayout from '@/layouts/MainLayout';
-import { RegisterMentorForm } from '@/components/mentorship/RegisterMentorForm';
 import { MentorWithProfile } from '@/types/mentorship';
+import { Spinner } from '@/components/ui/spinner';
+
+// Lazy load the form component to reduce initial bundle size
+const RegisterMentorForm = React.lazy(() => 
+  import('@/components/mentorship/RegisterMentorForm').then(module => ({ 
+    default: module.RegisterMentorForm 
+  }))
+);
 
 export function BecomeMentor() {
   const navigate = useNavigate();
@@ -34,10 +41,12 @@ export function BecomeMentor() {
           </p>
         </div>
         
-        <RegisterMentorForm
-          onSubmit={handleSubmit}
-          isLoading={isSubmitting}
-        />
+        <Suspense fallback={<div className="flex justify-center p-8"><Spinner /></div>}>
+          <RegisterMentorForm
+            onSubmit={handleSubmit}
+            isLoading={isSubmitting}
+          />
+        </Suspense>
       </div>
     </MainLayout>
   );

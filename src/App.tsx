@@ -1,183 +1,198 @@
 
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ThemeProvider } from '@/components/ui/theme-provider';
-
-// Import pages
-import Index from './pages/Index';
-import Feed from './pages/Feed';
-import Dashboard from './pages/Dashboard';
-import CredentialWallet from './pages/CredentialWallet';
-import ShareCredentials from './pages/ShareCredentials';
-import SharedCredentials from './pages/SharedCredentials';
-import AlumniDirectory from './pages/AlumniDirectory';
-import AlumniProfile from './pages/AlumniProfile';
-import EventsPage from './pages/EventsPage';
-import EventDetailPage from './pages/EventDetailPage';
-import CreateEventPage from './pages/CreateEventPage';
-import EditEventPage from './pages/EditEventPage';
-import ProfilePage from './pages/ProfilePage';
-import ProfileSetup from './pages/ProfileSetup';
-import CompleteProfile from './pages/CompleteProfile';
-import KnowledgeHub from './pages/KnowledgeHub';
-import KnowledgePostDetail from './pages/KnowledgePostDetail';
-import NewPost from './pages/NewPost';
-import JobsListingPage from './pages/JobsListingPage';
-import JobDetailPage from './pages/JobDetailPage';
-import PostJobPage from './pages/PostJobPage';
-import EditJobPage from './pages/EditJobPage';
-import MyApplicationsPage from './pages/MyApplicationsPage';
-import CVMaker from './pages/CVMaker';
-import MyNetwork from './pages/MyNetwork';
-import MessagingPage from './pages/MessagingPage';
-import PrivacySettings from './pages/PrivacySettings';
-import NotFound from './pages/NotFound';
-import MorePage from './pages/MorePage';
-
-// Mentorship pages
-import MentorshipDashboard from './pages/mentorship/MentorshipDashboard';
-import FindMentors from './pages/mentorship/FindMentors';
-import BecomeMentor from './pages/mentorship/BecomeMentor';
-import SuccessStories from './pages/mentorship/SuccessStories';
-
-// Admin pages
-import AdminDashboard from './pages/admin/AdminDashboard';
-import UserManagement from './pages/admin/UserManagement';
-import ContentModeration from './pages/admin/ContentModeration';
-import RoleManagement from './pages/admin/RoleManagement';
-import Announcements from './pages/admin/Announcements';
-import AuditLogs from './pages/admin/AuditLogs';
-import Settings from './pages/admin/Settings';
-
-// Auth pages
-import AuthLayout from './pages/auth/AuthLayout';
-import LoginPage from './pages/auth/LoginPage';
-import SignupPage from './pages/auth/SignupPage';
-import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
-import ResetPasswordPage from './pages/auth/ResetPasswordPage';
-import VerifyEmailPage from './pages/auth/VerifyEmailPage';
-
-// Auth callback handler
-import AuthCallback from './pages/AuthCallback';
-
-// Protected route component
-import ProtectedRoute from './components/auth/ProtectedRoute';
+import React, { lazy, Suspense, useEffect } from 'react';
+import { 
+  BrowserRouter as Router,
+  Routes, 
+  Route,
+  useLocation, 
+  useNavigationType,
+  Outlet
+} from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 
 // Context Providers
-import { AuthProvider } from './contexts/AuthContext';
-import { ProfileProvider } from './contexts/ProfileContext';
-import { ConnectionProvider } from './contexts/ConnectionContext';
-import { EventsProvider } from './contexts/EventsContext';
-import { JobsProvider } from './contexts/JobsContext';
-import { MessagingProvider } from './contexts/MessagingContext';
-import { KnowledgeProvider } from './contexts/KnowledgeContext';
-import { NotificationsProvider } from './contexts/NotificationsContext';
-import { MentorshipProvider } from './contexts/MentorshipContext';
+import { ThemeProvider } from '@/components/ui/theme-provider';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { MentorshipProvider } from '@/contexts/MentorshipContext';
+import { JobsProvider } from '@/contexts/JobsContext';
+import { EventsProvider } from '@/contexts/EventsContext';
+import { ProfileProvider } from '@/contexts/ProfileContext';
+import { ConnectionProvider } from '@/contexts/ConnectionContext';
+import { MessagingProvider } from '@/contexts/MessagingContext';
+import { NotificationsProvider } from '@/contexts/NotificationsContext';
+import { KnowledgeProvider } from '@/contexts/KnowledgeContext';
 
-// Toast provider
+// Services
+import analytics from './services/analytics';
+import { initErrorMonitoring, setErrorUser } from './services/errorMonitoring';
+import performanceMonitor from './services/performance';
+
+// Utils
+import { useAuth } from '@/contexts/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
+import { Spinner } from '@/components/ui/spinner';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import ErrorBoundary from './components/ErrorBoundary';
 
-// Notification pages
-import NotificationsPage from './pages/NotificationsPage';
-import NotificationSettingsPage from './pages/NotificationSettingsPage';
+// Eagerly loaded components
+import NotFound from './pages/NotFound';
 
-import './App.css';
+// Lazily loaded page components with code splitting
+const Index = lazy(() => import('./pages/Index'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const AlumniDirectory = lazy(() => import('./pages/AlumniDirectory'));
+const Feed = lazy(() => import('./pages/Feed'));
+const AlumniProfile = lazy(() => import('./pages/AlumniProfile'));
+const JobsListingPage = lazy(() => import('./pages/JobsListingPage'));
+const EventsPage = lazy(() => import('./pages/EventsPage'));
+const BecomeMentor = lazy(() => import('./pages/mentorship/BecomeMentor'));
+const FindMentors = lazy(() => import('./pages/mentorship/FindMentors'));
+const MentorshipDashboard = lazy(() => import('./pages/mentorship/MentorshipDashboard'));
+const SuccessStories = lazy(() => import('./pages/mentorship/SuccessStories'));
+const AuthLayout = lazy(() => import('./pages/auth/AuthLayout'));
+const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
+const SignupPage = lazy(() => import('./pages/auth/SignupPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
+const VerifyEmailPage = lazy(() => import('./pages/auth/VerifyEmailPage'));
+const AuthCallback = lazy(() => import('./pages/AuthCallback'));
+
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <Spinner size="lg" />
+  </div>
+);
+
+function RouteChangeTracker() {
+  const location = useLocation();
+  const navigationType = useNavigationType();
+
+  useEffect(() => {
+    // Track page view
+    analytics.pageView(location.pathname + location.search);
+    
+    // Scroll to top on route change, but not on POP navigation
+    if (navigationType !== 'POP') {
+      window.scrollTo(0, 0);
+    }
+  }, [location, navigationType]);
+
+  return <Outlet />;
+}
+
+function AuthMonitor() {
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      // Set user identity in analytics
+      analytics.setUser(user.id, { email: user.email });
+      
+      // Set user identity in error monitoring
+      setErrorUser(user.id, { email: user.email });
+    } else {
+      // Clear user identity when logged out
+      analytics.setUser(null);
+      setErrorUser(null);
+    }
+  }, [user]);
+
+  return <Outlet />;
+}
+
+function AppContent() {
+  return (
+    <ErrorBoundary>
+      <Routes>
+        <Route element={<RouteChangeTracker />}>
+          <Route element={<AuthMonitor />}>
+            <Route path="/" element={<Index />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/alumni-directory" element={<AlumniDirectory />} />
+            <Route path="/feed" element={<Feed />} />
+            <Route path="/profile/:userId?" element={<AlumniProfile />} />
+            <Route path="/jobs" element={<JobsListingPage />} />
+            <Route path="/events" element={<EventsPage />} />
+            
+            {/* Mentorship Routes */}
+            <Route path="/mentorship">
+              <Route path="dashboard" element={<MentorshipDashboard />} />
+              <Route path="become-mentor" element={<BecomeMentor />} />
+              <Route path="find-mentors" element={<FindMentors />} />
+              <Route path="success-stories" element={<SuccessStories />} />
+            </Route>
+            
+            {/* Auth Routes */}
+            <Route path="/auth" element={<AuthLayout />}>
+              <Route path="login" element={<LoginPage />} />
+              <Route path="signup" element={<SignupPage />} />
+              <Route path="forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="reset-password" element={<ResetPasswordPage />} />
+              <Route path="verify-email" element={<VerifyEmailPage />} />
+              <Route path="callback" element={<AuthCallback />} />
+            </Route>
+            
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Route>
+      </Routes>
+      
+      <Toaster />
+    </ErrorBoundary>
+  );
+}
 
 function App() {
+  // Initialize services
+  useEffect(() => {
+    // Initialize analytics
+    analytics.initialize();
+    
+    // Initialize error monitoring
+    initErrorMonitoring();
+    
+    // Track initial page load
+    performanceMonitor.measureComponentRender('App')();
+    
+    // Report initial load
+    analytics.trackEvent('app_loaded');
+  }, []);
+  
   return (
-    <ThemeProvider defaultTheme="system" storageKey="unilink-theme">
-      <BrowserRouter>
-        <AuthProvider>
-          <ProfileProvider>
-            <ConnectionProvider>
-              <EventsProvider>
-                <JobsProvider>
-                  <MessagingProvider>
-                    <KnowledgeProvider>
-                      <NotificationsProvider>
-                        <MentorshipProvider>
-                          {/* Skip link for accessibility */}
-                          <a href="#main-content" className="skip-link">
-                            Skip to main content
-                          </a>
-                          <Routes>
-                            {/* Public routes */}
-                            <Route path="/" element={<Index />} />
-                            <Route path="/auth" element={<AuthLayout />}>
-                              <Route path="login" element={<LoginPage />} />
-                              <Route path="signup" element={<SignupPage />} />
-                              <Route path="forgot-password" element={<ForgotPasswordPage />} />
-                              <Route path="reset-password" element={<ResetPasswordPage />} />
-                              <Route path="verify-email" element={<VerifyEmailPage />} />
-                            </Route>
-                            <Route path="/auth/callback" element={<AuthCallback />} />
-
-                            {/* Protected routes */}
-                            <Route element={<ProtectedRoute />}>
-                              <Route path="/dashboard" element={<Dashboard />} />
-                              <Route path="/feed" element={<Feed />} />
-                              <Route path="/credential-wallet" element={<CredentialWallet />} />
-                              <Route path="/share-credentials" element={<ShareCredentials />} />
-                              <Route path="/shared-credentials/:shareId" element={<SharedCredentials />} />
-                              <Route path="/alumni-directory" element={<AlumniDirectory />} />
-                              <Route path="/profile/:userId" element={<AlumniProfile />} />
-                              <Route path="/profile" element={<ProfilePage />} />
-                              <Route path="/profile-setup" element={<ProfileSetup />} />
-                              <Route path="/complete-profile" element={<CompleteProfile />} />
-                              <Route path="/events" element={<EventsPage />} />
-                              <Route path="/events/:id" element={<EventDetailPage />} />
-                              <Route path="/events/create" element={<CreateEventPage />} />
-                              <Route path="/events/edit/:id" element={<EditEventPage />} />
-                              <Route path="/knowledge" element={<KnowledgeHub />} />
-                              <Route path="/knowledge/:postId" element={<KnowledgePostDetail />} />
-                              <Route path="/knowledge/new" element={<NewPost />} />
-                              <Route path="/jobs" element={<JobsListingPage />} />
-                              <Route path="/jobs/:id" element={<JobDetailPage />} />
-                              <Route path="/jobs/post" element={<PostJobPage />} />
-                              <Route path="/jobs/edit/:id" element={<EditJobPage />} />
-                              <Route path="/my-applications" element={<MyApplicationsPage />} />
-                              <Route path="/cv-maker" element={<CVMaker />} />
-                              <Route path="/network" element={<MyNetwork />} />
-                              <Route path="/messages" element={<MessagingPage />} />
-                              <Route path="/messages/:conversationId" element={<MessagingPage />} />
-                              <Route path="/privacy-settings" element={<PrivacySettings />} />
-                              <Route path="/more" element={<MorePage />} />
-                              
-                              {/* Mentorship routes */}
-                              <Route path="/mentorship/dashboard" element={<MentorshipDashboard />} />
-                              <Route path="/mentorship/find-mentors" element={<FindMentors />} />
-                              <Route path="/mentorship/become-mentor" element={<BecomeMentor />} />
-                              <Route path="/mentorship/success-stories" element={<SuccessStories />} />
-                              
-                              {/* Notification routes */}
-                              <Route path="/notifications" element={<NotificationsPage />} />
-                              <Route path="/notification-settings" element={<NotificationSettingsPage />} />
-
-                              {/* Admin routes */}
-                              <Route path="/admin" element={<AdminDashboard />} />
-                              <Route path="/admin/users" element={<UserManagement />} />
-                              <Route path="/admin/content" element={<ContentModeration />} />
-                              <Route path="/admin/roles" element={<RoleManagement />} />
-                              <Route path="/admin/announcements" element={<Announcements />} />
-                              <Route path="/admin/audit" element={<AuditLogs />} />
-                              <Route path="/admin/settings" element={<Settings />} />
-                            </Route>
-
-                            {/* 404 - Not found */}
-                            <Route path="*" element={<NotFound />} />
-                          </Routes>
-                          <Toaster />
-                        </MentorshipProvider>
-                      </NotificationsProvider>
-                    </KnowledgeProvider>
-                  </MessagingProvider>
-                </JobsProvider>
-              </EventsProvider>
-            </ConnectionProvider>
-          </ProfileProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </ThemeProvider>
+    <React.StrictMode>
+      <ErrorBoundary>
+        <ThemeProvider defaultTheme="light" storageKey="unilink-theme">
+          <HelmetProvider>
+            <Router>
+              <ScrollArea className="h-screen">
+                <AuthProvider>
+                  <ProfileProvider>
+                    <ConnectionProvider>
+                      <MessagingProvider>
+                        <NotificationsProvider>
+                          <JobsProvider>
+                            <EventsProvider>
+                              <MentorshipProvider>
+                                <KnowledgeProvider>
+                                  <Suspense fallback={<LoadingFallback />}>
+                                    <AppContent />
+                                  </Suspense>
+                                </KnowledgeProvider>
+                              </MentorshipProvider>
+                            </EventsProvider>
+                          </JobsProvider>
+                        </NotificationsProvider>
+                      </MessagingProvider>
+                    </ConnectionProvider>
+                  </ProfileProvider>
+                </AuthProvider>
+              </ScrollArea>
+            </Router>
+          </HelmetProvider>
+        </ThemeProvider>
+      </ErrorBoundary>
+    </React.StrictMode>
   );
 }
 
