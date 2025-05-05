@@ -146,9 +146,15 @@ export const MentorshipProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         
       if (profileError) throw profileError;
       
-      // Combine the data
+      // Combine the data and ensure proper type conversion for availability
       const mentorWithProfile: MentorWithProfile = {
         ...mentorData,
+        // Convert Json to Record<string, any> or set to empty object if null
+        availability: mentorData.availability ? 
+          (typeof mentorData.availability === 'string' ? 
+            JSON.parse(mentorData.availability) : 
+            mentorData.availability as Record<string, any>) : 
+          {},
         profile: profileData || {
           full_name: 'Unknown User',
           avatar_url: undefined,
@@ -191,8 +197,16 @@ export const MentorshipProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const mentorsWithProfiles: MentorWithProfile[] = mentorsData.map(mentor => {
         const profile = profilesData?.find(p => p.user_id === mentor.user_id);
         
+        // Convert Json availability to Record<string, any> or set to empty object
+        const availability = mentor.availability ? 
+          (typeof mentor.availability === 'string' ? 
+            JSON.parse(mentor.availability) : 
+            mentor.availability as Record<string, any>) : 
+          {};
+        
         return {
           ...mentor,
+          availability,
           profile: profile ? {
             full_name: profile.full_name || 'Unknown User',
             avatar_url: profile.avatar_url,
