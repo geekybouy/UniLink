@@ -1,12 +1,23 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import type { PluginOption } from 'vite';
 
-// Dynamically import dependencies only when needed to avoid issues
-let visualizer;
-let VitePWA;
-let viteImagemin;
+// Define types for the dynamically imported modules
+type Visualizer = {
+  visualizer: (options?: any) => PluginOption;
+};
+
+type PWA = {
+  VitePWA: (options?: any) => PluginOption;
+};
+
+// Variables to store imported modules
+let visualizer: ((options?: any) => PluginOption) | undefined;
+let VitePWA: ((options?: any) => PluginOption) | undefined;
+let viteImagemin: any;
 
 // Import the dependencies only in production mode
 const loadProductionDependencies = async (mode: string) => {
@@ -28,7 +39,7 @@ export default defineConfig(async ({ mode }) => {
   await loadProductionDependencies(mode);
   
   // Define plugins array
-  const plugins = [react()];
+  const plugins: PluginOption[] = [react()];
   
   // Add development plugins
   if (mode === 'development') {
@@ -121,7 +132,7 @@ export default defineConfig(async ({ mode }) => {
       host: "::",
       port: 8080,
     },
-    plugins: plugins.filter(Boolean),
+    plugins,
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
