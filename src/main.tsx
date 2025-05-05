@@ -9,6 +9,7 @@ import { ThemeProvider } from './components/ui/theme-provider';
 import { AuthProvider } from './contexts/AuthContext';
 import { EventsProvider } from './contexts/EventsContext';
 import { MessagingProvider } from './contexts/MessagingContext';
+import { NotificationsProvider } from './contexts/NotificationsContext';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -18,7 +19,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <ProfileProvider>
             <MessagingProvider>
               <EventsProvider>
-                <App />
+                <NotificationsProvider>
+                  <App />
+                </NotificationsProvider>
               </EventsProvider>
             </MessagingProvider>
           </ProfileProvider>

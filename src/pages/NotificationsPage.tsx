@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { BellOff, Trash2, Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const NotificationsPage = () => {
   const { 
@@ -18,6 +19,7 @@ const NotificationsPage = () => {
     loading 
   } = useNotifications();
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
+  const { theme } = useTheme();
   
   const filteredNotifications = activeTab === 'unread' 
     ? notifications.filter(n => !n.is_read)
@@ -54,7 +56,7 @@ const NotificationsPage = () => {
           </div>
         </div>
         
-        <div className="bg-white rounded-lg border shadow">
+        <div className={`bg-card ${theme === 'dark' ? 'text-card-foreground' : 'bg-white'} rounded-lg border shadow`}>
           <Tabs defaultValue="all" value={activeTab} onValueChange={(v) => setActiveTab(v as 'all' | 'unread')}>
             <div className="px-4 pt-4 border-b">
               <TabsList className="grid w-full max-w-md grid-cols-2">
