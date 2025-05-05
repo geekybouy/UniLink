@@ -12,12 +12,19 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useProfile } from "./contexts/ProfileContext";
 import NotFound from "./pages/NotFound";
 
-// Lazy load pages
+// Eager load auth components to avoid dynamic import issues
+import AuthLayout from "./pages/auth/AuthLayout";
+import LoginPage from "./pages/auth/LoginPage";
+import SignupPage from "./pages/auth/SignupPage";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
+import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
+
+// Lazy load other pages
 const Index = lazy(() => import("./pages/Index"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const AlumniDirectory = lazy(() => import("./pages/AlumniDirectory"));
 const AlumniProfile = lazy(() => import("./pages/AlumniProfile"));
-const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const EventsPage = lazy(() => import("./pages/EventsPage"));
 const EventDetailPage = lazy(() => import("./pages/EventDetailPage"));
 const CreateEventPage = lazy(() => import("./pages/CreateEventPage"));
@@ -43,14 +50,6 @@ const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const NotificationSettingsPage = lazy(() => import("./pages/NotificationSettingsPage"));
 const PrivacySettings = lazy(() => import("./pages/PrivacySettings"));
 const MorePage = lazy(() => import("./pages/MorePage"));
-
-// Auth pages
-const AuthLayout = lazy(() => import("./pages/auth/AuthLayout"));
-const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
-const SignupPage = lazy(() => import("./pages/auth/SignupPage"));
-const ForgotPasswordPage = lazy(() => import("./pages/auth/ForgotPasswordPage"));
-const ResetPasswordPage = lazy(() => import("./pages/auth/ResetPasswordPage"));
-const VerifyEmailPage = lazy(() => import("./pages/auth/VerifyEmailPage"));
 
 // Admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -111,7 +110,7 @@ function App() {
           {/* Home route */}
           <Route path="/" element={<Index />} />
 
-          {/* Auth routes */}
+          {/* Auth routes - now eagerly loaded */}
           <Route path="/auth" element={<AuthLayout />}>
             <Route path="login" element={<LoginPage />} />
             <Route path="signup" element={<SignupPage />} />
@@ -121,7 +120,11 @@ function App() {
           </Route>
 
           {/* Core app routes */}
-          <Route path="/auth-callback" element={<AuthCallback />} />
+          <Route path="/auth-callback" element={
+            <Suspense fallback={<div className="flex h-screen items-center justify-center"><Spinner size="lg" /></div>}>
+              {lazy(() => import("./pages/AuthCallback"))}
+            </Suspense>
+          } />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/alumni-directory" element={<AlumniDirectory />} />
           <Route path="/alumni/:id" element={<AlumniProfile />} />
