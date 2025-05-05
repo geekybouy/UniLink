@@ -1,5 +1,5 @@
 
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { useNetworkStatus } from "./hooks/use-network-status";
 
@@ -69,7 +69,6 @@ const MentorshipDashboard = lazy(() => import("./pages/mentorship/MentorshipDash
 const SuccessStories = lazy(() => import("./pages/mentorship/SuccessStories"));
 
 function App() {
-  const navigate = useNavigate();
   const location = useLocation();
   const { online } = useNetworkStatus();
   const { isProfileCompleted } = useProfile();
@@ -92,12 +91,13 @@ function App() {
     if (!online && location.pathname !== '/offline') {
       // Save the last route to sessionStorage to redirect back when online
       sessionStorage.setItem('lastRoute', location.pathname);
+      window.location.href = '/offline';
     } else if (online && location.pathname === '/offline') {
       // Redirect back to the last route when connection is restored
       const lastRoute = sessionStorage.getItem('lastRoute') || '/dashboard';
-      navigate(lastRoute);
+      window.location.href = lastRoute;
     }
-  }, [online, location.pathname, navigate]);
+  }, [online, location.pathname]);
 
   return (
     <ErrorBoundary>
