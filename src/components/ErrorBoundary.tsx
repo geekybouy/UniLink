@@ -64,7 +64,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 }
 
-// Add typings for Sentry that matches the declaration in errorMonitoring.ts
+// Update the global Window interface to match the declaration in errorMonitoring.ts
 declare global {
   interface Window {
     Sentry?: {
