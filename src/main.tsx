@@ -7,6 +7,8 @@ import { BrowserRouter } from 'react-router-dom';
 import { ProfileProvider } from './contexts/ProfileContext';
 import { ThemeProvider } from './components/ui/theme-provider';
 import { AuthProvider } from './contexts/AuthContext';
+import { EventsProvider } from './contexts/EventsContext';
+import { MessagingProvider } from './contexts/MessagingContext';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -14,7 +16,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <ThemeProvider defaultTheme="light" storageKey="unilink-theme">
         <AuthProvider>
           <ProfileProvider>
-            <App />
+            <MessagingProvider>
+              <EventsProvider>
+                <App />
+              </EventsProvider>
+            </MessagingProvider>
           </ProfileProvider>
         </AuthProvider>
       </ThemeProvider>
