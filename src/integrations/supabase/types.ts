@@ -596,6 +596,214 @@ export type Database = {
           },
         ]
       }
+      mentors: {
+        Row: {
+          availability: Json | null
+          bio: string
+          created_at: string
+          expertise: string[]
+          id: string
+          is_active: boolean | null
+          max_mentees: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          availability?: Json | null
+          bio: string
+          created_at?: string
+          expertise: string[]
+          id?: string
+          is_active?: boolean | null
+          max_mentees?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          availability?: Json | null
+          bio?: string
+          created_at?: string
+          expertise?: string[]
+          id?: string
+          is_active?: boolean | null
+          max_mentees?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mentorship_relationships: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          goals: string
+          id: string
+          is_active: boolean | null
+          mentee_id: string
+          mentor_id: string
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          goals: string
+          id?: string
+          is_active?: boolean | null
+          mentee_id: string
+          mentor_id: string
+          start_date?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          goals?: string
+          id?: string
+          is_active?: boolean | null
+          mentee_id?: string
+          mentor_id?: string
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mentorship_requests: {
+        Row: {
+          created_at: string
+          goals: string
+          id: string
+          interests: string[]
+          mentee_id: string
+          mentor_id: string | null
+          message: string | null
+          status:
+            | Database["public"]["Enums"]["mentorship_request_status"]
+            | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          goals: string
+          id?: string
+          interests: string[]
+          mentee_id: string
+          mentor_id?: string | null
+          message?: string | null
+          status?:
+            | Database["public"]["Enums"]["mentorship_request_status"]
+            | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          goals?: string
+          id?: string
+          interests?: string[]
+          mentee_id?: string
+          mentor_id?: string | null
+          message?: string | null
+          status?:
+            | Database["public"]["Enums"]["mentorship_request_status"]
+            | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mentorship_resources: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          relationship_id: string | null
+          resource_type: string
+          resource_url: string
+          shared_by: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          relationship_id?: string | null
+          resource_type: string
+          resource_url: string
+          shared_by: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          relationship_id?: string | null
+          resource_type?: string
+          resource_url?: string
+          shared_by?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentorship_resources_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "mentorship_relationships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentorship_sessions: {
+        Row: {
+          created_at: string
+          duration: number
+          id: string
+          location: string | null
+          notes: string | null
+          relationship_id: string
+          scheduled_at: string
+          status:
+            | Database["public"]["Enums"]["mentorship_session_status"]
+            | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration: number
+          id?: string
+          location?: string | null
+          notes?: string | null
+          relationship_id: string
+          scheduled_at: string
+          status?:
+            | Database["public"]["Enums"]["mentorship_session_status"]
+            | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration?: number
+          id?: string
+          location?: string | null
+          notes?: string | null
+          relationship_id?: string
+          scheduled_at?: string
+          status?:
+            | Database["public"]["Enums"]["mentorship_session_status"]
+            | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentorship_sessions_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "mentorship_relationships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           attachment_url: string | null
@@ -845,6 +1053,44 @@ export type Database = {
         }
         Relationships: []
       }
+      session_feedback: {
+        Row: {
+          created_at: string
+          feedback: string | null
+          id: string
+          rating: number
+          session_id: string
+          submitted_by: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          rating: number
+          session_id: string
+          submitted_by: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          rating?: number
+          session_id?: string
+          submitted_by?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_feedback_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "mentorship_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sessions: {
         Row: {
           access_token: string | null
@@ -924,6 +1170,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      success_stories: {
+        Row: {
+          created_at: string
+          id: string
+          is_featured: boolean | null
+          is_published: boolean | null
+          relationship_id: string
+          story: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_featured?: boolean | null
+          is_published?: boolean | null
+          relationship_id: string
+          story: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_featured?: boolean | null
+          is_published?: boolean | null
+          relationship_id?: string
+          story?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "success_stories_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "mentorship_relationships"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tags: {
         Row: {
@@ -1161,12 +1448,28 @@ export type Database = {
         Args: { event_id: string }
         Returns: boolean
       }
+      match_mentee_with_mentors: {
+        Args: { mentee_id: string; interests: string[] }
+        Returns: {
+          mentor_id: string
+          user_id: string
+          expertise: string[]
+          bio: string
+          match_score: number
+        }[]
+      }
       remove_user_role: {
         Args: { user_id_param: string; role_param: string }
         Returns: undefined
       }
     }
     Enums: {
+      mentorship_request_status:
+        | "pending"
+        | "accepted"
+        | "rejected"
+        | "completed"
+      mentorship_session_status: "scheduled" | "completed" | "canceled"
       user_role: "admin" | "moderator" | "student" | "alumni" | "faculty"
     }
     CompositeTypes: {
@@ -1283,6 +1586,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      mentorship_request_status: [
+        "pending",
+        "accepted",
+        "rejected",
+        "completed",
+      ],
+      mentorship_session_status: ["scheduled", "completed", "canceled"],
       user_role: ["admin", "moderator", "student", "alumni", "faculty"],
     },
   },
