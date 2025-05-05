@@ -1,10 +1,11 @@
+
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/layouts/MainLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { getInitials } from '@/lib/utils';
 import {
   Card,
@@ -13,13 +14,13 @@ import {
   CardHeader,
   CardTitle,
   CardFooter,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
+} from "@/components/ui/accordion";
 import {
   Table,
   TableBody,
@@ -29,9 +30,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import { UpcomingEvents } from '@/components/dashboard/UpcomingEvents';
 import { ShieldCheck } from "lucide-react";
+import { Spinner } from '@/components/ui/spinner';
 
 const Dashboard: React.FC = () => {
   const { user, hasRole } = useAuth();
@@ -69,7 +71,7 @@ const Dashboard: React.FC = () => {
         <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
         
         {isAdmin && (
-          <div className="mb-6 p-4 border rounded-lg bg-muted/10">
+          <div className="mb-6 p-4 border rounded-lg bg-accent/10">
             <div className="flex items-center">
               <ShieldCheck className="h-5 w-5 mr-2 text-primary" />
               <h2 className="text-lg font-medium">Admin Access</h2>
@@ -95,9 +97,12 @@ const Dashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               {isLoading ? (
-                <div className="animate-pulse">
-                  <div className="h-4 w-1/2 bg-muted rounded-md mb-2"></div>
-                  <div className="h-3 w-1/4 bg-muted rounded-md"></div>
+                <div className="flex items-center space-x-3">
+                  <Spinner size="md" />
+                  <div className="space-y-2">
+                    <div className="h-4 w-32 bg-muted rounded-md"></div>
+                    <div className="h-3 w-24 bg-muted rounded-md"></div>
+                  </div>
                 </div>
               ) : user && profile ? (
                 <div className="flex items-center space-x-4">

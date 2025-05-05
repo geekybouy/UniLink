@@ -79,3 +79,18 @@ export function getInitials(name: string): string {
     .toUpperCase()
     .substring(0, 2);
 }
+
+/**
+ * Checks if the current color mode is dark
+ */
+export function isDarkMode(): boolean {
+  if (typeof window === 'undefined') return false;
+  return document.documentElement.classList.contains('dark');
+}
+
+/**
+ * Creates CSS HSL color string from HSL values
+ */
+export function hsl(h: number, s: number, l: number): string {
+  return `hsl(${h}, ${s}%, ${l}%)`;
+}

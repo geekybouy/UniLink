@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
 
 @tailwind base;
@@ -83,59 +82,60 @@
   }
  
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Updated dark mode colors for better contrast */
+    --background: 222 25% 9%; /* #0f141e - dark navy background */
+    --foreground: 210 15% 90%; /* #e8eaed - light text color */
  
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 222 20% 14%; /* #1a1f2e - slightly lighter navy for cards */
+    --card-foreground: 210 15% 90%; /* #e8eaed - light text color */
  
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 222 20% 14%; /* #1a1f2e - matching card background */
+    --popover-foreground: 210 15% 90%; /* #e8eaed - light text color */
  
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 216 100% 68%; /* #5d9eff - blue accent */
+    --primary-foreground: 222 25% 9%; /* #0f141e - dark navy */
  
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 222 15% 20%; /* #222a3a - slightly lighter than card */
+    --secondary-foreground: 210 15% 90%; /* #e8eaed - light text */
  
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 222 15% 20%; /* #222a3a - muted background */
+    --muted-foreground: 210 15% 70%; /* #b2bac4 - slightly dimmed text */
  
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 216 100% 68%; /* #5d9eff - blue accent */
+    --accent-foreground: 222 25% 9%; /* #0f141e - dark navy */
  
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 210 15% 90%; /* #e8eaed - light text */
 
     --success: 142.1 70.6% 45.3%;
-    --success-foreground: 144.9 80.4% 10%;
+    --success-foreground: 144.9 80.4% 90%; /* Light text on success */
     
     --warning: 38 92% 50%;
-    --warning-foreground: 26 83.3% 14.1%;
+    --warning-foreground: 26 83.3% 90%; /* Light text on warning */
     
-    --info: 217.2 91.2% 59.8%;
-    --info-foreground: 222.2 47.4% 11.2%;
+    --info: 216 100% 68%; /* #5d9eff - blue accent */
+    --info-foreground: 222 25% 9%; /* #0f141e - dark navy */
  
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --border: 222 15% 25%; /* #2a344a - visible but subtle borders */
+    --input: 222 15% 25%; /* #2a344a - visible but subtle inputs */
+    --ring: 216 100% 68%; /* #5d9eff - blue accent */
 
     /* Sidebar specific colors */
-    --sidebar: 222.2 84% 4.9%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-muted: 217.2 32.6% 17.5%;
-    --sidebar-muted-foreground: 215 20.2% 65.1%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 224.3 76.3% 48%;
+    --sidebar: 222 25% 9%; /* #0f141e - dark navy background */
+    --sidebar-foreground: 210 15% 90%; /* #e8eaed - light text */
+    --sidebar-accent: 216 100% 68%; /* #5d9eff - blue accent */
+    --sidebar-accent-foreground: 222 25% 9%; /* #0f141e - dark navy */
+    --sidebar-muted: 222 15% 20%; /* #222a3a - muted background */
+    --sidebar-muted-foreground: 210 15% 70%; /* #b2bac4 - slightly dimmed text */
+    --sidebar-border: 222 15% 25%; /* #2a344a - visible but subtle borders */
+    --sidebar-ring: 216 100% 68%; /* #5d9eff - blue accent */
 
     /* Gradients */
     --gradient-subtle: #161b22, #0d1117;
-    --gradient-brand: #3b82f6, #1e40af;
-    --gradient-accent: #60a5fa, #3b82f6;
+    --gradient-brand: #5d9eff, #3b82f6;
+    --gradient-accent: #60a5fa, #5d9eff;
     
-    /* Shadows */
+    /* Shadows - darker for better visibility in dark mode */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
     --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);

@@ -33,16 +33,21 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(() => {
     // Try to load from localStorage first
-    const storedTheme = localStorage.getItem(storageKey);
-    if (storedTheme && (storedTheme === 'light' || storedTheme === 'dark' || storedTheme === 'system')) {
-      return storedTheme;
+    if (typeof window !== 'undefined') {
+      const storedTheme = localStorage.getItem(storageKey);
+      if (storedTheme && (storedTheme === 'light' || storedTheme === 'dark' || storedTheme === 'system')) {
+        return storedTheme;
+      }
     }
     // Fall back to default
     return defaultTheme;
   });
 
   const [systemTheme, setSystemTheme] = useState<'light' | 'dark'>(() => {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    if (typeof window !== 'undefined') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return 'light';
   });
 
   // Calculate the resolved theme (considering system preference)
@@ -50,17 +55,39 @@ export function ThemeProvider({
 
   useEffect(() => {
     const root = window.document.documentElement;
+    
+    // Remove both light and dark classes first
     root.classList.remove('light', 'dark');
+    
+    // Add the appropriate class
     root.classList.add(resolvedTheme);
+    
+    // Set a data attribute for additional styling targeting
+    root.setAttribute('data-theme', resolvedTheme);
+    
+    // Apply a smooth transition when changing themes
+    const originalTransition = root.style.transition;
+    root.style.transition = 'background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease';
+    
+    // Reset the transition after the theme change effect
+    const timer = setTimeout(() => {
+      root.style.transition = originalTransition;
+    }, 300);
+    
+    return () => clearTimeout(timer);
   }, [resolvedTheme]);
 
   // Persist theme to localStorage when it changes
   useEffect(() => {
-    localStorage.setItem(storageKey, theme);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(storageKey, theme);
+    }
   }, [theme, storageKey]);
 
   // Watch for system theme changes
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     
     const handleChange = () => {

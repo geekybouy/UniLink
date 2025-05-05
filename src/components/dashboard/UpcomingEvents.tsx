@@ -6,6 +6,7 @@ import { Calendar, Clock, MapPin, Users, Video } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useEvents } from '@/contexts/EventsContext';
 import { format } from 'date-fns';
+import { Spinner } from '@/components/ui/spinner';
 
 export const UpcomingEvents = () => {
   const { upcomingEvents, loading } = useEvents();
@@ -20,13 +21,10 @@ export const UpcomingEvents = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="animate-pulse flex flex-col space-y-2">
-                <div className="h-4 bg-muted rounded w-3/4"></div>
-                <div className="h-3 bg-muted rounded w-1/2"></div>
-                <div className="h-3 bg-muted rounded w-1/4"></div>
-              </div>
-            ))}
+            <div className="flex items-center justify-center py-6">
+              <Spinner size="md" />
+              <span className="ml-2 text-muted-foreground">Loading events...</span>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -63,7 +61,7 @@ export const UpcomingEvents = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         {events.map((event) => (
-          <div key={event.id} className="border-b pb-4 last:border-0 last:pb-0">
+          <div key={event.id} className="border-b border-border pb-4 last:border-0 last:pb-0">
             <div className="font-medium hover:underline">
               <Link to={`/events/${event.id}`}>{event.name}</Link>
             </div>

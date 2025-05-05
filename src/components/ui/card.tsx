@@ -22,7 +22,7 @@ const Card = React.forwardRef<
     none: "",
     lift: "transition-transform duration-200 ease-out hover:-translate-y-1",
     scale: "transition-transform duration-200 ease-out hover:scale-[1.02]",
-    glow: "transition-all duration-200 ease-out hover:shadow-[0_0_15px_rgba(0,0,0,0.1)]",
+    glow: "transition-all duration-200 ease-out dark:hover:shadow-[0_0_15px_rgba(93,158,255,0.15)] hover:shadow-[0_0_15px_rgba(0,0,0,0.1)]",
     border: "transition-all duration-200 ease-out hover:border-primary/50",
   }
   
