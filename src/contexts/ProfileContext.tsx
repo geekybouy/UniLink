@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile, ProfileFormData, Skill, Education, WorkExperience, SocialLink } from '@/types/profile';
@@ -14,6 +13,7 @@ interface ProfileContextType {
   uploadAvatar: (file: File) => Promise<string | null>;
   refreshProfile: () => Promise<void>;
   getProfileCompletion: () => number;
+  isProfileCompleted: boolean; // Added this property
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -328,6 +328,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return Math.round((completedFields / totalFields) * 100);
   };
 
+  // Derive isProfileCompleted from the profile state
+  const isProfileCompleted = profile?.isProfileComplete || false;
+  
   return (
     <ProfileContext.Provider
       value={{
@@ -336,7 +339,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         updateProfile,
         uploadAvatar,
         refreshProfile,
-        getProfileCompletion
+        getProfileCompletion,
+        isProfileCompleted, // Add the new property to the context value
       }}
     >
       {children}
