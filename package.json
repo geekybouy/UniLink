@@ -65,7 +65,7 @@
     "uuid": "^9.0.1",
     "vaul": "^0.9.3",
     "vite-plugin-imagemin": "^0.6.1",
-    "vite-plugin-pwa": "^1.0.0",
+    "vite-plugin-pwa": "^0.19.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {
