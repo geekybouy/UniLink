@@ -64,11 +64,16 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 }
 
-// Add typings for Sentry
+// Add typings for Sentry that matches the declaration in errorMonitoring.ts
 declare global {
   interface Window {
     Sentry?: {
+      init: (config: any) => void;
       captureException: (error: Error) => void;
+      setUser: (user: any) => void;
+      setContext: (name: string, context: Record<string, any>) => void;
+      BrowserTracing: any;
+      Replay: any;
     };
   }
 }
