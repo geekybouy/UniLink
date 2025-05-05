@@ -63,7 +63,9 @@ export function RequestMentorshipDialog({
 
   const handleSubmit = (values: RequestFormValues) => {
     onSubmit({
-      ...values,
+      goals: values.goals, // Ensure goals is not optional here
+      interests: values.interests,
+      message: values.message,
       mentorId
     });
     form.reset();
