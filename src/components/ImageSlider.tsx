@@ -1,33 +1,61 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 
 const slides = [
   {
-    image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=1200",
     title: "Connect with Alumni",
     description: "Network with graduates from your university"
   },
   {
-    image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=1200",
     title: "Search Alumni Profiles",
     description: "Find and connect with professionals in your field"
   },
   {
-    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=1200",
     title: "Instant Messaging",
     description: "Stay connected with real-time conversations"
   }
 ];
 
-const ImageSlider = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
+// Add image preloading function
+const preloadImages = () => {
+  slides.forEach(slide => {
+    const img = new Image();
+    img.src = slide.image;
+  });
+};
 
+const ImageSlider = memo(() => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Preload images once component mounts
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(interval);
+    preloadImages();
+    setIsLoaded(true);
   }, []);
+
+  // Memoize the slide transition function
+  const nextSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  }, []);
+
+  // Set up the interval for slides
+  useEffect(() => {
+    const interval = setInterval(nextSlide, 5000);
+    return () => clearInterval(interval);
+  }, [nextSlide]);
+
+  // Initial loading state
+  if (!isLoaded) {
+    return (
+      <div className="h-[600px] w-full bg-gray-100 flex items-center justify-center">
+        <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative h-[600px] w-full overflow-hidden">
@@ -43,6 +71,7 @@ const ImageSlider = () => {
             src={slide.image}
             alt={slide.title}
             className="h-full w-full object-cover"
+            loading={index === 0 ? "eager" : "lazy"}
           />
           <div className="absolute inset-0 flex flex-col items-center justify-center z-20 text-white">
             <h2 className="text-4xl md:text-5xl font-playfair mb-4">{slide.title}</h2>
@@ -52,6 +81,8 @@ const ImageSlider = () => {
       ))}
     </div>
   );
-};
+});
+
+ImageSlider.displayName = 'ImageSlider';
 
 export default ImageSlider;

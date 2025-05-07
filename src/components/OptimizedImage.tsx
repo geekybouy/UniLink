@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { 
   getOptimizedImageUrl, 
   createSrcSet, 
@@ -22,7 +22,7 @@ interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> 
   onLoad?: () => void;
 }
 
-export function OptimizedImage({
+export const OptimizedImage = memo(({
   src,
   alt,
   width,
@@ -36,7 +36,7 @@ export function OptimizedImage({
   placeholderColor = '#f3f4f6',
   onLoad,
   ...props
-}: OptimizedImageProps) {
+}: OptimizedImageProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -49,9 +49,17 @@ export function OptimizedImage({
   // Determine if image should be lazy loaded
   const shouldLazy = lazyLoad && shouldLazyLoad(position, isVisible) && !priority;
   
-  // Optimize the image URL
-  const optimizedSrc = getOptimizedImageUrl(src, width, imageQuality);
-  const srcSet = createSrcSet(src);
+  // Optimize the image URL - use cache key to improve cache hits
+  const cacheKey = `${width || 'auto'}-${imageQuality}-${src.split('?')[0]}`;
+  const optimizedSrc = React.useMemo(() => 
+    getOptimizedImageUrl(src, width, imageQuality), 
+    [cacheKey]
+  );
+  
+  const srcSet = React.useMemo(() => 
+    createSrcSet(src), 
+    [src]
+  );
   
   useEffect(() => {
     // Set up intersection observer for detecting when image is in viewport
@@ -140,6 +148,8 @@ export function OptimizedImage({
       />
     </div>
   );
-}
+});
+
+OptimizedImage.displayName = 'OptimizedImage';
 
 export default OptimizedImage;

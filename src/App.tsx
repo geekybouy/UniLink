@@ -21,95 +21,126 @@ import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
 
-// Lazy load the AuthCallback component
+// Lazy load the AuthCallback component with a separate loading fallback
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 
-// Lazy load other pages
-const Index = lazy(() => import("./pages/Index"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const AlumniDirectory = lazy(() => import("./pages/AlumniDirectory"));
-const AlumniProfile = lazy(() => import("./pages/AlumniProfile"));
-const EventsPage = lazy(() => import("./pages/EventsPage"));
-const EventDetailPage = lazy(() => import("./pages/EventDetailPage"));
-const CreateEventPage = lazy(() => import("./pages/CreateEventPage"));
-const EditEventPage = lazy(() => import("./pages/EditEventPage"));
-const JobsListingPage = lazy(() => import("./pages/JobsListingPage"));
-const JobDetailPage = lazy(() => import("./pages/JobDetailPage"));
-const PostJobPage = lazy(() => import("./pages/PostJobPage"));
-const EditJobPage = lazy(() => import("./pages/EditJobPage"));
-const MyApplicationsPage = lazy(() => import("./pages/MyApplicationsPage"));
-const MessagingPage = lazy(() => import("./pages/MessagingPage"));
-const KnowledgeHub = lazy(() => import("./pages/KnowledgeHub"));
-const KnowledgePostDetail = lazy(() => import("./pages/KnowledgePostDetail"));
-const NewPost = lazy(() => import("./pages/NewPost"));
-const ProfilePage = lazy(() => import("./pages/ProfilePage"));
-const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
-const CompleteProfile = lazy(() => import("./pages/CompleteProfile"));
-const CredentialWallet = lazy(() => import("./pages/CredentialWallet"));
-const ShareCredentials = lazy(() => import("./pages/ShareCredentials"));
-const SharedCredentials = lazy(() => import("./pages/SharedCredentials"));
-const CVMaker = lazy(() => import("./pages/CVMaker"));
-const MyNetwork = lazy(() => import("./pages/MyNetwork"));
-const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
-const NotificationSettingsPage = lazy(() => import("./pages/NotificationSettingsPage"));
-const PrivacySettings = lazy(() => import("./pages/PrivacySettings"));
-const MorePage = lazy(() => import("./pages/MorePage"));
+// Optimize lazy loading with proper chunk naming for better caching
+const Index = lazy(() => import(/* webpackChunkName: "index-page" */ "./pages/Index"));
+const Dashboard = lazy(() => import(/* webpackChunkName: "dashboard-page" */ "./pages/Dashboard"));
+const AlumniDirectory = lazy(() => import(/* webpackChunkName: "alumni-directory-page" */ "./pages/AlumniDirectory"));
+const AlumniProfile = lazy(() => import(/* webpackChunkName: "alumni-profile-page" */ "./pages/AlumniProfile"));
+const EventsPage = lazy(() => import(/* webpackChunkName: "events-page" */ "./pages/EventsPage"));
+const EventDetailPage = lazy(() => import(/* webpackChunkName: "event-detail-page" */ "./pages/EventDetailPage"));
+const CreateEventPage = lazy(() => import(/* webpackChunkName: "create-event-page" */ "./pages/CreateEventPage"));
+const EditEventPage = lazy(() => import(/* webpackChunkName: "edit-event-page" */ "./pages/EditEventPage"));
+const JobsListingPage = lazy(() => import(/* webpackChunkName: "jobs-listing-page" */ "./pages/JobsListingPage"));
+const JobDetailPage = lazy(() => import(/* webpackChunkName: "job-detail-page" */ "./pages/JobDetailPage"));
+const PostJobPage = lazy(() => import(/* webpackChunkName: "post-job-page" */ "./pages/PostJobPage"));
+const EditJobPage = lazy(() => import(/* webpackChunkName: "edit-job-page" */ "./pages/EditJobPage"));
+const MyApplicationsPage = lazy(() => import(/* webpackChunkName: "my-applications-page" */ "./pages/MyApplicationsPage"));
+const MessagingPage = lazy(() => import(/* webpackChunkName: "messaging-page" */ "./pages/MessagingPage"));
+const KnowledgeHub = lazy(() => import(/* webpackChunkName: "knowledge-hub-page" */ "./pages/KnowledgeHub"));
+const KnowledgePostDetail = lazy(() => import(/* webpackChunkName: "knowledge-post-detail-page" */ "./pages/KnowledgePostDetail"));
+const NewPost = lazy(() => import(/* webpackChunkName: "new-post-page" */ "./pages/NewPost"));
+const ProfilePage = lazy(() => import(/* webpackChunkName: "profile-page" */ "./pages/ProfilePage"));
+const ProfileSetup = lazy(() => import(/* webpackChunkName: "profile-setup-page" */ "./pages/ProfileSetup"));
+const CompleteProfile = lazy(() => import(/* webpackChunkName: "complete-profile-page" */ "./pages/CompleteProfile"));
+const CredentialWallet = lazy(() => import(/* webpackChunkName: "credential-wallet-page" */ "./pages/CredentialWallet"));
+const ShareCredentials = lazy(() => import(/* webpackChunkName: "share-credentials-page" */ "./pages/ShareCredentials"));
+const SharedCredentials = lazy(() => import(/* webpackChunkName: "shared-credentials-page" */ "./pages/SharedCredentials"));
+const CVMaker = lazy(() => import(/* webpackChunkName: "cv-maker-page" */ "./pages/CVMaker"));
+const MyNetwork = lazy(() => import(/* webpackChunkName: "my-network-page" */ "./pages/MyNetwork"));
+const NotificationsPage = lazy(() => import(/* webpackChunkName: "notifications-page" */ "./pages/NotificationsPage"));
+const NotificationSettingsPage = lazy(() => import(/* webpackChunkName: "notification-settings-page" */ "./pages/NotificationSettingsPage"));
+const PrivacySettings = lazy(() => import(/* webpackChunkName: "privacy-settings-page" */ "./pages/PrivacySettings"));
+const MorePage = lazy(() => import(/* webpackChunkName: "more-page" */ "./pages/MorePage"));
 
 // Admin pages
-const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
-const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
-const ContentModeration = lazy(() => import("./pages/admin/ContentModeration"));
-const RoleManagement = lazy(() => import("./pages/admin/RoleManagement"));
-const Announcements = lazy(() => import("./pages/admin/Announcements"));
-const Settings = lazy(() => import("./pages/admin/Settings"));
-const AuditLogs = lazy(() => import("./pages/admin/AuditLogs"));
+const AdminDashboard = lazy(() => import(/* webpackChunkName: "admin-dashboard-page" */ "./pages/admin/AdminDashboard"));
+const UserManagement = lazy(() => import(/* webpackChunkName: "user-management-page" */ "./pages/admin/UserManagement"));
+const ContentModeration = lazy(() => import(/* webpackChunkName: "content-moderation-page" */ "./pages/admin/ContentModeration"));
+const RoleManagement = lazy(() => import(/* webpackChunkName: "role-management-page" */ "./pages/admin/RoleManagement"));
+const Announcements = lazy(() => import(/* webpackChunkName: "announcements-page" */ "./pages/admin/Announcements"));
+const Settings = lazy(() => import(/* webpackChunkName: "settings-page" */ "./pages/admin/Settings"));
+const AuditLogs = lazy(() => import(/* webpackChunkName: "audit-logs-page" */ "./pages/admin/AuditLogs"));
 
 // Mentorship pages
-const FindMentors = lazy(() => import("./pages/mentorship/FindMentors"));
-const BecomeMentor = lazy(() => import("./pages/mentorship/BecomeMentor"));
-const MentorshipDashboard = lazy(() => import("./pages/mentorship/MentorshipDashboard"));
-const SuccessStories = lazy(() => import("./pages/mentorship/SuccessStories"));
+const FindMentors = lazy(() => import(/* webpackChunkName: "find-mentors-page" */ "./pages/mentorship/FindMentors"));
+const BecomeMentor = lazy(() => import(/* webpackChunkName: "become-mentor-page" */ "./pages/mentorship/BecomeMentor"));
+const MentorshipDashboard = lazy(() => import(/* webpackChunkName: "mentorship-dashboard-page" */ "./pages/mentorship/MentorshipDashboard"));
+const SuccessStories = lazy(() => import(/* webpackChunkName: "success-stories-page" */ "./pages/mentorship/SuccessStories"));
+
+// Create better loading fallback component
+const LoadingFallback = () => (
+  <div className="flex h-screen items-center justify-center bg-background">
+    <Spinner size="lg" className="text-primary" />
+  </div>
+);
+
+// Create offline fallback component
+const OfflineFallback = () => (
+  <div className="flex h-screen flex-col items-center justify-center bg-background text-foreground p-4 text-center">
+    <div className="bg-card p-8 rounded-lg shadow-lg max-w-md">
+      <h2 className="text-2xl font-bold mb-4">You are offline</h2>
+      <p className="mb-4">Please check your internet connection and try again.</p>
+      <button 
+        onClick={() => window.location.reload()}
+        className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+      >
+        Retry Connection
+      </button>
+    </div>
+  </div>
+);
 
 function App() {
   const location = useLocation();
   const { online } = useNetworkStatus();
   const { isProfileCompleted } = useProfile();
 
-  // Register service worker
+  // Register service worker - moved to a useEffect with cleanup
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/serviceWorker.js').then(registration => {
+    let registration: ServiceWorkerRegistration | undefined;
+
+    const registerServiceWorker = async () => {
+      if ('serviceWorker' in navigator) {
+        try {
+          registration = await navigator.serviceWorker.register('/serviceWorker.js');
           console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        }).catch(error => {
+        } catch (error) {
           console.log('ServiceWorker registration failed: ', error);
+        }
+      }
+    };
+
+    registerServiceWorker();
+
+    // Cleanup function
+    return () => {
+      if (registration) {
+        registration.unregister().catch(error => {
+          console.error('Error unregistering service worker:', error);
         });
-      });
-    }
+      }
+    };
   }, []);
 
-  // Handle offline state - use window.location instead of useNavigate
+  // Handle offline state more efficiently
   useEffect(() => {
     if (!online && location.pathname !== '/offline') {
       // Save the last route to sessionStorage to redirect back when online
       sessionStorage.setItem('lastRoute', location.pathname);
-      window.location.href = '/offline';
-    } else if (online && location.pathname === '/offline') {
-      // Redirect back to the last route when connection is restored
-      const lastRoute = sessionStorage.getItem('lastRoute') || '/dashboard';
-      window.location.href = lastRoute;
     }
   }, [online, location.pathname]);
 
+  // If offline, show offline fallback component
+  if (!online && location.pathname !== '/offline') {
+    return <OfflineFallback />;
+  }
+
   return (
     <ErrorBoundary>
-      <Suspense
-        fallback={
-          <div className="flex h-screen items-center justify-center">
-            <Spinner size="lg" className="text-primary" />
-          </div>
-        }
-      >
+      <Suspense fallback={<LoadingFallback />}>
         <Routes>
           {/* Home route */}
           <Route path="/" element={<Index />} />
@@ -125,7 +156,7 @@ function App() {
 
           {/* Core app routes */}
           <Route path="/auth-callback" element={
-            <Suspense fallback={<div className="flex h-screen items-center justify-center"><Spinner size="lg" /></div>}>
+            <Suspense fallback={<LoadingFallback />}>
               <AuthCallback />
             </Suspense>
           } />
@@ -158,7 +189,7 @@ function App() {
           <Route path="/notification-settings" element={<NotificationSettingsPage />} />
           <Route path="/privacy-settings" element={<PrivacySettings />} />
           <Route path="/more" element={<MorePage />} />
-          <Route path="/offline" element={<div>You are offline</div>} />
+          <Route path="/offline" element={<OfflineFallback />} />
 
           {/* Admin routes */}
           <Route path="/admin" element={<AdminDashboard />} />
