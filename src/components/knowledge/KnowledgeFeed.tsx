@@ -139,7 +139,7 @@ const KnowledgeFeed: React.FC = () => {
                 <SelectValue placeholder="Filter by Tag" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Tags</SelectItem>
+                <SelectItem value="all-tags">All Tags</SelectItem>
                 {tags.map(tag => (
                   <SelectItem key={tag.id} value={tag.id}>
                     {tag.name}
