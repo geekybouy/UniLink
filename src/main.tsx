@@ -33,9 +33,9 @@ root.render(
                 </NotificationsProvider>
               </EventsProvider>
             </JobsProvider>
-          </ProfileProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </BrowserRouter>
-  </root.render>
+          </MessagingProvider>
+        </ProfileProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  </BrowserRouter>
 );
