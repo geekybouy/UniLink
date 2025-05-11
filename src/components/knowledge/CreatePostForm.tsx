@@ -214,7 +214,7 @@ export default function CreatePostForm({ onSuccess }: CreatePostFormProps) {
                   </SelectItem>
                 ))}
                 {tags.filter(tag => !selectedTags.includes(tag.id)).length === 0 && (
-                  <SelectItem value="no-tags" disabled>
+                  <SelectItem value="no-tags-available" disabled>
                     No more tags available
                   </SelectItem>
                 )}
