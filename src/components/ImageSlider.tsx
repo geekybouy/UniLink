@@ -4,18 +4,12 @@ import { useState, useEffect, useCallback, memo } from 'react';
 const slides = [
   {
     image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=1200",
-    title: "Connect with Alumni",
-    description: "Network with graduates from your university"
   },
   {
     image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=1200",
-    title: "Search Alumni Profiles",
-    description: "Find and connect with professionals in your field"
   },
   {
     image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=1200",
-    title: "Instant Messaging",
-    description: "Stay connected with real-time conversations"
   }
 ];
 
@@ -66,17 +60,13 @@ const ImageSlider = memo(() => {
             index === currentSlide ? "opacity-100" : "opacity-0"
           }`}
         >
-          <div className="absolute inset-0 bg-black/40 z-10" />
+          <div className="absolute inset-0 bg-black/20 z-10" />
           <img
             src={slide.image}
-            alt={slide.title}
+            alt="University alumni networking"
             className="h-full w-full object-cover"
             loading={index === 0 ? "eager" : "lazy"}
           />
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-20 text-white">
-            <h2 className="text-4xl md:text-5xl font-playfair mb-4">{slide.title}</h2>
-            <p className="text-lg md:text-xl">{slide.description}</p>
-          </div>
         </div>
       ))}
     </div>
