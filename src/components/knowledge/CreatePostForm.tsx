@@ -1,26 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useKnowledge } from '@/contexts/KnowledgeContext';
-import { PostFormData, ContentType } from '@/types/knowledge';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { toast } from 'sonner';
-import { Spinner } from '@/components/ui/spinner';
-import {
+import { Label } from '@/components/ui/label';
+import { 
   Select,
   SelectContent,
   SelectGroup,
@@ -28,350 +13,240 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Plus, Upload, FileText, Link2, Image, File } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
-// Define form schema
-const formSchema = z.object({
-  title: z.string().min(3, 'Title must be at least 3 characters'),
-  content: z.string().optional(),
-  content_type: z.enum(['article', 'link', 'file', 'image']),
-  link_url: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
-  tags: z.array(z.string()).optional(),
-});
+} from '@/components/ui/select';
+import { useKnowledge } from '@/contexts/KnowledgeContext';
+import { ContentType, PostFormData, Tag } from '@/types/knowledge';
+import { toast } from 'sonner';
+import { PlusCircle, X } from 'lucide-react';
 
 interface CreatePostFormProps {
   onSuccess?: () => void;
 }
 
-const CreatePostForm: React.FC<CreatePostFormProps> = ({ onSuccess }) => {
+export default function CreatePostForm({ onSuccess }: CreatePostFormProps) {
   const { createPost, createTag, tags } = useKnowledge();
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [newTagDialogOpen, setNewTagDialogOpen] = useState(false);
-  const [newTagName, setNewTagName] = useState('');
-  
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: '',
-      content: '',
-      content_type: 'article',
-      link_url: '',
-      tags: [],
-    },
-  });
-  
-  const contentType = form.watch('content_type') as ContentType;
-  
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    setIsSubmitting(true);
-    try {
-      // Validate file attachment if needed
-      if ((contentType === 'file' || contentType === 'image') && !selectedFile) {
-        toast.error(`Please select a ${contentType} to upload`);
-        setIsSubmitting(false);
-        return;
+  const [newTag, setNewTag] = useState('');
+  const [contentType, setContentType] = useState<ContentType>('article');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<PostFormData>();
+
+  const handleTagSelect = (tagId: string) => {
+    if (!selectedTags.includes(tagId)) {
+      setSelectedTags([...selectedTags, tagId]);
+    }
+  };
+
+  const handleRemoveTag = (tagId: string) => {
+    setSelectedTags(selectedTags.filter(id => id !== tagId));
+  };
+
+  const handleAddNewTag = async () => {
+    if (newTag.trim() !== '') {
+      const tagResult = await createTag(newTag.trim());
+      if (tagResult) {
+        setSelectedTags([...selectedTags, tagResult.id]);
+        setNewTag('');
       }
+    }
+  };
+
+  const onSubmit = async (data: PostFormData) => {
+    try {
+      setIsSubmitting(true);
+      data.content_type = contentType;
+      data.tags = selectedTags;
       
-      // Create post data
-      const postData: PostFormData = {
-        title: data.title,
-        content: data.content || '',
-        content_type: data.content_type,
-        link_url: data.content_type === 'link' ? data.link_url : undefined,
-        tags: selectedTags,
-      };
-      
-      const result = await createPost(postData, selectedFile || undefined);
-      
+      const result = await createPost(data, selectedFile || undefined);
       if (result) {
-        toast.success('Post created successfully');
-        form.reset();
-        setSelectedFile(null);
+        toast.success('Post created successfully!');
+        reset();
         setSelectedTags([]);
+        setContentType('article');
+        setSelectedFile(null);
         if (onSuccess) onSuccess();
       }
+    } catch (error) {
+      console.error('Error creating post:', error);
+      toast.error('Failed to create post');
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setSelectedFile(file);
-  };
-  
-  const handleTagSelect = (tagId: string) => {
-    if (selectedTags.includes(tagId)) {
-      setSelectedTags(selectedTags.filter(id => id !== tagId));
-    } else {
-      setSelectedTags([...selectedTags, tagId]);
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedFile(e.target.files[0]);
     }
   };
-  
-  const handleCreateTag = async () => {
-    if (!newTagName.trim()) {
-      toast.error('Please enter a tag name');
-      return;
-    }
-    
-    const newTag = await createTag(newTagName.trim());
-    if (newTag) {
-      setSelectedTags([...selectedTags, newTag.id]);
-      setNewTagName('');
-      setNewTagDialogOpen(false);
-    }
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
   };
-  
-  const displayContentTypeFields = () => {
-    switch (contentType) {
-      case 'article':
-        return (
-          <FormField
-            control={form.control}
-            name="content"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Content</FormLabel>
-                <FormControl>
-                  <Textarea 
-                    placeholder="Write your article..." 
-                    {...field} 
-                    className="min-h-[200px]"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        );
-        
-      case 'link':
-        return (
-          <FormField
-            control={form.control}
-            name="link_url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Link URL</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="https://example.com" 
-                    {...field} 
-                    type="url"
-                  />
-                </FormControl>
-                <FormDescription>
-                  Please enter the full URL including http:// or https://
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        );
-        
-      case 'file':
-      case 'image':
-        return (
-          <FormItem>
-            <FormLabel>Upload {contentType}</FormLabel>
-            <FormControl>
-              <div className="flex items-center gap-2">
-                <Input 
-                  type="file" 
-                  onChange={handleFileChange}
-                  accept={contentType === 'image' ? "image/*" : undefined}
-                  className="flex-1"
-                />
-              </div>
-            </FormControl>
-            {selectedFile && (
-              <div className="text-sm text-muted-foreground">
-                Selected: {selectedFile.name}
-              </div>
-            )}
-            <FormMessage />
-          </FormItem>
-        );
-        
-      default:
-        return null;
-    }
-  };
-  
+
   return (
-    <div>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Content Type Selection */}
-          <FormField
-            control={form.control}
-            name="content_type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Content Type</FormLabel>
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="grid grid-cols-2 gap-4 sm:grid-cols-4"
-                  >
-                    <FormItem className="flex flex-col items-center space-y-2 rounded-md border p-4 hover:bg-muted/50 [&:has([data-state=checked])]:bg-muted/50">
-                      <FormControl>
-                        <RadioGroupItem value="article" className="sr-only" />
-                      </FormControl>
-                      <FileText className="h-5 w-5" />
-                      <FormLabel className="text-center">Article</FormLabel>
-                    </FormItem>
-                    
-                    <FormItem className="flex flex-col items-center space-y-2 rounded-md border p-4 hover:bg-muted/50 [&:has([data-state=checked])]:bg-muted/50">
-                      <FormControl>
-                        <RadioGroupItem value="link" className="sr-only" />
-                      </FormControl>
-                      <Link2 className="h-5 w-5" />
-                      <FormLabel className="text-center">Link</FormLabel>
-                    </FormItem>
-                    
-                    <FormItem className="flex flex-col items-center space-y-2 rounded-md border p-4 hover:bg-muted/50 [&:has([data-state=checked])]:bg-muted/50">
-                      <FormControl>
-                        <RadioGroupItem value="file" className="sr-only" />
-                      </FormControl>
-                      <File className="h-5 w-5" />
-                      <FormLabel className="text-center">File</FormLabel>
-                    </FormItem>
-                    
-                    <FormItem className="flex flex-col items-center space-y-2 rounded-md border p-4 hover:bg-muted/50 [&:has([data-state=checked])]:bg-muted/50">
-                      <FormControl>
-                        <RadioGroupItem value="image" className="sr-only" />
-                      </FormControl>
-                      <Image className="h-5 w-5" />
-                      <FormLabel className="text-center">Image</FormLabel>
-                    </FormItem>
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div>
+        <Label htmlFor="title">Title</Label>
+        <Input 
+          id="title"
+          {...register('title', { required: 'Title is required' })}
+          placeholder="Post title"
+        />
+        {errors.title && (
+          <p className="text-sm text-red-500">{errors.title.message}</p>
+        )}
+      </div>
 
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Title</FormLabel>
-                <FormControl>
-                  <Input placeholder="Post title" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+      <div>
+        <Label htmlFor="content-type">Content Type</Label>
+        <Select
+          value={contentType}
+          onValueChange={(value) => setContentType(value as ContentType)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select content type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Content Type</SelectLabel>
+              <SelectItem value="article">Article</SelectItem>
+              <SelectItem value="link">Link</SelectItem>
+              <SelectItem value="file">File</SelectItem>
+              <SelectItem value="image">Image</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {contentType === 'link' && (
+        <div>
+          <Label htmlFor="link_url">Link URL</Label>
+          <Input 
+            id="link_url"
+            {...register('link_url', { 
+              required: contentType === 'link' ? 'URL is required' : false,
+              pattern: {
+                value: /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/,
+                message: 'Please enter a valid URL'
+              } 
+            })}
+            placeholder="https://example.com"
           />
-          
-          {/* Dynamic content fields based on content type */}
-          {displayContentTypeFields()}
-          
-          {/* Tags Section */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <FormLabel>Tags</FormLabel>
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm"
-                onClick={() => setNewTagDialogOpen(true)}
-                className="h-8 flex items-center gap-1"
-              >
-                <Plus className="h-3 w-3" /> New Tag
-              </Button>
-            </div>
-            
-            <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[50px] bg-background">
-              {tags.map(tag => (
-                <Badge
-                  key={tag.id}
-                  variant={selectedTags.includes(tag.id) ? "default" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => handleTagSelect(tag.id)}
-                >
-                  {tag.name}
-                </Badge>
-              ))}
-              
-              {tags.length === 0 && (
-                <p className="text-sm text-muted-foreground p-1">No tags available. Create one!</p>
-              )}
-            </div>
-            
-            {selectedTags.length > 0 && (
-              <p className="text-sm text-muted-foreground">
-                {selectedTags.length} tag(s) selected
-              </p>
-            )}
-          </div>
-          
-          <Button 
-            type="submit" 
-            disabled={isSubmitting}
-            className="w-full"
-          >
-            {isSubmitting ? (
-              <>
-                <Spinner className="mr-2 h-4 w-4" />
-                Creating Post...
-              </>
-            ) : (
-              <>
-                <Upload className="mr-2 h-4 w-4" />
-                Publish Post
-              </>
-            )}
-          </Button>
-        </form>
-      </Form>
-      
-      {/* New Tag Dialog */}
-      <Dialog open={newTagDialogOpen} onOpenChange={setNewTagDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Tag</DialogTitle>
-            <DialogDescription>
-              Enter a name for the new tag. Tags help categorize and find content.
-            </DialogDescription>
-          </DialogHeader>
-          <Input
-            placeholder="Tag name"
-            value={newTagName}
-            onChange={(e) => setNewTagName(e.target.value)}
-          />
-          <DialogFooter>
+          {errors.link_url && (
+            <p className="text-sm text-red-500">{errors.link_url.message}</p>
+          )}
+        </div>
+      )}
+
+      {(contentType === 'file' || contentType === 'image') && (
+        <div>
+          <Label htmlFor="file">Upload {contentType}</Label>
+          <div className="flex items-center gap-2">
             <Button 
+              type="button" 
               variant="outline" 
-              onClick={() => setNewTagDialogOpen(false)}
+              onClick={triggerFileInput}
+              className="w-full"
             >
-              Cancel
+              {selectedFile ? selectedFile.name : `Choose ${contentType}`}
             </Button>
-            <Button 
-              onClick={handleCreateTag}
-            >
-              Create Tag
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
+            <input 
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+              accept={contentType === 'image' ? 'image/*' : undefined}
+            />
+          </div>
+        </div>
+      )}
 
-export default CreatePostForm;
+      <div>
+        <Label htmlFor="content">Content</Label>
+        <Textarea 
+          id="content"
+          {...register('content', { required: 'Content is required' })}
+          placeholder="Write your post content here..."
+          className="min-h-[200px]"
+        />
+        {errors.content && (
+          <p className="text-sm text-red-500">{errors.content.message}</p>
+        )}
+      </div>
+
+      <div>
+        <Label>Tags</Label>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {selectedTags.map(tagId => {
+            const tag = tags.find(t => t.id === tagId);
+            return tag ? (
+              <span 
+                key={tag.id}
+                className="bg-primary/10 text-primary px-2 py-1 rounded-md text-sm flex items-center"
+              >
+                {tag.name}
+                <button 
+                  type="button"
+                  onClick={() => handleRemoveTag(tag.id)}
+                  className="ml-1 text-primary/70 hover:text-primary"
+                >
+                  <X size={14} />
+                </button>
+              </span>
+            ) : null;
+          })}
+        </div>
+        <div className="flex gap-2 mt-2">
+          <Select onValueChange={handleTagSelect}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select tags" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Available Tags</SelectLabel>
+                {tags.filter(tag => !selectedTags.includes(tag.id)).map(tag => (
+                  <SelectItem key={tag.id} value={tag.id}>
+                    {tag.name}
+                  </SelectItem>
+                ))}
+                {tags.filter(tag => !selectedTags.includes(tag.id)).length === 0 && (
+                  <SelectItem value="no-tags" disabled>
+                    No more tags available
+                  </SelectItem>
+                )}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex gap-2 mt-2">
+          <Input 
+            placeholder="Add new tag" 
+            value={newTag}
+            onChange={(e) => setNewTag(e.target.value)}
+          />
+          <Button 
+            type="button" 
+            variant="outline"
+            onClick={handleAddNewTag}
+            disabled={newTag.trim() === ''}
+          >
+            <PlusCircle size={16} className="mr-2" />
+            Add
+          </Button>
+        </div>
+      </div>
+
+      <Button 
+        type="submit" 
+        disabled={isSubmitting}
+        className="w-full"
+      >
+        {isSubmitting ? 'Creating...' : 'Create Post'}
+      </Button>
+    </form>
+  );
+}

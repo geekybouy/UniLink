@@ -10,6 +10,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import { EventsProvider } from './contexts/EventsContext';
 import { MessagingProvider } from './contexts/MessagingContext';
 import { NotificationsProvider } from './contexts/NotificationsContext';
+import { JobsProvider } from './contexts/JobsContext';
+import { KnowledgeProvider } from './contexts/KnowledgeContext';
 
 // Create root outside of the render call for better performance
 const root = ReactDOM.createRoot(document.getElementById('root')!);
@@ -22,14 +24,18 @@ root.render(
       <AuthProvider>
         <ProfileProvider>
           <MessagingProvider>
-            <EventsProvider>
-              <NotificationsProvider>
-                <App />
-              </NotificationsProvider>
-            </EventsProvider>
-          </MessagingProvider>
-        </ProfileProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  </BrowserRouter>
+            <JobsProvider>
+              <EventsProvider>
+                <NotificationsProvider>
+                  <KnowledgeProvider>
+                    <App />
+                  </KnowledgeProvider>
+                </NotificationsProvider>
+              </EventsProvider>
+            </JobsProvider>
+          </ProfileProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+  </root.render>
 );

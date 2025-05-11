@@ -1,7 +1,9 @@
+
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole } from '@/types/roles';
+import { toast } from 'sonner';
 
 // Export UserRole to be used in other components
 export type { UserRole };
@@ -39,6 +41,26 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+};
+
+// Helper function to clean up auth state
+const cleanupAuthState = () => {
+  // Remove standard auth tokens
+  localStorage.removeItem('supabase.auth.token');
+  
+  // Remove all Supabase auth keys from localStorage
+  Object.keys(localStorage).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      localStorage.removeItem(key);
+    }
+  });
+  
+  // Remove from sessionStorage if in use
+  Object.keys(sessionStorage || {}).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      sessionStorage.removeItem(key);
+    }
+  });
 };
 
 // Provider component
@@ -125,11 +147,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Sign out
+  // Sign out - Enhanced version with thorough cleanup
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      throw error;
+    try {
+      // First clean up any existing auth state
+      cleanupAuthState();
+      
+      // Attempt a global sign out to invalidate all sessions
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      if (error) {
+        console.error('Error during sign out:', error);
+        throw error;
+      }
+      
+      // Show success message
+      toast.success("Signed out successfully");
+      
+      // Force page reload for a clean state
+      window.location.href = '/auth/login';
+    } catch (error) {
+      console.error('Failed to sign out:', error);
+      toast.error('Failed to sign out properly');
     }
   };
 

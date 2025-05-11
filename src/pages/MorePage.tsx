@@ -6,16 +6,22 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 
 const MorePage = () => {
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
     try {
+      setIsSigningOut(true);
       await signOut();
+      // Note: No need to redirect here as the signOut function in AuthContext
+      // already handles redirection after successful logout
     } catch (error) {
       console.error('Error signing out:', error);
+      setIsSigningOut(false);
     }
   };
 
@@ -25,7 +31,7 @@ const MorePage = () => {
         <h1 className="text-2xl font-bold mb-6">More Options</h1>
         
         {/* User Profile Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-6 dark:bg-gray-800 dark:border-gray-700">
           <div className="flex items-center">
             <Avatar className="h-16 w-16">
               <AvatarImage src={profile?.avatarUrl || ''} />
@@ -34,8 +40,8 @@ const MorePage = () => {
               </AvatarFallback>
             </Avatar>
             <div className="ml-4">
-              <h2 className="text-lg font-semibold">{profile?.fullName || 'User'}</h2>
-              <p className="text-sm text-gray-500">{user?.email}</p>
+              <h2 className="text-lg font-semibold dark:text-white">{profile?.fullName || 'User'}</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{user?.email}</p>
               <Link 
                 to="/profile" 
                 className="text-primary text-sm font-medium hover:underline mt-1 inline-block"
@@ -90,8 +96,9 @@ const MorePage = () => {
             variant="destructive" 
             className="w-full"
             onClick={handleSignOut}
+            disabled={isSigningOut}
           >
-            Sign Out
+            {isSigningOut ? 'Signing Out...' : 'Sign Out'}
           </Button>
         </div>
       </div>
@@ -110,14 +117,14 @@ const LinkCard = ({ to, title, description, icon: Icon }: LinkCardProps) => {
   return (
     <Link 
       to={to}
-      className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 flex items-center hover:shadow-md transition-shadow duration-200"
+      className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 flex items-center hover:shadow-md transition-shadow duration-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:shadow-none dark:hover:bg-gray-700"
     >
       <div className="bg-primary/10 p-3 rounded-full">
         <Icon className="h-6 w-6 text-primary" />
       </div>
       <div className="ml-4">
-        <h3 className="font-medium">{title}</h3>
-        <p className="text-sm text-gray-500">{description}</p>
+        <h3 className="font-medium dark:text-white">{title}</h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>
       </div>
     </Link>
   );
