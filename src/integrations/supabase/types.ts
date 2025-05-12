@@ -238,6 +238,33 @@ export type Database = {
         }
         Relationships: []
       }
+      cv_templates: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          image_preview_url: string
+          name: string
+          template_file: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          image_preview_url: string
+          name: string
+          template_file: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          image_preview_url?: string
+          name?: string
+          template_file?: string
+        }
+        Relationships: []
+      }
       cvs: {
         Row: {
           created_at: string

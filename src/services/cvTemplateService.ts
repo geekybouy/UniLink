@@ -4,14 +4,14 @@ import { CVTemplate, EnhancementOptions } from '@/types/cvTemplate';
 
 export async function fetchCVTemplates(): Promise<CVTemplate[]> {
   try {
-    // Use a raw SQL query instead of RPC to avoid type issues
-    const { data, error } = await supabase
+    // Use any type to bypass TypeScript limitation since the table was just created
+    const { data, error } = await (supabase
       .from('cv_templates')
-      .select('*') as { data: CVTemplate[] | null, error: any };
+      .select('*') as any);
     
     if (error) throw error;
     
-    return data || [];
+    return (data || []) as CVTemplate[];
   } catch (error) {
     console.error('Error fetching CV templates:', error);
     throw error;
@@ -20,12 +20,12 @@ export async function fetchCVTemplates(): Promise<CVTemplate[]> {
 
 export async function fetchTemplateContent(templateId: string): Promise<string> {
   try {
-    // Get the template file name
-    const { data, error } = await supabase
+    // Get the template file name using any type assertion
+    const { data, error } = await (supabase
       .from('cv_templates')
       .select('template_file')
       .eq('id', templateId)
-      .single() as { data: { template_file: string } | null, error: any };
+      .single() as any);
     
     if (error || !data) throw new Error('Template not found');
     
