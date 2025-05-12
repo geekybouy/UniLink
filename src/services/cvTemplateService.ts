@@ -4,16 +4,16 @@ import { CVTemplate, EnhancementOptions } from '@/types/cvTemplate';
 
 export async function fetchCVTemplates(): Promise<CVTemplate[]> {
   try {
-    // Using from() with rawQuery option to avoid TypeScript errors
-    // This tells TypeScript to treat this as a custom table not in the schema
-    const { data, error } = await supabase
-      .from('cv_templates', { count: 'exact' })
+    // Use explicit type casting to handle the fact that cv_templates is not in the TypeScript schema
+    const response = await supabase
+      .from('cv_templates')
       .select('*')
-      .order('name') as { data: CVTemplate[] | null, error: any };
+      .order('name');
       
-    if (error) throw error;
+    if (response.error) throw response.error;
     
-    return data || [];
+    // Cast the data to the CVTemplate type
+    return (response.data || []) as unknown as CVTemplate[];
   } catch (error) {
     console.error('Error fetching CV templates:', error);
     throw error;
@@ -22,16 +22,16 @@ export async function fetchCVTemplates(): Promise<CVTemplate[]> {
 
 export async function fetchTemplateContent(templateId: string): Promise<string> {
   try {
-    // Get the template file name using from() with type assertion
-    const { data: template, error: templateError } = await supabase
+    // Get the template file name with type assertion
+    const templateResponse = await supabase
       .from('cv_templates')
       .select('template_file')
       .eq('id', templateId)
-      .single() as { data: { template_file: string } | null, error: any };
+      .single();
       
-    if (templateError || !template) throw new Error('Template not found');
+    if (templateResponse.error || !templateResponse.data) throw new Error('Template not found');
     
-    const templateFile = template.template_file;
+    const templateFile = (templateResponse.data as unknown as { template_file: string }).template_file;
     
     const { data, error } = await supabase
       .storage
