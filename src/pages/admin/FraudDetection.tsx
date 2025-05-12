@@ -217,10 +217,10 @@ const FraudDetection: React.FC = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <CardTitle className="text-lg">
-                        {review.credentials?.credential_name || 'Unnamed Credential'}
+                        {review.credentials?.title || 'Unnamed Credential'}
                       </CardTitle>
                       <CardDescription>
-                        Issued by: {review.credentials?.issuer_name || 'Unknown Issuer'}
+                        Issued by: {review.credentials?.issuer || 'Unknown Issuer'}
                       </CardDescription>
                     </div>
                     <Badge className={getRiskLevelColor(review.risk_level)}>
@@ -245,7 +245,7 @@ const FraudDetection: React.FC = () => {
                         Type: {review.credentials?.credential_type || 'Unknown'}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Issued: {new Date(review.credentials?.issue_date).toLocaleDateString()}
+                        Issued: {review.credentials?.issue_date ? new Date(review.credentials?.issue_date).toLocaleDateString() : 'Unknown'}
                       </p>
                     </div>
                     

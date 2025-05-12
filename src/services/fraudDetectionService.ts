@@ -44,18 +44,22 @@ export async function storeCredentialAnalysis(
   analysisResult: CredentialAnalysisResult
 ): Promise<string> {
   try {
-    // Store the analysis result using the rpc function to avoid type issues
-    const { data, error } = await supabase.rpc('insert_credential_fraud_analysis', {
-      p_credential_id: credentialId,
-      p_risk_score: analysisResult.riskScore,
-      p_risk_level: analysisResult.riskLevel,
-      p_detection_method: analysisResult.detectionMethods,
-      p_detection_details: analysisResult.detectionDetails
-    });
+    // Insert the analysis directly
+    const { data, error } = await supabase
+      .from('credential_fraud_analysis')
+      .insert({
+        credential_id: credentialId,
+        risk_score: analysisResult.riskScore,
+        risk_level: analysisResult.riskLevel,
+        detection_method: analysisResult.detectionMethods,
+        detection_details: analysisResult.detectionDetails
+      })
+      .select('id')
+      .single();
     
     if (error) throw error;
     
-    const analysisId = data?.id;
+    const analysisId = data.id;
     
     // If there are issues, store them as anomalies
     if (analysisResult.detectionDetails.issues.length > 0) {
@@ -68,10 +72,12 @@ export async function storeCredentialAnalysis(
         evidence: issue.details
       }));
       
-      // Use RPC function for anomalies
-      await supabase.rpc('insert_credential_anomalies', {
-        p_anomalies: anomalies
-      });
+      // Insert anomalies directly
+      const { error: anomalyError } = await supabase
+        .from('credential_anomalies')
+        .insert(anomalies);
+        
+      if (anomalyError) throw anomalyError;
     }
     
     return analysisId;
@@ -83,15 +89,52 @@ export async function storeCredentialAnalysis(
 
 export async function getFraudAnalysisForCredential(credentialId: string): Promise<CredentialAnalysisResult | null> {
   try {
-    // Get the fraud analysis for the credential using RPC function
-    const { data, error } = await supabase.rpc('get_credential_fraud_analysis', {
-      p_credential_id: credentialId
-    });
+    // Query the analysis directly
+    const { data, error } = await supabase
+      .from('credential_fraud_analysis')
+      .select(`
+        id,
+        risk_score,
+        risk_level,
+        detection_method,
+        detection_details,
+        credential_anomalies (
+          id,
+          anomaly_type,
+          severity,
+          evidence
+        )
+      `)
+      .eq('credential_id', credentialId)
+      .order('detection_timestamp', { ascending: false })
+      .limit(1)
+      .single();
     
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST116') { // No rows returned
+        return null;
+      }
+      throw error;
+    }
+    
     if (!data) return null;
     
-    return data as CredentialAnalysisResult;
+    // Transform to match the expected interface
+    const result: CredentialAnalysisResult = {
+      riskScore: data.risk_score,
+      riskLevel: data.risk_level,
+      detectionMethods: data.detection_method,
+      detectionDetails: {
+        issues: data.credential_anomalies.map((anomaly: any) => ({
+          type: anomaly.anomaly_type,
+          severity: anomaly.severity,
+          details: anomaly.evidence
+        })),
+        anomalies: []
+      }
+    };
+    
+    return result;
   } catch (error) {
     console.error('Error fetching fraud analysis:', error);
     return null;
@@ -100,15 +143,27 @@ export async function getFraudAnalysisForCredential(credentialId: string): Promi
 
 export async function getPendingFraudReviews(limit = 10, offset = 0) {
   try {
-    // Get pending reviews using the RPC function
-    const { data, error } = await supabase.rpc('get_pending_fraud_reviews', {
-      p_limit: limit,
-      p_offset: offset
-    });
-      
+    // Query pending reviews directly
+    const { data, error } = await supabase
+      .from('credential_fraud_analysis')
+      .select(`
+        id,
+        credential_id,
+        risk_score,
+        risk_level,
+        detection_timestamp,
+        detection_method,
+        detection_details,
+        credentials:credential_id (id, title, issuer, user_id, issue_date, credential_type, verification_status),
+        credential_anomalies (*)
+      `)
+      .eq('review_status', 'pending')
+      .order('risk_score', { ascending: false })
+      .range(offset, offset + limit - 1);
+    
     if (error) throw error;
     
-    return data;
+    return data || [];
   } catch (error) {
     console.error('Error fetching pending fraud reviews:', error);
     throw error;
@@ -121,13 +176,17 @@ export async function reviewCredentialFraud(
   reviewNotes: string
 ) {
   try {
-    // Use RPC function to review fraud
-    const { error } = await supabase.rpc('review_credential_fraud', {
-      p_analysis_id: analysisId,
-      p_review_status: reviewStatus,
-      p_review_notes: reviewNotes
-    });
-      
+    // Update the review status directly
+    const { error } = await supabase
+      .from('credential_fraud_analysis')
+      .update({
+        review_status: reviewStatus,
+        review_notes: reviewNotes,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: (await supabase.auth.getUser()).data.user?.id
+      })
+      .eq('id', analysisId);
+    
     if (error) throw error;
     
     // Log the review action
@@ -140,7 +199,7 @@ export async function reviewCredentialFraud(
         review_notes: reviewNotes
       }
     );
-      
+    
     return true;
   } catch (error) {
     console.error('Error reviewing credential fraud:', error);
@@ -150,23 +209,59 @@ export async function reviewCredentialFraud(
 
 export async function getFraudMetrics() {
   try {
-    // Get metrics using the RPC function
-    const { data, error } = await supabase.rpc('get_fraud_metrics');
+    // Get number of high risk pending reviews
+    const { data: highRiskPending, error: highRiskError } = await supabase
+      .from('credential_fraud_analysis')
+      .select('id', { count: 'exact' })
+      .in('risk_level', ['high', 'critical'])
+      .eq('review_status', 'pending');
       
-    if (error) {
-      // If the query fails, return default metrics
-      return {
-        high_risk_pending: 0,
-        confirmed_fraud_count: 0,
-        false_positive_count: 0,
-        average_risk_score: 0,
-        detected_today: 0,
-        duplicate_count: 0,
-        alteration_count: 0
-      };
-    }
+    if (highRiskError) throw highRiskError;
     
-    return data;
+    // Get number of confirmed fraud
+    const { data: confirmedFraud, error: confirmedError } = await supabase
+      .from('credential_fraud_analysis')
+      .select('id', { count: 'exact' })
+      .eq('review_status', 'confirmed_fraud');
+      
+    if (confirmedError) throw confirmedError;
+    
+    // Get number of false positives
+    const { data: falsePositives, error: falsePositiveError } = await supabase
+      .from('credential_fraud_analysis')
+      .select('id', { count: 'exact' })
+      .eq('review_status', 'cleared');
+      
+    if (falsePositiveError) throw falsePositiveError;
+    
+    // Get average risk score
+    const { data: averageRisk, error: averageError } = await supabase
+      .from('credential_fraud_analysis')
+      .select('risk_score');
+      
+    if (averageError) throw averageError;
+    
+    const avgScore = averageRisk && averageRisk.length > 0
+      ? averageRisk.reduce((sum: number, item: any) => sum + item.risk_score, 0) / averageRisk.length
+      : 0;
+    
+    // Get detected today
+    const { data: detectedToday, error: todayError } = await supabase
+      .from('credential_fraud_analysis')
+      .select('id', { count: 'exact' })
+      .gte('detection_timestamp', new Date(new Date().setHours(0, 0, 0, 0)).toISOString());
+      
+    if (todayError) throw todayError;
+    
+    return {
+      high_risk_pending: highRiskPending?.length || 0,
+      confirmed_fraud_count: confirmedFraud?.length || 0,
+      false_positive_count: falsePositives?.length || 0,
+      average_risk_score: Math.round(avgScore * 10) / 10,
+      detected_today: detectedToday?.length || 0,
+      duplicate_count: 0, // These will need separate queries
+      alteration_count: 0
+    };
   } catch (error) {
     console.error('Error fetching fraud metrics:', error);
     // Return default metrics on error
@@ -184,10 +279,12 @@ export async function getFraudMetrics() {
 
 export async function getUserReputationScore(userId: string) {
   try {
-    // Get user reputation using the RPC function
-    const { data, error } = await supabase.rpc('get_user_reputation', {
-      p_user_id: userId
-    });
+    // Query user reputation directly
+    const { data, error } = await supabase
+      .from('user_reputation')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
       
     if (error) {
       // If no reputation record exists, return default values
@@ -213,13 +310,15 @@ export async function logFraudDetectionEvent(
   details: any
 ) {
   try {
-    // Use RPC function to log event
-    const { error } = await supabase.rpc('log_fraud_detection_event', {
-      p_event_type: eventType,
-      p_user_id: userId,
-      p_credential_id: credentialId,
-      p_details: details
-    });
+    // Insert log entry directly
+    const { error } = await supabase
+      .from('fraud_detection_logs')
+      .insert({
+        event_type: eventType,
+        user_id: userId,
+        credential_id: credentialId,
+        details: details
+      });
       
     if (error) throw error;
     
