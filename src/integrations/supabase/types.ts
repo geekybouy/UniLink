@@ -172,6 +172,97 @@ export type Database = {
         }
         Relationships: []
       }
+      credential_anomalies: {
+        Row: {
+          analysis_id: string
+          anomaly_type: string
+          confidence_score: number
+          created_at: string
+          description: string | null
+          evidence: Json | null
+          id: string
+          severity: number
+        }
+        Insert: {
+          analysis_id: string
+          anomaly_type: string
+          confidence_score: number
+          created_at?: string
+          description?: string | null
+          evidence?: Json | null
+          id?: string
+          severity: number
+        }
+        Update: {
+          analysis_id?: string
+          anomaly_type?: string
+          confidence_score?: number
+          created_at?: string
+          description?: string | null
+          evidence?: Json | null
+          id?: string
+          severity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credential_anomalies_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "credential_fraud_analysis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credential_fraud_analysis: {
+        Row: {
+          credential_id: string
+          detection_details: Json
+          detection_method: string[]
+          detection_timestamp: string
+          id: string
+          review_notes: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          risk_level: Database["public"]["Enums"]["fraud_risk_level"]
+          risk_score: number
+        }
+        Insert: {
+          credential_id: string
+          detection_details: Json
+          detection_method: string[]
+          detection_timestamp?: string
+          id?: string
+          review_notes?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_level: Database["public"]["Enums"]["fraud_risk_level"]
+          risk_score: number
+        }
+        Update: {
+          credential_id?: string
+          detection_details?: Json
+          detection_method?: string[]
+          detection_timestamp?: string
+          id?: string
+          review_notes?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_level?: Database["public"]["Enums"]["fraud_risk_level"]
+          risk_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credential_fraud_analysis_credential_id_fkey"
+            columns: ["credential_id"]
+            isOneToOne: false
+            referencedRelation: "credentials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credential_shares: {
         Row: {
           created_at: string
@@ -451,6 +542,44 @@ export type Database = {
           virtual_link?: string | null
         }
         Relationships: []
+      }
+      fraud_detection_logs: {
+        Row: {
+          created_at: string
+          credential_id: string | null
+          details: Json
+          event_type: string
+          id: string
+          ip_address: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          credential_id?: string | null
+          details?: Json
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          credential_id?: string | null
+          details?: Json
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fraud_detection_logs_credential_id_fkey"
+            columns: ["credential_id"]
+            isOneToOne: false
+            referencedRelation: "credentials"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       job_alerts: {
         Row: {
@@ -1296,6 +1425,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_reputation: {
+        Row: {
+          fraud_attempts: number
+          last_updated: string
+          trust_score: number
+          user_id: string
+          verification_count: number
+        }
+        Insert: {
+          fraud_attempts?: number
+          last_updated?: string
+          trust_score?: number
+          user_id: string
+          verification_count?: number
+        }
+        Update: {
+          fraud_attempts?: number
+          last_updated?: string
+          trust_score?: number
+          user_id?: string
+          verification_count?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1491,6 +1644,7 @@ export type Database = {
       }
     }
     Enums: {
+      fraud_risk_level: "low" | "medium" | "high" | "critical"
       mentorship_request_status:
         | "pending"
         | "accepted"
@@ -1613,6 +1767,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      fraud_risk_level: ["low", "medium", "high", "critical"],
       mentorship_request_status: [
         "pending",
         "accepted",

@@ -45,7 +45,7 @@ export function useFraudDetection() {
     try {
       const result = await getFraudAnalysisForCredential(credentialId);
       if (result) {
-        setAnalysisResult(result as CredentialAnalysisResult);
+        setAnalysisResult(result);
       }
       return result;
     } catch (error) {
