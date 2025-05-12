@@ -4,13 +4,14 @@ import { CVTemplate, EnhancementOptions } from '@/types/cvTemplate';
 
 export async function fetchCVTemplates(): Promise<CVTemplate[]> {
   try {
-    // Use the RPC function we created
-    const { data, error } = await supabase.rpc('get_cv_templates');
+    // Use a raw SQL query instead of RPC to avoid type issues
+    const { data, error } = await supabase
+      .from('cv_templates')
+      .select('*') as { data: CVTemplate[] | null, error: any };
     
     if (error) throw error;
     
-    // Cast the data to the CVTemplate type
-    return (data || []) as CVTemplate[];
+    return data || [];
   } catch (error) {
     console.error('Error fetching CV templates:', error);
     throw error;
@@ -19,15 +20,16 @@ export async function fetchCVTemplates(): Promise<CVTemplate[]> {
 
 export async function fetchTemplateContent(templateId: string): Promise<string> {
   try {
-    // Use the RPC function we created to get template info
-    const { data, error } = await supabase.rpc('get_cv_template_by_id', {
-      template_id: templateId
-    });
+    // Get the template file name
+    const { data, error } = await supabase
+      .from('cv_templates')
+      .select('template_file')
+      .eq('id', templateId)
+      .single() as { data: { template_file: string } | null, error: any };
     
-    if (error || !data || data.length === 0) throw new Error('Template not found');
+    if (error || !data) throw new Error('Template not found');
     
-    // The data is returned as an array, so take the first item
-    const templateFile = data[0].template_file;
+    const templateFile = data.template_file;
     
     const storageResponse = await supabase
       .storage
