@@ -1,4 +1,3 @@
-
 import { Routes, Route, useLocation } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { useNetworkStatus } from "./hooks/use-network-status";
@@ -54,6 +53,7 @@ const NotificationsPage = lazy(() => import(/* webpackChunkName: "notifications-
 const NotificationSettingsPage = lazy(() => import(/* webpackChunkName: "notification-settings-page" */ "./pages/NotificationSettingsPage"));
 const PrivacySettings = lazy(() => import(/* webpackChunkName: "privacy-settings-page" */ "./pages/PrivacySettings"));
 const MorePage = lazy(() => import(/* webpackChunkName: "more-page" */ "./pages/MorePage"));
+const AICVMaker = lazy(() => import(/* webpackChunkName: "ai-cv-maker-page" */ "./pages/AICVMaker"));
 
 // Admin pages
 const AdminDashboard = lazy(() => import(/* webpackChunkName: "admin-dashboard-page" */ "./pages/admin/AdminDashboard"));
@@ -190,6 +190,7 @@ function App() {
           <Route path="/privacy-settings" element={<PrivacySettings />} />
           <Route path="/more" element={<MorePage />} />
           <Route path="/offline" element={<OfflineFallback />} />
+          <Route path="/ai-cv-maker" element={<AICVMaker />} />
 
           {/* Admin routes */}
           <Route path="/admin" element={<AdminDashboard />} />

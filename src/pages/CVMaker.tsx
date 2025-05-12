@@ -7,6 +7,8 @@ import { CVData } from "@/types/cv";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Json } from "@/integrations/supabase/types";
+import { Button } from "@/components/ui/button";
+import { Sparkles } from "lucide-react";
 
 export default function CVMaker() {
   const [cvData, setCVData] = useState<CVData | null>(null);
@@ -52,7 +54,13 @@ export default function CVMaker() {
   return (
     <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-8">AI CV Maker</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">CV Maker</h1>
+          <Button onClick={() => navigate('/ai-cv-maker')} className="gap-2">
+            <Sparkles className="h-4 w-4" />
+            Try AI CV Maker
+          </Button>
+        </div>
         <div className="max-w-4xl mx-auto">
           <CVForm onSubmit={handleSubmit} />
           {cvData && (
