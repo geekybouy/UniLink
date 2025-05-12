@@ -4,7 +4,7 @@ import { CVTemplate, EnhancementOptions } from '@/types/cvTemplate';
 
 export async function fetchCVTemplates(): Promise<CVTemplate[]> {
   try {
-    // Use "from" with explicit type casting since the table is new
+    // Use a raw query to select from cv_templates since it's not in the TypeScript schema yet
     const { data, error } = await supabase
       .from('cv_templates')
       .select('*')
@@ -12,8 +12,7 @@ export async function fetchCVTemplates(): Promise<CVTemplate[]> {
       
     if (error) throw error;
     
-    // Cast to CVTemplate[] since the table is new
-    return data as unknown as CVTemplate[];
+    return data as CVTemplate[];
   } catch (error) {
     console.error('Error fetching CV templates:', error);
     throw error;
@@ -22,7 +21,7 @@ export async function fetchCVTemplates(): Promise<CVTemplate[]> {
 
 export async function fetchTemplateContent(templateId: string): Promise<string> {
   try {
-    // Use "from" with explicit type casting since the table is new
+    // Use a raw query to select from cv_templates
     const { data: template, error: templateError } = await supabase
       .from('cv_templates')
       .select('template_file')
@@ -31,8 +30,7 @@ export async function fetchTemplateContent(templateId: string): Promise<string> 
       
     if (templateError || !template) throw new Error('Template not found');
     
-    // Safely access the template_file property with proper typecasting
-    const templateFile = (template as any).template_file;
+    const templateFile = template.template_file;
     
     const { data, error } = await supabase
       .storage
@@ -48,7 +46,7 @@ export async function fetchTemplateContent(templateId: string): Promise<string> 
   }
 }
 
-export async function enhanceCV(cvData: any, enhancementOptions: any) {
+export async function enhanceCV(cvData: any, enhancementOptions: EnhancementOptions) {
   try {
     const { data, error } = await supabase.functions.invoke('enhance-cv', {
       body: {
