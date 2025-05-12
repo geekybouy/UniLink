@@ -5,8 +5,8 @@ export interface CVTemplate {
   id: string;
   name: string;
   description: string;
-  imagePreviewUrl: string;
-  templateFile: string;
+  image_preview_url: string;
+  template_file: string;
 }
 
 export interface EnhancementOptions {
@@ -19,8 +19,12 @@ export interface EnhancementOptions {
 
 export interface EnhancedCVData extends CVData {
   enhancedWorkExperience?: {
-    original: string[];
-    enhanced: string[];
+    original: {
+      description: string | string[];
+    };
+    enhanced: {
+      description: string | string[];
+    };
   }[];
   enhancedProjects?: {
     original: {

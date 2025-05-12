@@ -4,6 +4,7 @@ import { CVTemplate } from '@/types/cvTemplate';
 
 export async function fetchCVTemplates(): Promise<CVTemplate[]> {
   try {
+    // Need to use "from" with string parameter as the table isn't in generated types yet
     const { data, error } = await supabase
       .from('cv_templates')
       .select('*')
@@ -11,7 +12,8 @@ export async function fetchCVTemplates(): Promise<CVTemplate[]> {
       
     if (error) throw error;
     
-    return data as CVTemplate[];
+    // Cast to CVTemplate[] since the table is new
+    return data as unknown as CVTemplate[];
   } catch (error) {
     console.error('Error fetching CV templates:', error);
     throw error;
@@ -20,18 +22,22 @@ export async function fetchCVTemplates(): Promise<CVTemplate[]> {
 
 export async function fetchTemplateContent(templateId: string): Promise<string> {
   try {
-    const { data: template } = await supabase
+    // Need to use "from" with string parameter as the table isn't in generated types yet
+    const { data: template, error: templateError } = await supabase
       .from('cv_templates')
-      .select('templateFile')
+      .select('template_file')
       .eq('id', templateId)
       .single();
       
-    if (!template) throw new Error('Template not found');
+    if (templateError || !template) throw new Error('Template not found');
+    
+    // Safely access the templateFile property with proper typecasting
+    const templateFile = (template as unknown as { template_file: string }).template_file;
     
     const { data, error } = await supabase
       .storage
       .from('cv_files')
-      .download(template.templateFile);
+      .download(templateFile);
       
     if (error) throw error;
     

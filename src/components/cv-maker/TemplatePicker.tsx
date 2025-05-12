@@ -27,7 +27,7 @@ export function TemplatePicker({ templates, selectedTemplateId, onTemplateSelect
                   <p className="text-sm text-muted-foreground mt-1">{template.description}</p>
                   <div className="mt-3 border rounded overflow-hidden">
                     <Image 
-                      src={template.imagePreviewUrl} 
+                      src={template.image_preview_url} 
                       alt={template.name} 
                       width={300}
                       height={400}
