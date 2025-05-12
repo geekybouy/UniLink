@@ -4,15 +4,14 @@ import { CVTemplate, EnhancementOptions } from '@/types/cvTemplate';
 
 export async function fetchCVTemplates(): Promise<CVTemplate[]> {
   try {
-    // Use a raw query to select from cv_templates since it's not in the TypeScript schema yet
+    // Use a raw query with rpc to avoid TypeScript errors since cv_templates isn't in the TypeScript schema
     const { data, error } = await supabase
-      .from('cv_templates')
-      .select('*')
-      .order('name');
+      .rpc('get_cv_templates')
+      .returns<CVTemplate[]>();
       
     if (error) throw error;
     
-    return data as CVTemplate[];
+    return data || [];
   } catch (error) {
     console.error('Error fetching CV templates:', error);
     throw error;
@@ -21,12 +20,10 @@ export async function fetchCVTemplates(): Promise<CVTemplate[]> {
 
 export async function fetchTemplateContent(templateId: string): Promise<string> {
   try {
-    // Use a raw query to select from cv_templates
+    // Use a raw query with rpc to get the template file name
     const { data: template, error: templateError } = await supabase
-      .from('cv_templates')
-      .select('template_file')
-      .eq('id', templateId)
-      .single();
+      .rpc('get_cv_template_by_id', { template_id: templateId })
+      .returns<{template_file: string}>();
       
     if (templateError || !template) throw new Error('Template not found');
     
