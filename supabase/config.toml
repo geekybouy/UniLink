@@ -5,3 +5,4 @@ project_id = "tchudsedvmebjqzewlyb"
 
 [functions.enhance-cv]
 verify_jwt = false
+

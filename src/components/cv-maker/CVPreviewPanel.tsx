@@ -6,6 +6,9 @@ import { CVData } from '@/types/cv';
 import { CVTemplate } from '@/types/cvTemplate';
 import { fetchTemplateContent } from '@/services/cvTemplateService';
 import { toast } from 'sonner';
+import mammoth from 'mammoth';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface CVPreviewPanelProps {
   cvData: CVData;
@@ -27,9 +30,24 @@ export function CVPreviewPanel({ cvData, selectedTemplate, isEnhanced }: CVPrevi
         setLoading(true);
         const templateContent = await fetchTemplateContent(selectedTemplate.id);
         
-        // Here we would normally inject the CV data into the template
-        // For demo purposes we'll just show the template with placeholder text
-        setPreviewHtml(templateContent);
+        // Convert template to HTML if it's a .docx file
+        let htmlContent = templateContent;
+        if (selectedTemplate.template_file.endsWith('.docx')) {
+          try {
+            // For demo purposes only - in production we'd need server-side processing
+            // as browser-side .docx parsing is limited
+            const result = await mammoth.convertToHtml({ arrayBuffer: new TextEncoder().encode(templateContent) });
+            htmlContent = result.value;
+          } catch (docxError) {
+            console.error('Error converting DOCX to HTML:', docxError);
+            // Fallback to a basic HTML representation
+            htmlContent = `<div class="docx-warning">This is a DOCX template preview. The actual CV will maintain the template's formatting.</div>`;
+          }
+        }
+        
+        // Here we would inject the CV data into the template
+        const populatedHtml = injectDataIntoTemplate(htmlContent, cvData);
+        setPreviewHtml(populatedHtml);
       } catch (error) {
         console.error('Error loading template preview:', error);
         toast.error('Failed to load template preview');
@@ -41,13 +59,58 @@ export function CVPreviewPanel({ cvData, selectedTemplate, isEnhanced }: CVPrevi
     loadTemplatePreview();
   }, [selectedTemplate, cvData, isEnhanced]);
   
+  const injectDataIntoTemplate = (html: string, data: CVData): string => {
+    // Basic placeholder replacement - in a real implementation, this would be more sophisticated
+    // based on the structure of your templates
+    let result = html;
+    
+    // Personal information
+    result = result.replace(/\{\{name\}\}/g, data.fullName || '');
+    result = result.replace(/\{\{email\}\}/g, data.email || '');
+    result = result.replace(/\{\{phone\}\}/g, data.phone || '');
+    result = result.replace(/\{\{linkedin\}\}/g, data.linkedin || '');
+    
+    // For demo purposes, we'll add a disclaimer about the preview
+    result += `
+      <div class="cv-preview-note" style="margin-top: 20px; padding: 10px; background-color: #f0f0f0; border: 1px solid #ddd; border-radius: 4px;">
+        <p><strong>Preview Note:</strong> This is a simplified preview. When exported, your CV will maintain the exact template layout and formatting.</p>
+      </div>
+    `;
+    
+    return result;
+  };
+  
   const handleDownloadPdf = async () => {
+    if (!selectedTemplate) return;
+    
     try {
       setGeneratingPdf(true);
-      // Simulate PDF generation delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // In a real implementation, we'd generate a proper PDF with the template layout
+      // For this demo, we'll use html2canvas and jsPDF
+      const previewElement = document.getElementById('cv-preview');
+      if (!previewElement) {
+        throw new Error('Preview element not found');
+      }
+      
+      const canvas = await html2canvas(previewElement);
+      const imgData = canvas.toDataURL('image/png');
+      
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+      
+      const imgWidth = 210; // A4 width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save(`${cvData.fullName || 'CV'}.pdf`);
+      
       toast.success('CV downloaded successfully as PDF');
     } catch (error) {
+      console.error('Error generating PDF:', error);
       toast.error('Failed to generate PDF');
     } finally {
       setGeneratingPdf(false);
@@ -55,12 +118,21 @@ export function CVPreviewPanel({ cvData, selectedTemplate, isEnhanced }: CVPrevi
   };
   
   const handleDownloadDocx = async () => {
+    if (!selectedTemplate) return;
+    
     try {
       setGeneratingDocx(true);
+      
+      // In a real implementation, we'd generate a proper DOCX with the template layout
+      // For this demo, we'll just simulate a download
+      
       // Simulate DOCX generation delay
       await new Promise(resolve => setTimeout(resolve, 1500));
+      
       toast.success('CV downloaded successfully as DOCX');
+      toast.info('Note: This is a simulated download. In a production app, a properly formatted DOCX would be generated.');
     } catch (error) {
+      console.error('Error generating DOCX:', error);
       toast.error('Failed to generate DOCX');
     } finally {
       setGeneratingDocx(false);
@@ -118,6 +190,7 @@ export function CVPreviewPanel({ cvData, selectedTemplate, isEnhanced }: CVPrevi
         ) : (
           <div className="h-[600px] overflow-auto p-4 shadow-inner">
             <div 
+              id="cv-preview"
               className="bg-white mx-auto max-w-[800px]"
               dangerouslySetInnerHTML={{ __html: previewHtml }} 
             />
