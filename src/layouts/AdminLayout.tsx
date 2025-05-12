@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Spinner } from '@/components/ui/spinner';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import { ChevronLeft, Users, FileText, BarChart2, Settings, Bell, Shield, FileSearch, UserCheck } from 'lucide-react';
+import { ChevronLeft, Users, FileText, BarChart2, Settings, Bell, Shield, FileSearch, UserCheck, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface AdminLayoutProps {
@@ -105,6 +105,15 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                     <a href="/admin/announcements" className="flex items-center space-x-2">
                       <Bell className="h-5 w-5" />
                       {sidebarOpen && <span>Announcements</span>}
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <a href="/admin/fraud-detection" className="flex items-center space-x-2">
+                      <AlertTriangle className="h-5 w-5" />
+                      {sidebarOpen && <span>Fraud Detection</span>}
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

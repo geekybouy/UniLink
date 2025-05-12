@@ -1,4 +1,3 @@
-
 import { CVData } from './cv';
 
 export interface CVTemplate {
@@ -10,11 +9,21 @@ export interface CVTemplate {
 }
 
 export interface EnhancementOptions {
-  improveLanguage: boolean;
-  optimizeForATS: boolean;
-  addActionVerbs: boolean;
-  quantifyAchievements: boolean;
-  correctGrammar: boolean;
+  adaptToJobDescription?: boolean;
+  highlightKeySkills?: boolean;
+  improveLanguage?: boolean;
+  suggestAdditions?: boolean;
+  customInstructions?: string;
+}
+
+export interface FraudDetectionResult {
+  riskScore: number;
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  detectedIssues: {
+    type: string;
+    severity: number;
+    details: any;
+  }[];
 }
 
 export interface EnhancedCVData extends CVData {

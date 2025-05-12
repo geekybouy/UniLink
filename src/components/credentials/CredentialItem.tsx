@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -16,12 +17,15 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-} from "@/components/ui/dialog" // Added DialogFooter import
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, Clock, XCircle } from 'lucide-react';
+import { useFraudDetection } from '@/hooks/useFraudDetection';
+import CredentialRiskIndicator from './CredentialRiskIndicator';
+import { getFraudAnalysisForCredential } from '@/services/fraudDetectionService';
 
 interface CredentialItemProps {
   credential: any;
@@ -32,6 +36,36 @@ interface CredentialItemProps {
 const CredentialItem = ({ credential, onDelete, onShare }: CredentialItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedCredential, setEditedCredential] = useState({ ...credential });
+  const [fraudAnalysis, setFraudAnalysis] = useState<any>(null);
+  const { detectFraud } = useFraudDetection();
+
+  useEffect(() => {
+    // Load fraud analysis when component mounts
+    const loadFraudAnalysis = async () => {
+      try {
+        const analysis = await getFraudAnalysisForCredential(credential.id);
+        if (analysis) {
+          setFraudAnalysis(analysis);
+        }
+      } catch (error) {
+        console.error('Error fetching fraud analysis:', error);
+      }
+    };
+
+    loadFraudAnalysis();
+
+    // If no existing analysis is found, run detection
+    if (!fraudAnalysis) {
+      detectFraud(credential).then((result) => {
+        if (result) {
+          setFraudAnalysis({
+            risk_score: result.riskScore,
+            risk_level: result.riskLevel
+          });
+        }
+      });
+    }
+  }, [credential.id]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -80,7 +114,15 @@ const CredentialItem = ({ credential, onDelete, onShare }: CredentialItemProps) 
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>{credential.title}</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>{credential.title}</CardTitle>
+          {fraudAnalysis && (
+            <CredentialRiskIndicator 
+              riskLevel={fraudAnalysis.risk_level} 
+              riskScore={fraudAnalysis.risk_score} 
+            />
+          )}
+        </div>
         <CardDescription>{credential.description}</CardDescription>
       </CardHeader>
       <CardContent>
