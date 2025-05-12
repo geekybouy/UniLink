@@ -1,3 +1,4 @@
+
 import { CVData } from './cv';
 
 export interface CVTemplate {
@@ -14,6 +15,11 @@ export interface EnhancementOptions {
   improveLanguage?: boolean;
   suggestAdditions?: boolean;
   customInstructions?: string;
+  // Add the missing properties that were causing TypeScript errors
+  optimizeForATS?: boolean;
+  addActionVerbs?: boolean;
+  quantifyAchievements?: boolean;
+  correctGrammar?: boolean;
 }
 
 export interface FraudDetectionResult {

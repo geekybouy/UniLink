@@ -44,7 +44,9 @@ export function useFraudDetection() {
   const getCredentialAnalysis = async (credentialId: string) => {
     try {
       const result = await getFraudAnalysisForCredential(credentialId);
-      setAnalysisResult(result);
+      if (result) {
+        setAnalysisResult(result as CredentialAnalysisResult);
+      }
       return result;
     } catch (error) {
       console.error('Error fetching credential analysis:', error);

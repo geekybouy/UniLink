@@ -1,29 +1,36 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProfileProvider } from './contexts/ProfileContext';
 import { KnowledgeProvider } from './contexts/KnowledgeContext';
 import { ThemeProvider } from './contexts/ThemeContext';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
+
+// Updated import paths for auth pages
+import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/SignupPage'; // Changed from RegisterPage to SignupPage based on file structure
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+
+// Main pages
 import Dashboard from './pages/Dashboard';
 import ProfilePage from './pages/ProfilePage';
-import EditProfilePage from './pages/EditProfilePage';
+import EditProfilePage from './pages/CompleteProfile'; // Updated path
 import CredentialWallet from './pages/CredentialWallet';
 import ShareCredentials from './pages/ShareCredentials';
 import SharedCredentials from './pages/SharedCredentials';
-import NetworkPage from './pages/NetworkPage';
-import SettingsPage from './pages/SettingsPage';
+import NetworkPage from './pages/MyNetwork'; // Updated path
+import SettingsPage from './pages/NotificationSettingsPage'; // Updated path
+import PrivacySettings from './pages/PrivacySettings';
+
+// Knowledge base pages
+import KnowledgeBase from './pages/KnowledgeHub'; // Updated path
+import PostDetails from './pages/KnowledgePostDetail'; // Updated path
+
+// Admin pages
 import AdminPage from './pages/admin/AdminDashboard';
 import ContentModeration from './pages/admin/ContentModeration';
 import AuditLogs from './pages/admin/AuditLogs';
-import KnowledgeBase from './pages/KnowledgeBase';
-import PostDetails from './pages/PostDetails';
-import PrivacySettings from './pages/PrivacySettings';
-
-// Import the new FraudDetection page
 import FraudDetection from './pages/admin/FraudDetection';
 
 const App: React.FC = () => {

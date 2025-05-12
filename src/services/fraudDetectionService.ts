@@ -45,17 +45,13 @@ export async function storeCredentialAnalysis(
 ): Promise<string> {
   try {
     // Store the analysis result in the credential_fraud_analysis table
-    const { data, error } = await supabase
-      .from('credential_fraud_analysis')
-      .insert({
-        credential_id: credentialId,
-        risk_score: analysisResult.riskScore,
-        risk_level: analysisResult.riskLevel,
-        detection_method: analysisResult.detectionMethods,
-        detection_details: analysisResult.detectionDetails
-      })
-      .select('id')
-      .single();
+    const { data, error } = await supabase.rpc('insert_credential_fraud_analysis', {
+      p_credential_id: credentialId,
+      p_risk_score: analysisResult.riskScore,
+      p_risk_level: analysisResult.riskLevel,
+      p_detection_method: analysisResult.detectionMethods,
+      p_detection_details: JSON.stringify(analysisResult.detectionDetails)
+    });
 
     if (error) throw error;
     
@@ -70,11 +66,9 @@ export async function storeCredentialAnalysis(
         evidence: issue.details
       }));
       
-      const { error: anomalyError } = await supabase
-        .from('credential_anomalies')
-        .insert(anomalies);
-        
-      if (anomalyError) console.error('Error storing anomalies:', anomalyError);
+      await supabase.rpc('insert_credential_anomalies', {
+        p_anomalies: anomalies
+      });
     }
     
     return data.id;
@@ -84,23 +78,17 @@ export async function storeCredentialAnalysis(
   }
 }
 
-export async function getFraudAnalysisForCredential(credentialId: string) {
+export async function getFraudAnalysisForCredential(credentialId: string): Promise<CredentialAnalysisResult | null> {
   try {
     // Get the fraud analysis for the credential
-    const { data, error } = await supabase
-      .from('credential_fraud_analysis')
-      .select(`
-        *,
-        credential_anomalies (*)
-      `)
-      .eq('credential_id', credentialId)
-      .order('detection_timestamp', { ascending: false })
-      .limit(1)
-      .single();
+    const { data, error } = await supabase.rpc('get_credential_fraud_analysis', {
+      p_credential_id: credentialId
+    });
     
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "no rows returned"
+    if (error) throw error;
+    if (!data) return null;
     
-    return data;
+    return data as unknown as CredentialAnalysisResult;
   } catch (error) {
     console.error('Error fetching fraud analysis:', error);
     throw error;
@@ -109,24 +97,10 @@ export async function getFraudAnalysisForCredential(credentialId: string) {
 
 export async function getPendingFraudReviews(limit = 10, offset = 0) {
   try {
-    const { data, error } = await supabase
-      .from('credential_fraud_analysis')
-      .select(`
-        *,
-        credential:credential_id (
-          id,
-          title,
-          issuer,
-          user_id,
-          issue_date,
-          credential_type,
-          verification_status
-        ),
-        credential_anomalies (*)
-      `)
-      .eq('review_status', 'pending')
-      .order('risk_score', { ascending: false })
-      .range(offset, offset + limit - 1);
+    const { data, error } = await supabase.rpc('get_pending_fraud_reviews', {
+      p_limit: limit,
+      p_offset: offset
+    });
       
     if (error) throw error;
     
@@ -143,29 +117,22 @@ export async function reviewCredentialFraud(
   reviewNotes: string
 ) {
   try {
-    const { error } = await supabase
-      .from('credential_fraud_analysis')
-      .update({
-        review_status: reviewStatus,
-        review_notes: reviewNotes,
-        review_timestamp: new Date().toISOString(),
-        reviewed_by: (await supabase.auth.getUser()).data.user?.id
-      })
-      .eq('id', analysisId);
+    const { error } = await supabase.rpc('review_credential_fraud', {
+      p_analysis_id: analysisId,
+      p_review_status: reviewStatus,
+      p_review_notes: reviewNotes
+    });
       
     if (error) throw error;
     
     // Log the review action
-    await supabase
-      .from('fraud_detection_logs')
-      .insert({
-        event_type: `fraud_review_${reviewStatus}`,
-        user_id: (await supabase.auth.getUser()).data.user?.id,
-        details: {
-          analysis_id: analysisId,
-          review_notes: reviewNotes
-        }
-      });
+    await supabase.rpc('log_fraud_detection_event', {
+      p_event_type: `fraud_review_${reviewStatus}`,
+      p_details: JSON.stringify({
+        analysis_id: analysisId,
+        review_notes: reviewNotes
+      })
+    });
       
     return true;
   } catch (error) {
@@ -176,13 +143,10 @@ export async function reviewCredentialFraud(
 
 export async function getFraudMetrics() {
   try {
-    const { data, error } = await supabase
-      .from('fraud_detection_metrics')
-      .select('*')
-      .single();
+    const { data, error } = await supabase.rpc('get_fraud_metrics');
       
     if (error) {
-      // If the view doesn't exist yet, return default metrics
+      // If the function doesn't exist yet, return default metrics
       return {
         high_risk_pending: 0,
         confirmed_fraud_count: 0,
@@ -212,16 +176,12 @@ export async function getFraudMetrics() {
 
 export async function getUserReputationScore(userId: string) {
   try {
-    const { data, error } = await supabase
-      .from('user_reputation')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+    const { data, error } = await supabase.rpc('get_user_reputation', {
+      p_user_id: userId
+    });
       
-    if (error && error.code !== 'PGRST116') throw error;
-    
-    // If no reputation record exists, return default values
-    if (!data) {
+    if (error) {
+      // If no reputation record exists, return default values
       return {
         user_id: userId,
         trust_score: 100,
@@ -245,15 +205,12 @@ export async function logFraudDetectionEvent(
 ) {
   try {
     // Create a log entry
-    const { error } = await supabase
-      .from('fraud_detection_logs')
-      .insert({
-        event_type: eventType,
-        user_id: userId,
-        credential_id: credentialId,
-        details,
-        ip_address: null // Client-side can't reliably get IP
-      });
+    const { error } = await supabase.rpc('log_fraud_detection_event', {
+      p_event_type: eventType,
+      p_user_id: userId,
+      p_credential_id: credentialId,
+      p_details: JSON.stringify(details)
+    });
       
     if (error) throw error;
     
