@@ -4,16 +4,13 @@ import { CVTemplate, EnhancementOptions } from '@/types/cvTemplate';
 
 export async function fetchCVTemplates(): Promise<CVTemplate[]> {
   try {
-    // Use explicit type casting to handle the fact that cv_templates is not in the TypeScript schema
-    const response = await supabase
-      .from('cv_templates')
-      .select('*')
-      .order('name');
-      
-    if (response.error) throw response.error;
+    // Use the RPC function we created
+    const { data, error } = await supabase.rpc('get_cv_templates');
+    
+    if (error) throw error;
     
     // Cast the data to the CVTemplate type
-    return (response.data || []) as unknown as CVTemplate[];
+    return (data || []) as CVTemplate[];
   } catch (error) {
     console.error('Error fetching CV templates:', error);
     throw error;
@@ -22,25 +19,24 @@ export async function fetchCVTemplates(): Promise<CVTemplate[]> {
 
 export async function fetchTemplateContent(templateId: string): Promise<string> {
   try {
-    // Get the template file name with type assertion
-    const templateResponse = await supabase
-      .from('cv_templates')
-      .select('template_file')
-      .eq('id', templateId)
-      .single();
-      
-    if (templateResponse.error || !templateResponse.data) throw new Error('Template not found');
+    // Use the RPC function we created to get template info
+    const { data, error } = await supabase.rpc('get_cv_template_by_id', {
+      template_id: templateId
+    });
     
-    const templateFile = (templateResponse.data as unknown as { template_file: string }).template_file;
+    if (error || !data || data.length === 0) throw new Error('Template not found');
     
-    const { data, error } = await supabase
+    // The data is returned as an array, so take the first item
+    const templateFile = data[0].template_file;
+    
+    const storageResponse = await supabase
       .storage
       .from('cv_files')
       .download(templateFile);
       
-    if (error) throw error;
+    if (storageResponse.error) throw storageResponse.error;
     
-    return await data.text();
+    return await storageResponse.data.text();
   } catch (error) {
     console.error('Error fetching template content:', error);
     throw error;
