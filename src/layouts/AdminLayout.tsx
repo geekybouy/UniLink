@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Spinner } from '@/components/ui/spinner';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
@@ -16,6 +16,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const { user, isLoading, hasRole } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const location = useLocation();
 
   useEffect(() => {
     const checkAdminRole = async () => {

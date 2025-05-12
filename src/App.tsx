@@ -33,13 +33,18 @@ import ContentModeration from './pages/admin/ContentModeration';
 import AuditLogs from './pages/admin/AuditLogs';
 import FraudDetection from './pages/admin/FraudDetection';
 
+// Create an authentication layout component
+import AuthLayout from './pages/auth/AuthLayout';
+// Create an admin layout component
+import AdminLayout from './layouts/AdminLayout';
+
 const App: React.FC = () => {
   return (
     <ThemeProvider>
-      <Router>
-        <AuthProvider>
-          <ProfileProvider>
-            <KnowledgeProvider>
+      <AuthProvider>
+        <ProfileProvider>
+          <KnowledgeProvider>
+            <Router>
               <Routes>
                 {/* Auth routes */}
                 <Route path="/" element={<LoginPage />} />
@@ -69,10 +74,10 @@ const App: React.FC = () => {
                 <Route path="/admin/audit-logs" element={<AuditLogs />} />
                 <Route path="/admin/fraud-detection" element={<FraudDetection />} />
               </Routes>
-            </KnowledgeProvider>
-          </ProfileProvider>
-        </AuthProvider>
-      </Router>
+            </Router>
+          </KnowledgeProvider>
+        </ProfileProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 };
