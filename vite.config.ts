@@ -6,7 +6,7 @@ import type { PluginOption } from 'vite';
 
 // Define types for the dynamically imported modules
 type Visualizer = {
-  visualizer: (options?: any) => PluginOption;
+  visualizer: (options?: any) => any;  // Changed to any to avoid type conflicts
 };
 
 type PWA = {
@@ -14,7 +14,7 @@ type PWA = {
 };
 
 // Variables to store imported modules
-let visualizer: ((options?: any) => PluginOption) | undefined;
+let visualizer: ((options?: any) => any) | undefined;  // Changed to any return type
 let VitePWA: ((options?: any) => PluginOption) | undefined;
 let viteImagemin: any;
 
@@ -53,7 +53,7 @@ export default defineConfig(async ({ mode }) => {
           open: false,
           gzipSize: true,
           brotliSize: true,
-        }) as PluginOption
+        }) as unknown as PluginOption  // Use double type assertion to handle plugin type safely
       );
     }
     
