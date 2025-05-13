@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,7 @@ import { AlertCircle, Bell, Check, Info, X } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export function DesignSystem() {
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (

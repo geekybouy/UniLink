@@ -71,7 +71,7 @@ const mockData: AuditEvent[] = [
 ];
 
 const AuditLogs = () => {
-  const { resolvedTheme } = useTheme();
+  const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");

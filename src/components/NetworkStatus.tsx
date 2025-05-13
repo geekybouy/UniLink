@@ -4,12 +4,10 @@ import { useNetworkStatus } from '@/hooks/use-network-status';
 import { toast } from 'sonner';
 import { Wifi, WifiOff } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { useTheme } from '@/contexts/ThemeContext';
 
 export function NetworkStatus() {
   const { online, effectiveConnectionType } = useNetworkStatus();
   const [previousOnline, setPreviousOnline] = useState(online);
-  const { theme } = useTheme();
 
   useEffect(() => {
     // Only show notifications when the status changes, not on initial render
@@ -45,13 +43,11 @@ export function NetworkStatus() {
   return (
     <Alert 
       variant="destructive" 
-      className={`fixed bottom-20 md:bottom-4 left-4 right-4 md:left-auto md:w-96 z-50 animate-fade-in ${
-        theme === 'dark' ? 'text-white' : ''
-      }`}
+      className="fixed bottom-20 md:bottom-4 left-4 right-4 md:left-auto md:w-96 z-50 animate-fade-in"
     >
       <WifiOff className="h-4 w-4" />
-      <AlertTitle className={theme === 'dark' ? 'text-white' : ''}>You're offline</AlertTitle>
-      <AlertDescription className={theme === 'dark' ? 'text-gray-200' : ''}>
+      <AlertTitle>You're offline</AlertTitle>
+      <AlertDescription>
         Some features may not be available. We'll keep trying to reconnect.
       </AlertDescription>
     </Alert>
