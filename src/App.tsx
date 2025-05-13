@@ -4,7 +4,7 @@ import { Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProfileProvider } from './contexts/ProfileContext';
 import { KnowledgeProvider } from './contexts/KnowledgeContext';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider } from './components/ui/theme-provider';
 
 // Updated import paths for auth pages
 import LoginPage from './pages/auth/LoginPage';

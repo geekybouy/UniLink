@@ -7,8 +7,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import UpdatePrompt from '@/components/pwa/UpdatePrompt';
 import InstallPrompt from '@/components/pwa/InstallPrompt';
 import NetworkStatus from '@/components/NetworkStatus';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { useTheme } from '@/contexts/ThemeContext';
 
 type MainLayoutProps = {
   children: ReactNode;
@@ -17,10 +15,9 @@ type MainLayoutProps = {
 
 const MainLayout = ({ children, hideFooter = false }: MainLayoutProps) => {
   const isMobile = useIsMobile();
-  const { theme } = useTheme();
 
   return (
-    <div className={`min-h-screen flex flex-col bg-background ${theme === 'dark' ? 'text-foreground' : ''}`}>
+    <div className="min-h-screen flex flex-col bg-background">
       {/* PWA Components */}
       <UpdatePrompt />
       <InstallPrompt />

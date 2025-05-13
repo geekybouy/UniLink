@@ -20,7 +20,7 @@ const root = ReactDOM.createRoot(document.getElementById('root')!);
 root.render(
   // Remove StrictMode in production to avoid double rendering
   <BrowserRouter>
-    <ThemeProvider defaultTheme="light" storageKey="unilink-theme">
+    <ThemeProvider>
       <AuthProvider>
         <ProfileProvider>
           <MessagingProvider>
