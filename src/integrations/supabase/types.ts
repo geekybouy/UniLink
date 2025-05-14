@@ -1577,6 +1577,10 @@ export type Database = {
         Args: { user_id_param: string; role_param: string }
         Returns: undefined
       }
+      generate_fake_profiles: {
+        Args: { num_profiles: number }
+        Returns: undefined
+      }
       get_all_tags: {
         Args: Record<PropertyKey, never>
         Returns: {

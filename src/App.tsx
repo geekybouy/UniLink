@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
@@ -38,6 +37,9 @@ import AuthLayout from './pages/auth/AuthLayout';
 // Create an admin layout component
 import AdminLayout from './layouts/AdminLayout';
 
+// Smart Contract Simulation
+import ContractDashboardPage from "./pages/ContractDashboard";
+
 const App: React.FC = () => {
   return (
     <ThemeProvider>
@@ -72,6 +74,9 @@ const App: React.FC = () => {
               <Route path="/admin/content-moderation" element={<ContentModeration />} />
               <Route path="/admin/audit-logs" element={<AuditLogs />} />
               <Route path="/admin/fraud-detection" element={<FraudDetection />} />
+              
+              {/* Smart Contract Simulation */}
+              <Route path="/contract-dashboard" element={<ContractDashboardPage />} />
             </Routes>
           </KnowledgeProvider>
         </ProfileProvider>
