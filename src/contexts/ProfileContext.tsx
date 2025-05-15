@@ -32,7 +32,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         return;
       }
       
-      // Fetch profile data
       console.log(`Fetching profile for user ID: ${user.id}`);
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -40,14 +39,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         .eq('user_id', user.id)
         .single();
         
-      if (profileError && profileError.code !== 'PGRST116') { // PGRST116: no rows found
+      if (profileError && profileError.code !== 'PGRST116') { 
         console.error('Error fetching profile data:', profileError);
         throw profileError;
       }
       
       if (!profileData) {
         console.log(`No profile found for user ${user.id}, creating one.`);
-        // Create a new profile if one doesn't exist
         const defaultUsername = user.email ? user.email.split('@')[0] : `user_${uuidv4().substring(0, 8)}`;
         const { data: newProfileInsertData, error: createError } = await supabase
           .from('profiles')
@@ -57,7 +55,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             email: user.email || '',
             username: user.user_metadata?.user_name || defaultUsername,
             is_profile_complete: false,
-            // ensure required fields like email and full_name are present
           })
           .select()
           .single();
@@ -80,7 +77,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             phone: null, 
             university: newProfileInsertData.university_name || null,
             graduationYear: newProfileInsertData.graduation_year || null,
-            skills: [],
+            skills: (newProfileInsertData as any).skills || [], // Use (as any) if skills also causes issues, or ensure it's selected
             education: [],
             workExperience: [],
             socialLinks: [],
@@ -90,27 +87,24 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
               email: 'public', phone: 'public', education: 'public',
               workExperience: 'public', skills: 'public', socialLinks: 'public'
             },
-            createdAt: newProfileInsertData.created_at || new Date().toISOString(),
-            updatedAt: newProfileInsertData.updated_at || new Date().toISOString(),
+            createdAt: (newProfileInsertData as any).created_at || new Date().toISOString(),
+            updatedAt: (newProfileInsertData as any).updated_at || new Date().toISOString(),
             branch: newProfileInsertData.branch || null,
             registrationNumber: newProfileInsertData.registration_number || null,
             job_title: newProfileInsertData.job_title || null,
             current_company: newProfileInsertData.current_company || null
           };
           setProfile(emptyProfile);
-          return; // Early return after setting new profile
+          return; 
         } else {
           console.error('Failed to retrieve new profile data after creation.');
-          // Potentially set profile to null or a default error state
           setProfile(null);
           return;
         }
       }
       
-      // If profileData exists, proceed to fetch related data
       if (profileData) {
         console.log('Profile data found:', profileData);
-        // Fetch skills, education, work experience, social links...
         const [skillsRes, educationRes, workRes, socialRes] = await Promise.all([
           typedSupabaseClient.skills.getByUserId(user.id),
           typedSupabaseClient.education.getByUserId(user.id),
@@ -144,7 +138,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           platform: link.platform as "linkedin" | "github" | "twitter" | "website" | "other",
           url: link.url
         })) : [];
-        
+
         const userProfile: UserProfile = {
           id: profileData.id.toString(),
           userId: profileData.user_id || '',
@@ -153,21 +147,21 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           email: profileData.email || '',
           bio: profileData.bio || '',
           avatarUrl: profileData.avatar_url || null,
-          phone: null, // Phone not in DB 'profiles' table
+          phone: null, 
           university: profileData.university_name || null,
           graduationYear: profileData.graduation_year || null,
           location: profileData.location || '',
           isProfileComplete: profileData.is_profile_complete || false,
-          skills: skillsRes.data || [],
+          skills: (profileData as any).skills || skillsRes.data || [], // Also check skills from profileData if it's there
           education: mappedEducation,
           workExperience: mappedWorkExperience,
           socialLinks: mappedSocialLinks,
-          privacySettings: { // Default privacy settings
+          privacySettings: { 
             email: 'public', phone: 'public', education: 'public',
             workExperience: 'public', skills: 'public', socialLinks: 'public'
           },
-          createdAt: profileData.created_at || new Date().toISOString(),
-          updatedAt: profileData.updated_at || new Date().toISOString(),
+          createdAt: (profileData as any).created_at || new Date().toISOString(),
+          updatedAt: (profileData as any).updated_at || new Date().toISOString(),
           branch: profileData.branch || null,
           registrationNumber: profileData.registration_number || null,
           job_title: profileData.job_title || null,
@@ -177,7 +171,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Full error in fetchUserProfile:', error);
-      setProfile(null); // Set profile to null on error
+      setProfile(null); 
     } finally {
       setLoading(false);
       console.log('fetchUserProfile finished, loading set to false.');
@@ -209,30 +203,22 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       
       if (data.fullName !== undefined) updateData.full_name = data.fullName;
       if (data.username !== undefined) updateData.username = data.username;
-      if (data.email !== undefined) updateData.email = data.email; // Assuming email can be updated
+      if (data.email !== undefined) updateData.email = data.email; 
       if (data.bio !== undefined) updateData.bio = data.bio;
       if (data.location !== undefined) updateData.location = data.location;
       if (data.university !== undefined) updateData.university_name = data.university;
       if (data.graduationYear !== undefined) updateData.graduation_year = data.graduationYear;
       if (data.branch !== undefined) updateData.branch = data.branch;
       if (data.registrationNumber !== undefined) updateData.registration_number = data.registrationNumber;
-      // The 'profiles' table does not have a 'phone' column.
-      // If you want to save phone, you'll need to add a migration for it.
-      // if (data.phone !== undefined) updateData.phone = data.phone; // Temporarily commented out
-
-      // Add is_profile_complete if certain fields are filled,
-      // For now, let's assume any update makes it more complete or means user is working on it.
-      // A more robust check for completion should be done based on specific criteria.
-      // updateData.is_profile_complete = true; // Or calculate based on data
 
       console.log("Data prepared for Supabase update:", updateData);
 
       if (Object.keys(updateData).length === 0) {
         console.log("No data to update.");
-        // toast.info("No changes to save."); // Optional: inform user if no actual data changed
         return;
       }
 
+      // The updated_at column will be handled by the database trigger
       const { error } = await supabase
         .from('profiles')
         .update(updateData)
@@ -245,7 +231,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       
       console.log("Supabase update successful.");
       
-      // Update local state more accurately
       setProfile(prev => {
         if (!prev) return null;
         const updatedFields: Partial<UserProfile> = {};
@@ -258,20 +243,17 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         if (data.graduationYear !== undefined) updatedFields.graduationYear = data.graduationYear;
         if (data.branch !== undefined) updatedFields.branch = data.branch;
         if (data.registrationNumber !== undefined) updatedFields.registrationNumber = data.registrationNumber;
-        // if (data.phone !== undefined) updatedFields.phone = data.phone; // Reflect in local state if it were saved
         
         return {
           ...prev,
           ...updatedFields,
-          // isProfileComplete: prev.isProfileComplete || true, // Update based on logic
-          updatedAt: new Date().toISOString(), // Reflect update time
+          updatedAt: new Date().toISOString(), // Reflect update time locally immediately
         };
       });
-      // toast.success('Profile updated successfully!'); // Moved to PersonalInfoStep for context
     } catch (error: any) {
       console.error('Failed to update profile in ProfileContext:', error);
       toast.error(`Failed to update profile: ${error.message || 'An unexpected error occurred.'}`);
-      throw error; // Re-throw to be caught by the calling component
+      throw error; 
     }
   };
 
@@ -281,7 +263,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const errorMsg = 'User not authenticated or profile not loaded for avatar upload.';
       console.error(errorMsg);
       toast.error(errorMsg);
-      return null; // throw new Error(errorMsg) could also be an option
+      return null; 
     }
     
     try {
@@ -292,10 +274,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       console.log(`Uploading avatar to: user-content/${filePath}`);
       const { error: uploadError } = await supabase
         .storage
-        .from('user-content') // Ensure this bucket exists and has RLS/policies for uploads
+        .from('user-content') 
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: true, // Important for replacing existing avatar if same path logic used (not here due to Date.now())
+          upsert: true, 
         });
         
       if (uploadError) {
@@ -311,6 +293,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const avatarUrl = publicUrlData.publicUrl;
       console.log("Avatar public URL:", avatarUrl);
       
+      // The updated_at column will be handled by the database trigger
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: avatarUrl })
@@ -331,7 +314,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       console.error('Failed to upload avatar in ProfileContext:', error);
       toast.error(`Failed to upload avatar: ${error.message || 'An unexpected error occurred.'}`);
-      return null; // Or throw error
+      return null; 
     }
   };
 
@@ -350,10 +333,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     totalFields += basicFields.length;
     
     basicFields.forEach(field => {
-      if (profile[field] && String(profile[field]).trim() !== '') completedFields++;
+      // Ensure profile[field] is not null or undefined before calling String() or trim()
+      const fieldValue = profile[field];
+      if (fieldValue !== null && fieldValue !== undefined && String(fieldValue).trim() !== '') {
+        completedFields++;
+      }
     });
 
-    // Consider arrays non-empty as 'completed' for this basic calculation
     totalFields += 1; // Skills
     if (profile.skills && profile.skills.length > 0) completedFields++;
 
@@ -371,7 +357,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return completion;
   };
   
-  const isProfileCompleted = profile?.isProfileComplete || getProfileCompletion() > 80; // Example threshold
+  const isProfileCompleted = profile?.isProfileComplete || getProfileCompletion() > 80; 
   
   return (
     <ProfileContext.Provider

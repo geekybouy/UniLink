@@ -1127,6 +1127,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           branch: string | null
+          created_at: string
           current_company: string | null
           email: string
           full_name: string
@@ -1138,6 +1139,7 @@ export type Database = {
           registration_number: string | null
           skills: string[] | null
           university_name: string | null
+          updated_at: string
           user_id: string | null
           username: string | null
         }
@@ -1145,6 +1147,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           branch?: string | null
+          created_at?: string
           current_company?: string | null
           email: string
           full_name: string
@@ -1156,6 +1159,7 @@ export type Database = {
           registration_number?: string | null
           skills?: string[] | null
           university_name?: string | null
+          updated_at?: string
           user_id?: string | null
           username?: string | null
         }
@@ -1163,6 +1167,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           branch?: string | null
+          created_at?: string
           current_company?: string | null
           email?: string
           full_name?: string
@@ -1174,6 +1179,7 @@ export type Database = {
           registration_number?: string | null
           skills?: string[] | null
           university_name?: string | null
+          updated_at?: string
           user_id?: string | null
           username?: string | null
         }
