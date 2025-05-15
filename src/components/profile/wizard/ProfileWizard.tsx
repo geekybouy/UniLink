@@ -1,123 +1,69 @@
 
-import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { useNavigate } from 'react-router-dom';
-import { useProfile } from '@/contexts/ProfileContext';
-import { toast } from 'sonner';
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import PersonalInfoStep from './PersonalInfoStep';
 import EducationStep from './EducationStep';
 import WorkExperienceStep from './WorkExperienceStep';
 import SkillsStep from './SkillsStep';
-import LocationStep from './LocationStep';
 import SocialLinksStep from './SocialLinksStep';
+import LocationStep from './LocationStep';
+import { useProfile } from '@/contexts/ProfileContext';
 
-const steps = [
-  'personal',
-  'education',
-  'work',
-  'skills',
-  'location',
-  'social'
-];
+interface ProfileWizardProps {
+  onComplete?: () => void;
+}
 
-const ProfileWizard = () => {
-  const navigate = useNavigate();
-  const { profile, getProfileCompletion } = useProfile();
-  const [currentStep, setCurrentStep] = useState('personal');
+const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
+  const [currentStep, setCurrentStep] = useState(0);
+  const { profile, loading } = useProfile();
   
-  const handleNext = () => {
-    const currentIndex = steps.indexOf(currentStep);
-    if (currentIndex < steps.length - 1) {
-      setCurrentStep(steps[currentIndex + 1]);
+  const steps = [
+    { id: 'personal-info', title: 'Personal Information', component: PersonalInfoStep },
+    { id: 'education', title: 'Education', component: EducationStep },
+    { id: 'work-experience', title: 'Work Experience', component: WorkExperienceStep },
+    { id: 'skills', title: 'Skills', component: SkillsStep },
+    { id: 'social-links', title: 'Social Links', component: SocialLinksStep },
+    { id: 'location', title: 'Location', component: LocationStep },
+  ];
+  
+  const goToNextStep = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
     } else {
-      handleComplete();
+      if (onComplete) onComplete();
     }
   };
   
-  const handlePrevious = () => {
-    const currentIndex = steps.indexOf(currentStep);
-    if (currentIndex > 0) {
-      setCurrentStep(steps[currentIndex - 1]);
+  const goToPreviousStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
     }
   };
   
-  const handleComplete = () => {
-    toast.success('Profile setup completed!');
-    navigate('/alumni/' + profile?.userId);
-  };
-
-  const completion = getProfileCompletion();
-
+  const CurrentStepComponent = steps[currentStep].component;
+  
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-8">
-      <Card className="p-6">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2">Complete Your Profile</h1>
-          <p className="text-muted-foreground mb-4">
-            Fill in your details to help others find and connect with you
-          </p>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Profile completion</span>
-              <span>{completion}%</span>
-            </div>
-            <Progress value={completion} className="h-2" />
-          </div>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-2xl p-6 space-y-6">
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-bold">Complete Your Profile</h1>
+          <p className="text-muted-foreground">Step {currentStep + 1} of {steps.length}: {steps[currentStep].title}</p>
         </div>
-
-        <Tabs value={currentStep} onValueChange={setCurrentStep} className="space-y-6">
-          <TabsList className="w-full flex overflow-x-auto scrollbar-hide justify-start sm:justify-center p-0 h-auto bg-transparent border-b border-border space-x-2">
-            {steps.map((step) => (
-              <TabsTrigger 
-                key={step} 
-                value={step} 
-                className="flex-shrink-0 capitalize border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-2 py-1"
-              >
-                {step}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          
-          <TabsContent value="personal">
-            <PersonalInfoStep />
-          </TabsContent>
-          
-          <TabsContent value="education">
-            <EducationStep />
-          </TabsContent>
-          
-          <TabsContent value="work">
-            <WorkExperienceStep />
-          </TabsContent>
-          
-          <TabsContent value="skills">
-            <SkillsStep />
-          </TabsContent>
-          
-          <TabsContent value="location">
-            <LocationStep />
-          </TabsContent>
-          
-          <TabsContent value="social">
-            <SocialLinksStep />
-          </TabsContent>
-
-          <div className="flex justify-between mt-6">
-            <Button 
-              variant="outline" 
-              onClick={handlePrevious} 
-              disabled={currentStep === steps[0]}
-            >
-              Previous
-            </Button>
-            <Button onClick={handleNext}>
-              {currentStep === steps[steps.length - 1] ? 'Complete' : 'Next'}
-            </Button>
-          </div>
-        </Tabs>
+        
+        <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
+          <div 
+            className="bg-primary h-full transition-all" 
+            style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+          />
+        </div>
+        
+        <CurrentStepComponent
+          onNext={goToNextStep}
+          onPrevious={goToPreviousStep}
+          isFirstStep={currentStep === 0}
+          isLastStep={currentStep === steps.length - 1}
+        />
       </Card>
     </div>
   );

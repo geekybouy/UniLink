@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Pencil, User } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { useProfile } from '@/contexts/ProfileContext';
 
 interface ProfileHeaderProps {
@@ -31,7 +31,7 @@ const ProfileHeader = ({
   const getInitials = (name: string) => {
     return name
       .split(' ')
-      .map(part => part[0])
+      .map(part => part.charAt(0))
       .join('')
       .toUpperCase()
       .substring(0, 2);
@@ -60,9 +60,15 @@ const ProfileHeader = ({
         )}
       </div>
       <p className="text-muted-foreground">
-        {profile.university && `${profile.university}, `}
+        {profile.university && `${profile.university}`}
+        {profile.university && profile.graduationYear && `, `}
         {profile.graduationYear && `Class of ${profile.graduationYear}`}
       </p>
+      {profile.job_title && profile.current_company && (
+        <p className="text-sm text-muted-foreground mt-1">
+          {profile.job_title} at {profile.current_company}
+        </p>
+      )}
     </div>
   );
 };

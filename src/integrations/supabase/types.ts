@@ -1135,7 +1135,6 @@ export type Database = {
           is_profile_complete: boolean | null
           job_title: string | null
           location: string | null
-          password: string
           registration_number: string | null
           skills: string[] | null
           university_name: string | null
@@ -1154,7 +1153,6 @@ export type Database = {
           is_profile_complete?: boolean | null
           job_title?: string | null
           location?: string | null
-          password: string
           registration_number?: string | null
           skills?: string[] | null
           university_name?: string | null
@@ -1173,7 +1171,6 @@ export type Database = {
           is_profile_complete?: boolean | null
           job_title?: string | null
           location?: string | null
-          password?: string
           registration_number?: string | null
           skills?: string[] | null
           university_name?: string | null
