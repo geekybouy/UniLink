@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
@@ -21,6 +22,10 @@ import SharedCredentials from './pages/SharedCredentials';
 import NetworkPage from './pages/MyNetwork'; // Updated path
 import SettingsPage from './pages/NotificationSettingsPage'; // Updated path
 import PrivacySettings from './pages/PrivacySettings';
+import AlumniDirectory from './pages/AlumniDirectory'; // Added import
+import EventsPage from './pages/EventsPage'; // Added import
+import JobsListingPage from './pages/JobsListingPage'; // Added import
+
 
 // Knowledge base pages
 import KnowledgeBase from './pages/KnowledgeHub'; // Updated path
@@ -39,6 +44,9 @@ import AdminLayout from './layouts/AdminLayout';
 
 // Smart Contract Simulation
 import ContractDashboardPage from "./pages/ContractDashboard";
+
+// System Check Page
+import SystemCheckPage from './pages/SystemCheckPage'; // New import
 
 const App: React.FC = () => {
   return (
@@ -62,6 +70,9 @@ const App: React.FC = () => {
               <Route path="/share-credentials" element={<ShareCredentials />} />
               <Route path="/shared/:shareId" element={<SharedCredentials />} />
               <Route path="/network" element={<NetworkPage />} />
+              <Route path="/alumni-directory" element={<AlumniDirectory />} /> {/* Added route */}
+              <Route path="/events" element={<EventsPage />} /> {/* Added route */}
+              <Route path="/jobs" element={<JobsListingPage />} /> {/* Added route */}
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/privacy-settings" element={<PrivacySettings />} />
               
@@ -77,6 +88,9 @@ const App: React.FC = () => {
               
               {/* Smart Contract Simulation */}
               <Route path="/contract-dashboard" element={<ContractDashboardPage />} />
+
+              {/* System Check Page Route */}
+              <Route path="/system-check" element={<SystemCheckPage />} />
             </Routes>
           </KnowledgeProvider>
         </ProfileProvider>
@@ -86,3 +100,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+
