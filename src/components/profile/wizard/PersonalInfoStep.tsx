@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -10,8 +9,10 @@ import { ProfileFormData } from '@/types/profile';
 import { useProfile } from '@/contexts/ProfileContext';
 import { toast } from 'sonner';
 import { User, Upload } from 'lucide-react';
+import { WizardStepProps } from './ProfileWizard'; // Import WizardStepProps
 
-const PersonalInfoStep = () => {
+// Update component to accept WizardStepProps
+const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext }) => {
   const { profile, updateProfile, uploadAvatar } = useProfile();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -23,7 +24,7 @@ const PersonalInfoStep = () => {
       username: profile?.username || '',
       email: profile?.email || '',
       bio: profile?.bio || '',
-      phone: profile?.phone || ''
+      phone: profile?.phone || '' // Keep phone in form, just not sent to DB yet
     }
   });
 
@@ -41,16 +42,25 @@ const PersonalInfoStep = () => {
   const onSubmit = async (data: ProfileFormData) => {
     try {
       setIsSubmitting(true);
+      console.log("PersonalInfoStep onSubmit data:", data);
       
       await updateProfile(data);
       
+      let avatarUpdated = false;
       if (data.avatarFile && data.avatarFile instanceof File) {
-        await uploadAvatar(data.avatarFile);
+        const newAvatarUrl = await uploadAvatar(data.avatarFile);
+        if (newAvatarUrl) {
+          avatarUpdated = true;
+        }
       }
       
-      toast.success('Personal information updated successfully');
-    } catch (error) {
-      console.error('Error updating profile:', error);
+      toast.success('Personal information updated successfully!');
+      if (onNext) { // Call onNext if defined
+        onNext();
+      }
+    } catch (error: any) {
+      console.error('Error updating profile in PersonalInfoStep:', error);
+      toast.error(`Failed to update personal information: ${error.message || 'Please try again.'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -59,14 +69,11 @@ const PersonalInfoStep = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewImage(reader.result as string);
       };
       reader.readAsDataURL(file);
-      
-      // Set file for form submission
       setValue('avatarFile', file);
     }
   };
@@ -176,14 +183,15 @@ const PersonalInfoStep = () => {
           className="min-h-[120px]"
         />
       </div>
-
-      <Button 
-        type="submit" 
-        className="w-full md:w-auto"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? 'Saving...' : 'Save Personal Information'}
-      </Button>
+      <div className="flex justify-end space-x-2 mt-6">
+        <Button 
+          type="submit" 
+          className="w-full md:w-auto"
+          disabled={isSubmitting || !profile} // Disable if profile not loaded
+        >
+          {isSubmitting ? 'Saving...' : 'Save & Next'}
+        </Button>
+      </div>
     </form>
   );
 };
