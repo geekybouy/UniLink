@@ -75,9 +75,14 @@ const App: React.FC = () => {
                   <NetworkPage />
                 </ConnectionProvider>
               } />
-              <Route path="/alumni-directory" element={<AlumniDirectory />} /> {/* Added route */}
-              <Route path="/events" element={<EventsPage />} /> {/* Added route */}
-              <Route path="/jobs" element={<JobsListingPage />} /> {/* Added route */}
+              {/* Wrap /alumni-directory with ConnectionProvider too */}
+              <Route path="/alumni-directory" element={
+                <ConnectionProvider>
+                  <AlumniDirectory />
+                </ConnectionProvider>
+              } />
+              <Route path="/events" element={<EventsPage />} /> {/* Events route unchanged */}
+              <Route path="/jobs" element={<JobsListingPage />} /> {/* Jobs route unchanged */}
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/privacy-settings" element={<PrivacySettings />} />
               
