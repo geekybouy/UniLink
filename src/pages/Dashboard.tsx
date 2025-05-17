@@ -34,19 +34,23 @@ import {
 import { UpcomingEvents } from '@/components/dashboard/UpcomingEvents';
 import { ShieldCheck } from "lucide-react";
 import { Spinner } from '@/components/ui/spinner';
+import { toast } from 'sonner';
 
 const Dashboard: React.FC = () => {
   const { user, hasRole } = useAuth();
   const { profile, refreshProfile, loading } = useProfile();
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [profileLoadError, setProfileLoadError] = useState(false);
   
   useEffect(() => {
     const loadProfileData = async () => {
       setIsLoading(true);
+      setProfileLoadError(false);
       try {
         await refreshProfile();
       } catch (error) {
+        setProfileLoadError(true);
         console.error("Error fetching profile:", error);
       } finally {
         setIsLoading(false);
@@ -64,6 +68,46 @@ const Dashboard: React.FC = () => {
     
     checkAdminRole();
   }, [hasRole]);
+
+  // Show error if profile is missing or can't be loaded
+  if (!isLoading && (!profile || profileLoadError)) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[60vh]">
+          <Card className="p-8 shadow-lg max-w-lg w-full">
+            <CardHeader>
+              <CardTitle className="text-2xl font-semibold text-destructive">
+                Profile Not Found
+              </CardTitle>
+              <CardDescription className="text-muted-foreground mt-2">
+                Your profile could not be loaded. This may be due to a new account, missing data, or a temporary issue.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center">
+              <Button 
+                variant="destructive" 
+                className="mt-4"
+                onClick={async () => {
+                  setIsLoading(true);
+                  setProfileLoadError(false);
+                  try {
+                    await refreshProfile();
+                    toast.success("Retried profile loading. If you still see this, contact support.");
+                  } catch (e) {
+                    setProfileLoadError(true);
+                  } finally {
+                    setIsLoading(false);
+                  }
+                }}
+              >
+                Retry Profile Setup
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -92,7 +136,9 @@ const Dashboard: React.FC = () => {
               <CardDescription>
                 {isLoading
                   ? "Loading profile..."
-                  : `Here's a snapshot of your account.`}
+                  : profile
+                  ? `Here's a snapshot of your account.`
+                  : "Profile data unavailable."}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -190,3 +236,4 @@ const Dashboard: React.FC = () => {
 }
 
 export default Dashboard;
+
