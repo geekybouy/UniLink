@@ -4,11 +4,7 @@ import { Route } from 'react-router-dom';
 import KnowledgeBase from '../pages/KnowledgeHub';
 import PostDetails from '../pages/KnowledgePostDetail';
 
-const KnowledgeRoutes = () => (
-  <>
-    <Route path="/knowledge" element={<KnowledgeBase />} />
-    <Route path="/knowledge/:postId" element={<PostDetails />} />
-  </>
-);
-
-export default KnowledgeRoutes;
+export const knowledgeRoutes = [
+  <Route path="/knowledge" element={<KnowledgeBase />} key="knowledge-base" />,
+  <Route path="/knowledge/:postId" element={<PostDetails />} key="knowledge-details" />,
+];

@@ -15,30 +15,25 @@ import SettingsPage from '../pages/NotificationSettingsPage';
 import PrivacySettings from '../pages/PrivacySettings';
 import { ConnectionProvider } from '../contexts/ConnectionContext';
 
-const MainRoutes = () => (
-  <>
-    <Route path="/dashboard" element={<Dashboard />} />
-    <Route path="/profile" element={<ProfilePage />} />
-    <Route path="/edit-profile" element={<EditProfilePage />} />
-    <Route path="/credentials" element={<CredentialWallet />} />
-    <Route path="/share-credentials" element={<ShareCredentials />} />
-    <Route path="/shared/:shareId" element={<SharedCredentials />} />
-    {/* Wrap network and alumni-directory with ConnectionProvider */}
-    <Route path="/network" element={
-      <ConnectionProvider>
-        <NetworkPage />
-      </ConnectionProvider>
-    } />
-    <Route path="/alumni-directory" element={
-      <ConnectionProvider>
-        <AlumniDirectory />
-      </ConnectionProvider>
-    } />
-    <Route path="/events" element={<EventsPage />} />
-    <Route path="/jobs" element={<JobsListingPage />} />
-    <Route path="/settings" element={<SettingsPage />} />
-    <Route path="/privacy-settings" element={<PrivacySettings />} />
-  </>
-);
-
-export default MainRoutes;
+export const mainRoutes = [
+  <Route path="/dashboard" element={<Dashboard />} key="main-dashboard" />,
+  <Route path="/profile" element={<ProfilePage />} key="main-profile" />,
+  <Route path="/edit-profile" element={<EditProfilePage />} key="main-edit-profile" />,
+  <Route path="/credentials" element={<CredentialWallet />} key="main-credentials" />,
+  <Route path="/share-credentials" element={<ShareCredentials />} key="main-share-credentials" />,
+  <Route path="/shared/:shareId" element={<SharedCredentials />} key="main-shared" />,
+  <Route path="/network" element={
+    <ConnectionProvider>
+      <NetworkPage />
+    </ConnectionProvider>
+  } key="main-network" />,
+  <Route path="/alumni-directory" element={
+    <ConnectionProvider>
+      <AlumniDirectory />
+    </ConnectionProvider>
+  } key="main-alumni-directory" />,
+  <Route path="/events" element={<EventsPage />} key="main-events" />,
+  <Route path="/jobs" element={<JobsListingPage />} key="main-jobs" />,
+  <Route path="/settings" element={<SettingsPage />} key="main-settings" />,
+  <Route path="/privacy-settings" element={<PrivacySettings />} key="main-privacy-settings" />,
+];

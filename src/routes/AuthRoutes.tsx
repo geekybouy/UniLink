@@ -7,13 +7,10 @@ import RegisterPage from '../pages/auth/SignupPage';
 import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from '../pages/auth/ResetPasswordPage';
 
-const AuthRoutes = () => (
-  <>
-    <Route path="/" element={<LoginPage />} />
-    <Route path="/login" element={<LoginPage />} />
-    <Route path="/register" element={<RegisterPage />} />
-    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-    <Route path="/reset-password" element={<ResetPasswordPage />} />
-  </>
-);
-export default AuthRoutes;
+export const authRoutes = [
+  <Route path="/" element={<LoginPage />} key="auth-login-root" />,
+  <Route path="/login" element={<LoginPage />} key="auth-login" />,
+  <Route path="/register" element={<RegisterPage />} key="auth-register" />,
+  <Route path="/forgot-password" element={<ForgotPasswordPage />} key="auth-forgot" />,
+  <Route path="/reset-password" element={<ResetPasswordPage />} key="auth-reset" />,
+];

@@ -6,11 +6,11 @@ import { ProfileProvider } from './contexts/ProfileContext';
 import { KnowledgeProvider } from './contexts/KnowledgeContext';
 import { ThemeProvider } from './components/ui/theme-provider';
 
-import AuthRoutes from './routes/AuthRoutes';
-import MainRoutes from './routes/MainRoutes';
-import AdminRoutes from './routes/AdminRoutes';
-import KnowledgeRoutes from './routes/KnowledgeRoutes';
-import SystemRoutes from './routes/SystemRoutes';
+import { authRoutes } from './routes/AuthRoutes';
+import { mainRoutes } from './routes/MainRoutes';
+import { adminRoutes } from './routes/AdminRoutes';
+import { knowledgeRoutes } from './routes/KnowledgeRoutes';
+import { systemRoutes } from './routes/SystemRoutes';
 
 const App: React.FC = () => {
   return (
@@ -19,11 +19,11 @@ const App: React.FC = () => {
         <ProfileProvider>
           <KnowledgeProvider>
             <Routes>
-              <AuthRoutes />
-              <MainRoutes />
-              <KnowledgeRoutes />
-              <AdminRoutes />
-              <SystemRoutes />
+              {authRoutes}
+              {mainRoutes}
+              {knowledgeRoutes}
+              {adminRoutes}
+              {systemRoutes}
             </Routes>
           </KnowledgeProvider>
         </ProfileProvider>
@@ -33,4 +33,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
