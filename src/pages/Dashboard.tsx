@@ -36,13 +36,50 @@ import { ShieldCheck } from "lucide-react";
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
 
+// ProgressBar for loading state
+const ProgressBar = ({ progress }: { progress: number }) => (
+  <div className="w-full mt-2">
+    <div className="relative h-2 bg-muted rounded overflow-hidden">
+      <div
+        className="absolute left-0 top-0 h-2 bg-primary transition-all"
+        style={{ width: `${progress}%` }}
+      />
+    </div>
+    <div className="text-right text-xs text-muted-foreground mt-1">{progress}% loaded</div>
+  </div>
+);
+
 const Dashboard: React.FC = () => {
   const { user, hasRole } = useAuth();
   const { profile, refreshProfile, loading } = useProfile();
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [profileLoadError, setProfileLoadError] = useState(false);
-  
+
+  // NEW: simulated loading progress
+  const [loadingProgress, setLoadingProgress] = useState(0);
+
+  // Simulate incrementing progress bar during loading
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (isLoading) {
+      setLoadingProgress(0);
+      interval = setInterval(() => {
+        setLoadingProgress((prev) => {
+          // progress increases incrementally but slows as it approaches 90%
+          if (prev < 90) return prev + Math.floor(Math.random() * 6) + 5;  // increment 5~10%
+          return prev;
+        });
+      }, 250);
+    } else {
+      setLoadingProgress(100);
+      setTimeout(() => setLoadingProgress(0), 600); // reset after brief full bar
+    }
+
+    return () => interval && clearInterval(interval);
+  }, [isLoading]);
+
   useEffect(() => {
     const loadProfileData = async () => {
       setIsLoading(true);
@@ -65,34 +102,38 @@ const Dashboard: React.FC = () => {
       const admin = await hasRole('admin');
       setIsAdmin(admin);
     };
-    
+
     checkAdminRole();
   }, [hasRole]);
 
-  // Show error if profile is missing or can't be loaded
+  // Enhanced error state
   if (!isLoading && (!profile || profileLoadError)) {
     return (
       <MainLayout>
         <div className="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[60vh]">
-          <Card className="p-8 shadow-lg max-w-lg w-full">
+          <Card className="p-8 shadow-lg max-w-lg w-full animate-fade-in">
             <CardHeader>
               <CardTitle className="text-2xl font-semibold text-destructive">
-                Profile Not Found
+                Profile Not Found or Failed to Load
               </CardTitle>
-              <CardDescription className="text-muted-foreground mt-2">
-                Your profile could not be loaded. This may be due to a new account, missing data, or a temporary issue.
+              <CardDescription className="mt-2 text-muted-foreground">
+                We couldn't load your profile.<br />
+                This may be because you just created your account, data not yet available, or a network issue.<br />
+                <span className="text-xs block mt-2 text-destructive/70">
+                  (Error details are in console – check your internet connection or try again.)
+                </span>
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center">
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 className="mt-4"
                 onClick={async () => {
                   setIsLoading(true);
                   setProfileLoadError(false);
                   try {
                     await refreshProfile();
-                    toast.success("Retried profile loading. If you still see this, contact support.");
+                    toast.success("Retrying profile loading. If this fails, contact support.", { duration: 4000 });
                   } catch (e) {
                     setProfileLoadError(true);
                   } finally {
@@ -113,8 +154,18 @@ const Dashboard: React.FC = () => {
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-        
-        {isAdmin && (
+
+        {isLoading && (
+          <div className="mb-6 p-8 w-full flex flex-col items-center justify-center">
+            <Spinner size="lg" variant="primary" />
+            <ProgressBar progress={Math.min(loadingProgress, 99)} />
+            <div className="mt-3 text-muted-foreground text-base font-medium">
+              Loading your profile and dashboard&hellip;
+            </div>
+          </div>
+        )}
+
+        {!isLoading && isAdmin && (
           <div className="mb-6 p-4 border rounded-lg bg-accent/10">
             <div className="flex items-center">
               <ShieldCheck className="h-5 w-5 mr-2 text-primary" />
@@ -128,7 +179,7 @@ const Dashboard: React.FC = () => {
             </Button>
           </div>
         )}
-        
+
         <div className="grid gap-6">
           <Card>
             <CardHeader>
@@ -137,7 +188,7 @@ const Dashboard: React.FC = () => {
                 {isLoading
                   ? "Loading profile..."
                   : profile
-                  ? `Here's a snapshot of your account.`
+                  ? "Here's a snapshot of your account."
                   : "Profile data unavailable."}
               </CardDescription>
             </CardHeader>
@@ -168,7 +219,7 @@ const Dashboard: React.FC = () => {
               )}
             </CardContent>
           </Card>
-          
+
           <div className="grid gap-6 md:grid-cols-2">
             <div>
               <UpcomingEvents />
@@ -194,7 +245,7 @@ const Dashboard: React.FC = () => {
               </Card>
             </div>
           </div>
-          
+
           <Card>
             <CardHeader>
               <CardTitle>Account Settings</CardTitle>
@@ -236,4 +287,3 @@ const Dashboard: React.FC = () => {
 }
 
 export default Dashboard;
-
