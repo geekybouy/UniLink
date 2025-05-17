@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProfileProvider } from './contexts/ProfileContext';
 import { KnowledgeProvider } from './contexts/KnowledgeContext';
 import { ThemeProvider } from './components/ui/theme-provider';
+import { ConnectionProvider } from './contexts/ConnectionContext';
 
 // Updated import paths for auth pages
 import LoginPage from './pages/auth/LoginPage';
@@ -69,7 +69,12 @@ const App: React.FC = () => {
               <Route path="/credentials" element={<CredentialWallet />} />
               <Route path="/share-credentials" element={<ShareCredentials />} />
               <Route path="/shared/:shareId" element={<SharedCredentials />} />
-              <Route path="/network" element={<NetworkPage />} />
+              {/* Wrap /network route with ConnectionProvider */}
+              <Route path="/network" element={
+                <ConnectionProvider>
+                  <NetworkPage />
+                </ConnectionProvider>
+              } />
               <Route path="/alumni-directory" element={<AlumniDirectory />} /> {/* Added route */}
               <Route path="/events" element={<EventsPage />} /> {/* Added route */}
               <Route path="/jobs" element={<JobsListingPage />} /> {/* Added route */}
@@ -100,4 +105,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
