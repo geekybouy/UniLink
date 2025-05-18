@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -9,22 +10,21 @@ import { ProfileFormData } from '@/types/profile';
 import { useProfile } from '@/contexts/ProfileContext';
 import { toast } from 'sonner';
 import { User, Upload } from 'lucide-react';
-import { WizardStepProps } from './ProfileWizard'; // Import WizardStepProps
+import { WizardStepProps } from './ProfileWizard'; 
 
-// Update component to accept WizardStepProps
-const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext }) => {
-  const { profile, updateProfile, uploadAvatar } = useProfile();
+const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext, onStepSave }) => {
+  const { profile, uploadAvatar } = useProfile();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<ProfileFormData>({
+  const { register, handleSubmit, setValue, formState: { errors }, watch } = useForm<ProfileFormData>({
     defaultValues: {
       fullName: profile?.fullName || '',
       username: profile?.username || '',
       email: profile?.email || '',
       bio: profile?.bio || '',
-      phone: profile?.phone || '' // Keep phone in form, just not sent to DB yet
+      phone: profile?.phone || ''
     }
   });
 
@@ -40,26 +40,24 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext }) => {
   }, [profile, setValue]);
 
   const onSubmit = async (data: ProfileFormData) => {
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      console.log("PersonalInfoStep onSubmit data:", data);
-      
-      await updateProfile(data);
-      
-      let avatarUpdated = false;
+      let avatarUrl = profile?.avatarUrl || null;
       if (data.avatarFile && data.avatarFile instanceof File) {
         const newAvatarUrl = await uploadAvatar(data.avatarFile);
         if (newAvatarUrl) {
-          avatarUpdated = true;
+          avatarUrl = newAvatarUrl;
         }
       }
-      
+      // only fields that the backend expects
+      const saveData = {
+        ...data,
+        avatarUrl,
+      };
+      if (onStepSave) await onStepSave(saveData);
       toast.success('Personal information updated successfully!');
-      if (onNext) { // Call onNext if defined
-        onNext();
-      }
+      if (onNext) onNext();
     } catch (error: any) {
-      console.error('Error updating profile in PersonalInfoStep:', error);
       toast.error(`Failed to update personal information: ${error.message || 'Please try again.'}`);
     } finally {
       setIsSubmitting(false);
@@ -70,9 +68,7 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext }) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result as string);
-      };
+      reader.onloadend = () => setPreviewImage(reader.result as string);
       reader.readAsDataURL(file);
       setValue('avatarFile', file);
     }
@@ -92,17 +88,15 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext }) => {
               <User size={36} />
             </AvatarFallback>
           </Avatar>
-          
-          <Button 
-            type="button" 
-            variant="secondary" 
+          <Button
+            type="button"
+            variant="secondary"
             size="icon"
             className="absolute bottom-0 right-0 rounded-full h-10 w-10"
             onClick={triggerFileInput}
           >
             <Upload size={16} />
           </Button>
-          
           <input
             type="file"
             ref={fileInputRef}
@@ -112,7 +106,6 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext }) => {
           />
         </div>
       </div>
-      
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="fullName">Full Name *</Label>
@@ -125,12 +118,11 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext }) => {
             <p className="text-sm text-destructive">{errors.fullName.message}</p>
           )}
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="username">Username *</Label>
           <Input
             id="username"
-            {...register('username', { 
+            {...register('username', {
               required: 'Username is required',
               pattern: {
                 value: /^[a-zA-Z0-9_]+$/,
@@ -143,13 +135,12 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext }) => {
             <p className="text-sm text-destructive">{errors.username.message}</p>
           )}
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="email">Email Address *</Label>
           <Input
             id="email"
             type="email"
-            {...register('email', { 
+            {...register('email', {
               required: 'Email is required',
               pattern: {
                 value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
@@ -162,7 +153,6 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext }) => {
             <p className="text-sm text-destructive">{errors.email.message}</p>
           )}
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="phone">Phone Number</Label>
           <Input
@@ -173,7 +163,6 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext }) => {
           />
         </div>
       </div>
-
       <div className="space-y-2">
         <Label htmlFor="bio">About Me</Label>
         <Textarea
@@ -184,10 +173,10 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext }) => {
         />
       </div>
       <div className="flex justify-end space-x-2 mt-6">
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           className="w-full md:w-auto"
-          disabled={isSubmitting || !profile} // Disable if profile not loaded
+          disabled={isSubmitting}
         >
           {isSubmitting ? 'Saving...' : 'Save & Next'}
         </Button>
@@ -197,3 +186,4 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext }) => {
 };
 
 export default PersonalInfoStep;
+

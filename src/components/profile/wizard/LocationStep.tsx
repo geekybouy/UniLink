@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,22 +8,21 @@ import { Card } from '@/components/ui/card';
 import { MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { useProfile } from '@/contexts/ProfileContext';
-import { supabase } from '@/integrations/supabase/client';
 
 interface LocationFormData {
   location: string;
 }
 
-const LocationStep = ({ onPrevious, isFirstStep, isLastStep, onNext }) => {
-  const { profile, updateProfile } = useProfile();
+const LocationStep = ({ onPrevious, isFirstStep, isLastStep, onNext, onStepSave }) => {
+  const { profile } = useProfile();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<LocationFormData>({
     defaultValues: {
       location: profile?.location || ''
     }
   });
-  
+
   useEffect(() => {
     if (profile?.location) {
       setValue('location', profile.location);
@@ -30,11 +30,9 @@ const LocationStep = ({ onPrevious, isFirstStep, isLastStep, onNext }) => {
   }, [profile, setValue]);
 
   const onSubmit = async (data: LocationFormData) => {
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      
-      await updateProfile({ location: data.location });
-      
+      if (onStepSave) await onStepSave(data);
       toast.success('Location updated successfully');
       if (typeof onNext === "function") {
         onNext();
@@ -54,7 +52,6 @@ const LocationStep = ({ onPrevious, isFirstStep, isLastStep, onNext }) => {
           Add your location to connect with alumni and peers near you
         </p>
       </div>
-      
       <Card className="p-6">
         <div className="space-y-4">
           <div className="flex justify-center mb-4">
@@ -62,7 +59,6 @@ const LocationStep = ({ onPrevious, isFirstStep, isLastStep, onNext }) => {
               <MapPin className="h-8 w-8 text-primary" />
             </div>
           </div>
-          
           <div className="space-y-2">
             <Label htmlFor="location">City/Region</Label>
             <Input
@@ -74,13 +70,11 @@ const LocationStep = ({ onPrevious, isFirstStep, isLastStep, onNext }) => {
               <p className="text-sm text-destructive">{errors.location.message}</p>
             )}
           </div>
-          
           <p className="text-xs text-muted-foreground">
             This information helps UniLink connect you with alumni and peers in your area
           </p>
         </div>
       </Card>
-      
       <div className="flex justify-between pt-6">
         <Button
           type="button"
@@ -103,3 +97,4 @@ const LocationStep = ({ onPrevious, isFirstStep, isLastStep, onNext }) => {
 };
 
 export default LocationStep;
+
