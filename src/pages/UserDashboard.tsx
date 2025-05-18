@@ -5,6 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile, ProfileProvider } from "@/contexts/ProfileContext";
+import PersonalDetailsSection from "@/components/alumni-dashboard/PersonalDetailsSection";
+import AcademicHistorySection from "@/components/alumni-dashboard/AcademicHistorySection";
+import ProfessionalJourneySection from "@/components/alumni-dashboard/ProfessionalJourneySection";
+import SkillsSection from "@/components/alumni-dashboard/SkillsSection";
+import SocialLinksSection from "@/components/alumni-dashboard/SocialLinksSection";
+import NetworkingSection from "@/components/alumni-dashboard/NetworkingSection";
+import NotificationCenterSection from "@/components/alumni-dashboard/NotificationCenterSection";
+import ExportProfileButton from "@/components/alumni-dashboard/ExportProfileButton";
+import ProfileMetricsSection from "@/components/alumni-dashboard/ProfileMetricsSection";
 
 const CACHE_KEY = "user-dashboard-profile";
 
@@ -42,7 +51,6 @@ const ProfileSummary = ({ onEdit }: { onEdit: () => void }) => {
   }, [profile]);
 
   useEffect(() => {
-    // Always refresh real profile (cache is fallback only)
     refreshProfile().catch((e) => setError("Failed to load profile data."));
   }, [refreshProfile]);
 
@@ -87,7 +95,6 @@ const ProfileSummary = ({ onEdit }: { onEdit: () => void }) => {
     );
   }
 
-  // Data validation helpers
   const safe = (val: any, fallback: string = "Not specified") =>
     val === null || val === undefined || val === "" ? fallback : val;
 
@@ -95,99 +102,32 @@ const ProfileSummary = ({ onEdit }: { onEdit: () => void }) => {
     <div className="max-w-2xl mx-auto p-4 sm:p-8">
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-2xl text-primary">My Profile</CardTitle>
+          <CardTitle className="text-2xl text-primary">My Alumni Dashboard</CardTitle>
           <CardDescription>
             Last updated: {profile.updatedAt ? new Date(profile.updatedAt).toLocaleString() : "Unknown"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-2">
-            {/* Personal Details */}
-            <div>
-              <h4 className="text-lg font-semibold mb-1">Personal Details</h4>
-              <p><span className="font-medium">Name:</span> {safe(profile.fullName)}</p>
-              <p><span className="font-medium">Email:</span> {safe(profile.email)}</p>
-              <p><span className="font-medium">Username:</span> {safe(profile.username)}</p>
-              <p><span className="font-medium">Phone:</span> {safe(profile.phone)}</p>
-              <p><span className="font-medium">Location:</span> {safe(profile.location)}</p>
-            </div>
+            <PersonalDetailsSection profile={profile} safe={safe} />
             <div className="my-4 border-t border-border" />
-            {/* Education */}
-            <div>
-              <h4 className="text-lg font-semibold mb-1">Education</h4>
-              {Array.isArray(profile.education) && profile.education.length > 0 ? (
-                profile.education.map((edu, idx) => (
-                  <div key={edu.id ?? idx} className="mb-2">
-                    <p className="font-medium">{safe(edu.university)}, {safe(edu.degree)} in {safe(edu.field)}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {safe(edu.startYear)} –{" "}
-                      {edu.isCurrentlyStudying ? "Present" : safe(edu.endYear)}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-muted-foreground">No education records found.</p>
-              )}
-            </div>
+            <AcademicHistorySection profile={profile} safe={safe} />
             <div className="my-4 border-t border-border" />
-            {/* Experience */}
-            <div>
-              <h4 className="text-lg font-semibold mb-1">Work Experience</h4>
-              {Array.isArray(profile.workExperience) && profile.workExperience.length > 0 ? (
-                profile.workExperience.map((exp, idx) => (
-                  <div key={exp.id ?? idx} className="mb-2">
-                    <p className="font-medium">{safe(exp.position)} at {safe(exp.company)}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {safe(exp.startDate)} – {exp.isCurrentlyWorking ? "Present" : safe(exp.endDate)}
-                    </p>
-                    <p className="text-xs">{safe(exp.description)}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-muted-foreground">No work experience records found.</p>
-              )}
-            </div>
+            <ProfessionalJourneySection profile={profile} safe={safe} />
             <div className="my-4 border-t border-border" />
-            {/* Skills */}
-            <div>
-              <h4 className="text-lg font-semibold mb-1">Skills</h4>
-              <div className="flex flex-wrap gap-2">
-                {Array.isArray(profile.skills) && profile.skills.length > 0 ? (
-                  profile.skills.map((skill, idx) => (
-                    <span key={skill.id ?? idx} className="inline-block bg-accent text-accent-foreground px-2 py-1 rounded">
-                      {safe(skill.name)}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-muted-foreground">No skills added.</span>
-                )}
-              </div>
-            </div>
+            <SkillsSection profile={profile} safe={safe} />
             <div className="my-4 border-t border-border" />
-            {/* Social Links */}
-            <div>
-              <h4 className="text-lg font-semibold mb-1">Social Links</h4>
-              <div className="flex flex-col gap-1">
-                {Array.isArray(profile.socialLinks) && profile.socialLinks.length > 0 ? (
-                  profile.socialLinks.map((link, idx) => (
-                    <a
-                      key={link.id ?? idx}
-                      href={safe(link.url, "#")}
-                      className="text-blue-600 underline"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {safe(link.platform)}: {safe(link.url)}
-                    </a>
-                  ))
-                ) : (
-                  <span className="text-muted-foreground">No social links available.</span>
-                )}
-              </div>
-            </div>
+            <SocialLinksSection profile={profile} safe={safe} />
+            <div className="my-4 border-t border-border" />
+            <NetworkingSection />
+            <div className="my-4 border-t border-border" />
+            <ProfileMetricsSection />
+            <div className="my-4 border-t border-border" />
+            <NotificationCenterSection />
+            <div className="my-4 border-t border-border" />
+            <ExportProfileButton profile={profile} />
           </div>
           <div className="mt-8 flex flex-col items-center">
-            {/* Change variant from "primary" to "default" */}
             <Button onClick={onEdit} variant="default" className="w-full max-w-xs">Edit Profile</Button>
           </div>
         </CardContent>
