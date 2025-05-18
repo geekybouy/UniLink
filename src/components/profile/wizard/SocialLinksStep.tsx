@@ -298,6 +298,23 @@ const SocialLinksStep = () => {
           </div>
         )}
       </div>
+      
+      <div className="flex justify-between pt-6">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={typeof onPrevious === "function" ? onPrevious : undefined}
+          disabled={isFirstStep}
+        >
+          Previous
+        </Button>
+        <Button
+          type="button"
+          onClick={typeof onNext === "function" ? onNext : undefined}
+        >
+          Next
+        </Button>
+      </div>
     </div>
   );
 };

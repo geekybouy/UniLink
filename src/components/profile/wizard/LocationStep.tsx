@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,7 @@ interface LocationFormData {
   location: string;
 }
 
-const LocationStep = () => {
+const LocationStep = ({ onPrevious, isFirstStep, isLastStep, onNext }) => {
   const { profile, updateProfile } = useProfile();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -37,6 +36,9 @@ const LocationStep = () => {
       await updateProfile({ location: data.location });
       
       toast.success('Location updated successfully');
+      if (typeof onNext === "function") {
+        onNext();
+      }
     } catch (error: any) {
       toast.error('Failed to update location: ' + error.message);
     } finally {
@@ -79,13 +81,23 @@ const LocationStep = () => {
         </div>
       </Card>
       
-      <Button 
-        type="submit" 
-        className="w-full"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? 'Saving...' : 'Save Location'}
-      </Button>
+      <div className="flex justify-between pt-6">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={typeof onPrevious === "function" ? onPrevious : undefined}
+          disabled={isFirstStep}
+        >
+          Previous
+        </Button>
+        <Button
+          type="submit"
+          className="w-auto"
+          disabled={isSubmitting}
+        >
+          {isLastStep ? 'Finish' : (isSubmitting ? 'Saving...' : 'Next')}
+        </Button>
+      </div>
     </form>
   );
 };

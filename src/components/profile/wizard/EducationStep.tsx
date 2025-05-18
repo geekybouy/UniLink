@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -279,21 +278,22 @@ const EducationStep: React.FC<Partial<WizardStepProps>> = ({
       {/* Navigation Stepper for Wizard */}
       {(showPrevious || showNext) && (
         <div className="flex justify-between pt-6">
-          {showPrevious ? (
-            <Button type="button" variant="outline" onClick={onPrevious} disabled={isFirstStep}>
-              Previous
-            </Button>
-          ) : <div />}
-          {showNext ? (
-            <Button
-              type="button"
-              onClick={onNext}
-              disabled={educationList.length === 0}
-              variant="default"
-            >
-              Next
-            </Button>
-          ) : null}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onPrevious}
+            disabled={isFirstStep}
+          >
+            Previous
+          </Button>
+          <Button
+            type="button"
+            onClick={onNext}
+            disabled={educationList.length === 0}
+            variant="default"
+          >
+            Next
+          </Button>
         </div>
       )}
     </div>
@@ -301,4 +301,3 @@ const EducationStep: React.FC<Partial<WizardStepProps>> = ({
 };
 
 export default EducationStep;
-

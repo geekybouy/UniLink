@@ -23,7 +23,7 @@ interface WorkExperienceFormData {
   description: string;
 }
 
-const WorkExperienceStep = () => {
+const WorkExperienceStep = ({ onPrevious, onNext, isFirstStep }) => {
   const { profile, refreshProfile } = useProfile();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [workList, setWorkList] = useState<WorkExperience[]>([]);
@@ -285,6 +285,33 @@ const WorkExperienceStep = () => {
           </form>
         </Card>
       )}
+      
+      <div className="flex justify-between pt-6 gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={typeof onPrevious === "function" ? onPrevious : undefined}
+          disabled={isFirstStep}
+        >
+          Previous
+        </Button>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            onClick={typeof onNext === "function" ? onNext : undefined}
+            disabled={workList.length === 0}
+          >
+            Next
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={typeof onNext === "function" ? onNext : undefined}
+          >
+            Skip
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

@@ -10,7 +10,7 @@ import { Skill } from '@/types/profile';
 import { typedSupabaseClient } from '@/integrations/supabase/customClient';
 import { v4 as uuidv4 } from 'uuid';
 
-const SkillsStep = () => {
+const SkillsStep = ({ onPrevious, onNext, isFirstStep }) => {
   const { profile, refreshProfile } = useProfile();
   const [skills, setSkills] = useState<Skill[]>([]);
   const [newSkill, setNewSkill] = useState('');
@@ -158,6 +158,24 @@ const SkillsStep = () => {
             )
           ))}
         </div>
+      </div>
+      
+      <div className="flex justify-between pt-6">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={typeof onPrevious === "function" ? onPrevious : undefined}
+          disabled={isFirstStep}
+        >
+          Previous
+        </Button>
+        <Button
+          type="button"
+          onClick={typeof onNext === "function" ? onNext : undefined}
+          disabled={skills.length === 0}
+        >
+          Next
+        </Button>
       </div>
     </div>
   );

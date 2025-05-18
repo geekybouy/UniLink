@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card"; // Added CardHeader, CardContent, CardTitle, CardDescription
@@ -55,6 +54,7 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
   };
   
   const CurrentStepComponent = steps[currentStep].component;
+  const isFinalStep = currentStep === steps.length - 1;
   const progressPercentage = ((currentStep + 1) / steps.length) * 100;
 
   if (profileLoading) {
@@ -82,7 +82,7 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
             onNext={goToNextStep}
             onPrevious={goToPreviousStep}
             isFirstStep={currentStep === 0}
-            isLastStep={currentStep === steps.length - 1}
+            isLastStep={isFinalStep}
           />
         </CardContent>
       </Card>
