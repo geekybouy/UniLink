@@ -43,22 +43,35 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext, onStepSave }) => 
     try {
       let avatarUrl = profile?.avatarUrl || null;
       if (data.avatarFile && data.avatarFile instanceof File) {
-        // Upload avatar to new bucket
         const newAvatarUrl = await uploadAvatar(data.avatarFile);
         if (newAvatarUrl) {
           avatarUrl = newAvatarUrl;
         }
       }
-      // Save all fields to database
       const saveData = {
         ...data,
-        avatarUrl, // Add the (possibly new) avatarUrl to payload
+        avatarUrl,
       };
-      if (onStepSave) await onStepSave(saveData); // This updates the DB & context
+
+      if (onStepSave) {
+        try {
+          await onStepSave(saveData);
+        } catch (err: any) {
+          if (err?.message?.includes("Failed to fetch")) {
+            toast.error("Could not connect to the server (maybe session expired?).");
+          } else if (err?.message?.includes("User not authenticated")) {
+            toast.error("Session expired or not logged in. Please log out, then log in again.");
+          } else {
+            toast.error("Could not save your personal info: " + (err?.message || err));
+          }
+          setIsSubmitting(false);
+          return; // BLOCK onNext call!
+        }
+      }
       toast.success('Personal information updated successfully!');
       if (onNext) onNext();
     } catch (error: any) {
-      toast.error(`Failed to update personal information: ${error.message || 'Please try again.'}`);
+      toast.error(`Failed to update personal information: ${error?.message || 'Please try again.'}`);
     } finally {
       setIsSubmitting(false);
     }

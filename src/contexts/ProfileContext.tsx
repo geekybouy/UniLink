@@ -41,6 +41,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         
       if (profileError && profileError.code !== 'PGRST116') { 
         console.error('Error fetching profile data:', profileError);
+        toast.error(`Failed to fetch your profile: ${profileError.message || "Unknown DB error"}`);
         throw profileError;
       }
       
@@ -169,9 +170,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         };
         setProfile(userProfile);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Full error in fetchUserProfile:', error);
       setProfile(null); 
+      toast.error("Could not load your profile. Check your connection or try logging in again.");
     } finally {
       setLoading(false);
       console.log('fetchUserProfile finished, loading set to false.');
@@ -226,6 +228,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         
       if (error) {
         console.error('Supabase update error:', error);
+        toast.error(`Failed to save your profile: ${error.message || 'Unknown DB error.'}`);
         throw error;
       }
       
@@ -270,8 +273,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
-
-      // Use the new public bucket 'user-content'
       const { error: uploadError } = await supabase
         .storage
         .from('user-content')
@@ -282,6 +283,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
       if (uploadError) {
         console.error('Supabase storage upload error:', uploadError);
+        toast.error("Failed to upload photo: " + uploadError.message);
         throw uploadError;
       }
 
@@ -301,6 +303,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
       if (updateError) {
         console.error('Supabase profile update error for avatar_url:', updateError);
+        toast.error("Failed to save uploaded photo URL: " + updateError.message);
         throw updateError;
       }
 

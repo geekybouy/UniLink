@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
@@ -28,8 +29,7 @@ type StepComponentType = React.FC<WizardStepProps>;
 const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const { profile, loading: profileLoading, updateProfile } = useProfile();
-
-  const steps: { id: string; title: string; component: StepComponentType }[] = [
+  const steps = [
     { id: 'personal-info', title: 'Personal Information', component: PersonalInfoStep as StepComponentType },
     { id: 'education', title: 'Education', component: EducationStep as StepComponentType },
     { id: 'work-experience', title: 'Work Experience', component: WorkExperienceStep as StepComponentType },
@@ -38,30 +38,47 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
     { id: 'location', title: 'Location', component: LocationStep as StepComponentType },
   ];
 
-  // Maintain a per-step promise so parent waits for data save before moving steps
   const [stepSubmitting, setStepSubmitting] = useState(false);
 
-  // Save given step data, then move to next
+  // Block navigation if saving fails
   const handleStepSave = async (data: any) => {
     setStepSubmitting(true);
     try {
-      if (data) {
-        await updateProfile(data);
+      if (!data || typeof data !== "object") {
+        toast.error("Form data missing, please fill in all required fields.");
+        return Promise.reject(new Error("No data to save"));
       }
+      await updateProfile(data);
     } catch (e: any) {
-      toast.error("Error saving step data: " + (e?.message || e));
-    } finally {
+      // Decode error type for better UX
+      if (e?.message?.includes("Failed to fetch")) {
+        toast.error("Could not connect to the server. Check your network and login status.");
+      } else if (e?.message?.includes("User not authenticated")) {
+        toast.error("Your session expired or you are not logged in. Please log out, then log in again.");
+      } else {
+        toast.error("Error saving step data: " + (e?.message || e));
+      }
       setStepSubmitting(false);
+      // Propagate to child components so they can block onNext
+      throw e;
     }
+    setStepSubmitting(false);
   };
 
+  // Block advancing until save is successful
   const goToNextStep = async () => {
     if (stepSubmitting) return;
+    // Mark as ready to submit next step (for final step)
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // On final step, mark profile as complete in DB
-      await markProfileComplete();
+      try {
+        await markProfileComplete();
+      } catch (e: any) {
+        toast.error("Could not complete profile: " + (e?.message || e));
+        // Don't advance
+        return;
+      }
     }
   };
 
@@ -80,6 +97,7 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
       if (onComplete) onComplete();
     } catch (e: any) {
       toast.error("Error while finishing profile: " + (e?.message || e));
+      throw e;
     } finally {
       setStepSubmitting(false);
     }
@@ -93,9 +111,7 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
     );
   }
 
-  // The wizard step receives the onStepSave callback; step submits (or "Next"/"Finish" triggers its Form submit, which in turn saves via this prop)
   const CurrentStepComponent = steps[currentStep].component;
-  const isFinalStep = currentStep === steps.length - 1;
   const progressPercentage = ((currentStep + 1) / steps.length) * 100;
 
   return (
