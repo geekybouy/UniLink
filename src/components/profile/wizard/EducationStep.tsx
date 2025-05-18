@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -12,8 +13,6 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { Education } from '@/types/profile';
 import { typedSupabaseClient } from '@/integrations/supabase/customClient';
 import { v4 as uuidv4 } from 'uuid';
-
-// Add import for the step props type
 import { WizardStepProps } from './ProfileWizard';
 
 interface EducationFormData {
@@ -25,17 +24,24 @@ interface EducationFormData {
   isCurrentlyStudying: boolean;
 }
 
-// Accept WizardStepProps, but let the component work standalone for edit
 const EducationStep: React.FC<Partial<WizardStepProps>> = ({
   onPrevious,
   onNext,
   isFirstStep = false,
-  isLastStep = false
+  isLastStep = false,
+  onStepSave
 }) => {
   const { profile, refreshProfile } = useProfile();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [educationList, setEducationList] = useState<Education[]>([]);
   const [isAdding, setIsAdding] = useState(false);
+
+  // Ensure stable step
+  useEffect(() => {
+    if (profile?.education) {
+      setEducationList(profile.education);
+    }
+  }, [profile]);
 
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<EducationFormData>({
     defaultValues: {
@@ -50,12 +56,6 @@ const EducationStep: React.FC<Partial<WizardStepProps>> = ({
 
   const isCurrentlyStudying = watch('isCurrentlyStudying');
 
-  useEffect(() => {
-    if (profile?.education) {
-      setEducationList(profile.education);
-    }
-  }, [profile]);
-
   const yearOptions = () => {
     const currentYear = new Date().getFullYear();
     const years = [];
@@ -66,10 +66,14 @@ const EducationStep: React.FC<Partial<WizardStepProps>> = ({
   };
 
   const handleAdd = async (data: EducationFormData) => {
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
       if (!profile) {
         toast.error('User profile not found');
+        return;
+      }
+      if (!data.university || !data.degree || !data.field || !data.startYear || (!isCurrentlyStudying && !data.endYear)) {
+        toast.error('Please fill out all required fields');
         return;
       }
       const newEducation: Education = {
@@ -92,13 +96,14 @@ const EducationStep: React.FC<Partial<WizardStepProps>> = ({
         is_currently_studying: newEducation.isCurrentlyStudying
       });
       if (error) throw error;
-      setEducationList([...educationList, newEducation]);
+      setEducationList(prev => [...prev, newEducation]);
       setIsAdding(false);
       reset();
       await refreshProfile();
       toast.success('Education added successfully');
     } catch (error: any) {
       toast.error('Failed to add education: ' + error.message);
+      console.error("Add Education Error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -117,15 +122,10 @@ const EducationStep: React.FC<Partial<WizardStepProps>> = ({
     }
   };
 
-  const handleStartYearChange = (value: string) => {
-    setValue('startYear', parseInt(value));
-  };
+  const handleStartYearChange = (value: string) => setValue('startYear', parseInt(value));
+  const handleEndYearChange = (value: string) => setValue('endYear', parseInt(value));
 
-  const handleEndYearChange = (value: string) => {
-    setValue('endYear', parseInt(value));
-  };
-
-  // New: add next/previous nav buttons below add/cancel/add-education form
+  // Navigation
   const showNext = typeof onNext === 'function';
   const showPrevious = typeof onPrevious === 'function';
 
@@ -173,7 +173,9 @@ const EducationStep: React.FC<Partial<WizardStepProps>> = ({
         <Button
           className="w-full"
           variant="outline"
+          type="button"
           onClick={() => setIsAdding(true)}
+          data-testid="add-education-btn"
         >
           <Plus className="mr-2 h-4 w-4" /> Add Education
         </Button>
@@ -301,3 +303,4 @@ const EducationStep: React.FC<Partial<WizardStepProps>> = ({
 };
 
 export default EducationStep;
+

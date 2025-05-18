@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -29,7 +30,6 @@ const ProfilePage = () => {
       navigate('/login');
       return;
     }
-    
     setIsLoading(false);
   }, [user, navigate]);
 
@@ -40,9 +40,7 @@ const ProfilePage = () => {
   const handleWizardComplete = async () => {
     setShowWizard(false);
     toast.success("Profile updated successfully!");
-    // Consider calling a refreshProfile function from context if available
-    // For a more robust solution, context should handle re-fetching.
-    // window.location.reload(); // This is generally not ideal
+    navigate('/profile'); // Always redirect to profile after completion
   };
 
   if (isLoading) {
@@ -64,7 +62,7 @@ const ProfilePage = () => {
 
   return (
     <ProfileProvider>
-      <ProfileContent 
+      <ProfileContent
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onEditProfile={handleEditProfile}
@@ -73,9 +71,8 @@ const ProfilePage = () => {
   );
 };
 
-// Separate component to use the ProfileContext
-const ProfileContent = ({ 
-  activeTab, 
+const ProfileContent = ({
+  activeTab,
   setActiveTab,
   onEditProfile
 }: {
@@ -88,15 +85,14 @@ const ProfileContent = ({
 
   useEffect(() => {
     if (!profileLoading && profile && !profile.isProfileComplete) {
-      const wizardJustCompleted = sessionStorage.getItem('wizardCompleted');
-      if (!wizardJustCompleted) {
-        toast.info("Please complete your profile to access all features.");
-        onEditProfile(); 
-      } else {
-        sessionStorage.removeItem('wizardCompleted');
-      }
+      toast.info("Please complete your profile to access all features.");
+      onEditProfile();
     }
   }, [profile, profileLoading, onEditProfile]);
+
+  useEffect(() => {
+    refreshProfile();
+  }, [refreshProfile]); // Always fetch latest profile info on load
 
   if (profileLoading) {
     return (
@@ -132,8 +128,8 @@ const ProfileContent = ({
       <nav className="fixed top-0 w-full bg-background/95 backdrop-blur-sm shadow-sm z-50 border-b border-border/60">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <h1 className="text-2xl font-playfair text-primary font-bold">UniLink</h1>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onClick={onEditProfile}
             className="border-primary text-primary hover:bg-primary/10"
@@ -142,16 +138,14 @@ const ProfileContent = ({
           </Button>
         </div>
       </nav>
-
       <main className="container mx-auto px-4 pt-24">
-        <ProfileHeader 
-          isEditing={isEditing} 
+        <ProfileHeader
+          isEditing={isEditing}
           setIsEditing={setIsEditing}
           isOwnProfile={true}
         />
-        
         <div className="mt-8">
-          <Tabs 
+          <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
             className="w-full"
@@ -170,7 +164,6 @@ const ProfileContent = ({
                 Contact
               </TabsTrigger>
             </TabsList>
-            
             <ScrollArea className="h-[calc(100vh-20rem)] mt-6">
               <TabsContent value="overview" className="space-y-6">
                 <AboutSection isEditing={isEditing} />
@@ -186,7 +179,7 @@ const ProfileContent = ({
                     <div>
                       <h4 className="text-sm font-medium text-muted-foreground">Current Position</h4>
                       <p className="text-sm text-foreground">
-                        {profile.job_title && profile.current_company 
+                        {profile.job_title && profile.current_company
                           ? `${profile.job_title} at ${profile.current_company}`
                           : 'Not specified'}
                       </p>
@@ -198,26 +191,23 @@ const ProfileContent = ({
                     <div>
                       <h4 className="text-sm font-medium text-muted-foreground">Member Since</h4>
                       <p className="text-sm text-foreground">
-                        {profile.createdAt 
-                          ? new Date(profile.createdAt).toLocaleDateString('en-US', { 
-                              year: 'numeric', 
-                              month: 'long' 
-                            })
+                        {profile.createdAt
+                          ? new Date(profile.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long'
+                          })
                           : 'Unknown'}
                       </p>
                     </div>
                   </CardContent>
                 </Card>
               </TabsContent>
-              
               <TabsContent value="education" className="space-y-6">
                 <EducationSection isEditing={isEditing} />
               </TabsContent>
-              
               <TabsContent value="experience" className="space-y-6">
                 <WorkSection isEditing={isEditing} />
               </TabsContent>
-              
               <TabsContent value="contact" className="space-y-6">
                 <ContactInfo isEditing={isEditing} />
               </TabsContent>
@@ -225,10 +215,10 @@ const ProfileContent = ({
           </Tabs>
         </div>
       </main>
-
       <BottomNav />
     </div>
   );
 };
 
 export default ProfilePage;
+
