@@ -12,6 +12,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { useNavigate } from 'react-router-dom';
+import ErrorBoundary from "@/components/ErrorBoundary"; // <-- FIX: Import custom ErrorBoundary
 
 interface ProfileWizardProps {
   onComplete?: () => void;
@@ -27,36 +28,7 @@ export interface WizardStepProps {
 
 type StepComponentType = React.FC<WizardStepProps>;
 
-// Error Boundary as a component
-function WizardErrorBoundary({ children }: { children: React.ReactNode }) {
-  const [error, setError] = useState<null | Error>(null);
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md w-full p-6">
-          <CardTitle className="text-destructive">An error occurred</CardTitle>
-          <CardContent>
-            <p>{error.message}</p>
-            <Button onClick={() => window.location.reload()}>Reload Page</Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Catch errors below
-  return (
-    <React.ErrorBoundary
-      fallbackRender={({ error }) => {
-        setError(error);
-        return null;
-      }}
-    >
-      {children}
-    </React.ErrorBoundary>
-  );
-}
+// REMOVE the WizardErrorBoundary component since it is not needed when using ErrorBoundary
 
 const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -134,9 +106,9 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
   const CurrentStepComponent = steps[currentStep].component;
   const progressPercentage = ((currentStep + 1) / steps.length) * 100;
 
-  // Wrap wizard with error boundary to prevent white screens
+  // FIX: Wrap main wizard with the correct ErrorBoundary component
   return (
-    <WizardErrorBoundary>
+    <ErrorBoundary>
       <div className="min-h-screen bg-gradient-to-br from-primary/5 to-background flex items-center justify-center p-4">
         <Card className="w-full max-w-2xl p-6 sm:p-8 space-y-6 shadow-xl border-border/50">
           <CardHeader className="text-center p-0 mb-4">
@@ -157,8 +129,9 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
           </CardContent>
         </Card>
       </div>
-    </WizardErrorBoundary>
+    </ErrorBoundary>
   );
 };
 
 export default ProfileWizard;
+
