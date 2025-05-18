@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,9 @@ import { Education } from '@/types/profile';
 import { typedSupabaseClient } from '@/integrations/supabase/customClient';
 import { v4 as uuidv4 } from 'uuid';
 
+// Add import for the step props type
+import { WizardStepProps } from './ProfileWizard';
+
 interface EducationFormData {
   university: string;
   degree: string;
@@ -22,12 +26,18 @@ interface EducationFormData {
   isCurrentlyStudying: boolean;
 }
 
-const EducationStep = () => {
+// Accept WizardStepProps, but let the component work standalone for edit
+const EducationStep: React.FC<Partial<WizardStepProps>> = ({
+  onPrevious,
+  onNext,
+  isFirstStep = false,
+  isLastStep = false
+}) => {
   const { profile, refreshProfile } = useProfile();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [educationList, setEducationList] = useState<Education[]>([]);
   const [isAdding, setIsAdding] = useState(false);
-  
+
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<EducationFormData>({
     defaultValues: {
       university: '',
@@ -38,9 +48,9 @@ const EducationStep = () => {
       isCurrentlyStudying: false
     }
   });
-  
+
   const isCurrentlyStudying = watch('isCurrentlyStudying');
-  
+
   useEffect(() => {
     if (profile?.education) {
       setEducationList(profile.education);
@@ -50,23 +60,19 @@ const EducationStep = () => {
   const yearOptions = () => {
     const currentYear = new Date().getFullYear();
     const years = [];
-    
     for (let year = currentYear - 50; year <= currentYear + 10; year++) {
       years.push(year);
     }
-    
     return years;
   };
-  
+
   const handleAdd = async (data: EducationFormData) => {
     try {
       setIsSubmitting(true);
-      
       if (!profile) {
         toast.error('User profile not found');
         return;
       }
-      
       const newEducation: Education = {
         id: uuidv4(),
         university: data.university,
@@ -76,7 +82,6 @@ const EducationStep = () => {
         endYear: data.isCurrentlyStudying ? null : data.endYear,
         isCurrentlyStudying: data.isCurrentlyStudying
       };
-      
       // Add to database
       const { error } = await typedSupabaseClient.education.insert({
         user_id: profile.userId,
@@ -87,17 +92,11 @@ const EducationStep = () => {
         end_year: newEducation.endYear,
         is_currently_studying: newEducation.isCurrentlyStudying
       });
-      
       if (error) throw error;
-      
-      // Update local state
       setEducationList([...educationList, newEducation]);
       setIsAdding(false);
       reset();
-      
-      // Refresh profile data
       await refreshProfile();
-      
       toast.success('Education added successfully');
     } catch (error: any) {
       toast.error('Failed to add education: ' + error.message);
@@ -105,36 +104,32 @@ const EducationStep = () => {
       setIsSubmitting(false);
     }
   };
-  
+
   const handleDelete = async (id: string) => {
     try {
       if (!profile) return;
-      
-      // Delete from database
       const { error } = await typedSupabaseClient.education.delete(id);
-        
       if (error) throw error;
-      
-      // Update local state
       setEducationList(educationList.filter(edu => edu.id !== id));
-      
-      // Refresh profile
       await refreshProfile();
-      
       toast.success('Education removed');
     } catch (error: any) {
       toast.error('Failed to remove education: ' + error.message);
     }
   };
-  
+
   const handleStartYearChange = (value: string) => {
     setValue('startYear', parseInt(value));
   };
-  
+
   const handleEndYearChange = (value: string) => {
     setValue('endYear', parseInt(value));
   };
-  
+
+  // New: add next/previous nav buttons below add/cancel/add-education form
+  const showNext = typeof onNext === 'function';
+  const showPrevious = typeof onPrevious === 'function';
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-4">
@@ -174,11 +169,11 @@ const EducationStep = () => {
           </div>
         )}
       </div>
-      
+
       {!isAdding ? (
-        <Button 
+        <Button
           className="w-full"
-          variant="outline" 
+          variant="outline"
           onClick={() => setIsAdding(true)}
         >
           <Plus className="mr-2 h-4 w-4" /> Add Education
@@ -196,7 +191,6 @@ const EducationStep = () => {
                 <p className="text-sm text-destructive">{errors.university.message}</p>
               )}
             </div>
-            
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="degree">Degree *</Label>
@@ -209,7 +203,6 @@ const EducationStep = () => {
                   <p className="text-sm text-destructive">{errors.degree.message}</p>
                 )}
               </div>
-              
               <div className="space-y-2">
                 <Label htmlFor="field">Field of Study *</Label>
                 <Input
@@ -222,7 +215,6 @@ const EducationStep = () => {
                 )}
               </div>
             </div>
-            
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="startYear">Start Year *</Label>
@@ -231,7 +223,7 @@ const EducationStep = () => {
                     <SelectValue placeholder="Select year" />
                   </SelectTrigger>
                   <SelectContent>
-                    {yearOptions().map((year) => (
+                    {yearOptions().map(year => (
                       <SelectItem key={`start-${year}`} value={year.toString()}>
                         {year}
                       </SelectItem>
@@ -239,7 +231,6 @@ const EducationStep = () => {
                   </SelectContent>
                 </Select>
               </div>
-              
               {!isCurrentlyStudying && (
                 <div className="space-y-2">
                   <Label htmlFor="endYear">End Year *</Label>
@@ -248,7 +239,7 @@ const EducationStep = () => {
                       <SelectValue placeholder="Select year" />
                     </SelectTrigger>
                     <SelectContent>
-                      {yearOptions().map((year) => (
+                      {yearOptions().map(year => (
                         <SelectItem key={`end-${year}`} value={year.toString()}>
                           {year}
                         </SelectItem>
@@ -258,26 +249,24 @@ const EducationStep = () => {
                 </div>
               )}
             </div>
-            
             <div className="flex items-center space-x-2">
-              <Switch 
-                id="isCurrentlyStudying" 
+              <Switch
+                id="isCurrentlyStudying"
                 checked={isCurrentlyStudying}
-                onCheckedChange={(checked) => setValue('isCurrentlyStudying', checked)}
+                onCheckedChange={checked => setValue('isCurrentlyStudying', checked)}
               />
               <Label htmlFor="isCurrentlyStudying">I am currently studying here</Label>
             </div>
-            
             <div className="flex justify-end space-x-2">
-              <Button 
-                type="button" 
-                variant="ghost" 
+              <Button
+                type="button"
+                variant="ghost"
                 onClick={() => setIsAdding(false)}
               >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Adding...' : 'Add Education'}
@@ -286,8 +275,30 @@ const EducationStep = () => {
           </form>
         </Card>
       )}
+
+      {/* Navigation Stepper for Wizard */}
+      {(showPrevious || showNext) && (
+        <div className="flex justify-between pt-6">
+          {showPrevious ? (
+            <Button type="button" variant="outline" onClick={onPrevious} disabled={isFirstStep}>
+              Previous
+            </Button>
+          ) : <div />}
+          {showNext ? (
+            <Button
+              type="button"
+              onClick={onNext}
+              disabled={educationList.length === 0}
+              variant="default"
+            >
+              Next
+            </Button>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 };
 
 export default EducationStep;
+
