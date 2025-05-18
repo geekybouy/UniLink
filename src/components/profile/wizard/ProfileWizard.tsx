@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
@@ -61,6 +60,7 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
+      // On final step, mark profile as complete in DB
       await markProfileComplete();
     }
   };
@@ -123,4 +123,3 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
 };
 
 export default ProfileWizard;
-

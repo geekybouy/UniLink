@@ -263,58 +263,58 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const errorMsg = 'User not authenticated or profile not loaded for avatar upload.';
       console.error(errorMsg);
       toast.error(errorMsg);
-      return null; 
+      return null;
     }
     
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
-      
-      console.log(`Uploading avatar to: user-content/${filePath}`);
+
+      // Use the new public bucket 'user-content'
       const { error: uploadError } = await supabase
         .storage
-        .from('user-content') 
+        .from('user-content')
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: true, 
+          upsert: true,
         });
-        
+
       if (uploadError) {
         console.error('Supabase storage upload error:', uploadError);
         throw uploadError;
       }
-      
+
       const { data: publicUrlData } = supabase
         .storage
         .from('user-content')
         .getPublicUrl(filePath);
-        
+
       const avatarUrl = publicUrlData.publicUrl;
       console.log("Avatar public URL:", avatarUrl);
-      
-      // The updated_at column will be handled by the database trigger
+
+      // Save avatar url in database
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: avatarUrl })
         .eq('user_id', user.id);
-        
+
       if (updateError) {
         console.error('Supabase profile update error for avatar_url:', updateError);
         throw updateError;
       }
-      
+
       setProfile(prev => {
         if (!prev) return null;
         return { ...prev, avatarUrl, updatedAt: new Date().toISOString() };
       });
-      
+
       toast.success('Avatar uploaded successfully!');
       return avatarUrl;
     } catch (error: any) {
       console.error('Failed to upload avatar in ProfileContext:', error);
       toast.error(`Failed to upload avatar: ${error.message || 'An unexpected error occurred.'}`);
-      return null; 
+      return null;
     }
   };
 

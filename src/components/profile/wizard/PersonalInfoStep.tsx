@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -44,17 +43,18 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext, onStepSave }) => 
     try {
       let avatarUrl = profile?.avatarUrl || null;
       if (data.avatarFile && data.avatarFile instanceof File) {
+        // Upload avatar to new bucket
         const newAvatarUrl = await uploadAvatar(data.avatarFile);
         if (newAvatarUrl) {
           avatarUrl = newAvatarUrl;
         }
       }
-      // only fields that the backend expects
+      // Save all fields to database
       const saveData = {
         ...data,
-        avatarUrl,
+        avatarUrl, // Add the (possibly new) avatarUrl to payload
       };
-      if (onStepSave) await onStepSave(saveData);
+      if (onStepSave) await onStepSave(saveData); // This updates the DB & context
       toast.success('Personal information updated successfully!');
       if (onNext) onNext();
     } catch (error: any) {
@@ -186,4 +186,3 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext, onStepSave }) => 
 };
 
 export default PersonalInfoStep;
-
