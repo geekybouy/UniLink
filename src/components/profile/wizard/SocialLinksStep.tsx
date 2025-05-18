@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -12,12 +13,19 @@ import { SocialLink } from '@/types/profile';
 import { typedSupabaseClient } from '@/integrations/supabase/customClient';
 import { v4 as uuidv4 } from 'uuid';
 
+// Add wizard step props
+interface WizardStepProps {
+  onNext: () => void;
+  onPrevious: () => void;
+  isFirstStep: boolean;
+  isLastStep: boolean;
+}
 interface SocialLinkFormData {
   platform: 'linkedin' | 'github' | 'twitter' | 'website' | 'other';
   url: string;
 }
 
-const SocialLinksStep = () => {
+const SocialLinksStep: React.FC<WizardStepProps> = ({ onPrevious, onNext, isFirstStep, isLastStep }) => {
   const { profile, refreshProfile } = useProfile();
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -303,16 +311,16 @@ const SocialLinksStep = () => {
         <Button
           type="button"
           variant="outline"
-          onClick={typeof onPrevious === "function" ? onPrevious : undefined}
+          onClick={onPrevious}
           disabled={isFirstStep}
         >
           Previous
         </Button>
         <Button
           type="button"
-          onClick={typeof onNext === "function" ? onNext : undefined}
+          onClick={onNext}
         >
-          Next
+          {isLastStep ? "Finish" : "Next"}
         </Button>
       </div>
     </div>
