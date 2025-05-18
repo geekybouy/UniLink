@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -188,7 +187,8 @@ const ProfileSummary = ({ onEdit }: { onEdit: () => void }) => {
             </div>
           </div>
           <div className="mt-8 flex flex-col items-center">
-            <Button onClick={onEdit} variant="primary" className="w-full max-w-xs">Edit Profile</Button>
+            {/* Change variant from "primary" to "default" */}
+            <Button onClick={onEdit} variant="default" className="w-full max-w-xs">Edit Profile</Button>
           </div>
         </CardContent>
       </Card>
@@ -197,14 +197,14 @@ const ProfileSummary = ({ onEdit }: { onEdit: () => void }) => {
 };
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth(); // Change "loading" to "isLoading"
   const navigate = useNavigate();
   useEffect(() => {
-    if (!loading && !user) {
+    if (!isLoading && !user) {
       navigate("/login");
     }
-  }, [user, loading, navigate]);
-  if (loading) {
+  }, [user, isLoading, navigate]);
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Spinner size="lg" />
