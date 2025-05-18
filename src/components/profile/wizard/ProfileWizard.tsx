@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
@@ -78,7 +77,7 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
         await updateProfile({ isProfileComplete: true });
         toast.success("Profile completed successfully!");
         if (onComplete) onComplete();
-        navigate('/profile'); // <<< IMMEDIATE REDIRECT AFTER FINISH!
+        navigate('/user-dashboard'); // <--- FIX: redirect to UserDashboard!
       } catch (e: any) {
         toast.error("Could not complete profile: " + (e?.message || e));
         setStepSubmitting(false);
@@ -134,4 +133,3 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
 };
 
 export default ProfileWizard;
-

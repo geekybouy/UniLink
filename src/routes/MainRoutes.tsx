@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Route } from 'react-router-dom';
 import Dashboard from '../pages/Dashboard';
@@ -14,6 +13,7 @@ import JobsListingPage from '../pages/JobsListingPage';
 import SettingsPage from '../pages/NotificationSettingsPage';
 import PrivacySettings from '../pages/PrivacySettings';
 import { ConnectionProvider } from '../contexts/ConnectionContext';
+import UserDashboardPage from '../pages/UserDashboard';
 
 export const mainRoutes = [
   <Route path="/dashboard" element={<Dashboard />} key="main-dashboard" />,
@@ -36,4 +36,5 @@ export const mainRoutes = [
   <Route path="/jobs" element={<JobsListingPage />} key="main-jobs" />,
   <Route path="/settings" element={<SettingsPage />} key="main-settings" />,
   <Route path="/privacy-settings" element={<PrivacySettings />} key="main-privacy-settings" />,
+  <Route path="/user-dashboard" element={<UserDashboardPage />} key="main-user-dashboard" />,
 ];
