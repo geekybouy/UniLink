@@ -1,4 +1,3 @@
-
 export interface Education {
   id: string;
   university: string;
@@ -80,4 +79,5 @@ export interface ProfileFormData {
   location?: string;
   registrationNumber?: string;
   avatarFile?: File | null;
+  isProfileComplete?: boolean;
 }
