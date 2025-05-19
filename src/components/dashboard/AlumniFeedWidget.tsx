@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Feed } from "lucide-react";
+import { Newspaper } from "lucide-react";
 
 // Placeholder posts
 const mockPosts = [
@@ -22,7 +22,7 @@ const mockPosts = [
 const AlumniFeedWidget = () => (
   <Card className="shadow-soft rounded-xl">
     <CardHeader className="flex flex-row items-center gap-2 pb-3">
-      <Feed className="w-5 h-5 text-primary" />
+      <Newspaper className="w-5 h-5 text-primary" />
       <CardTitle className="text-lg font-semibold tracking-tight">Alumni Feed</CardTitle>
     </CardHeader>
     <CardContent>
@@ -46,3 +46,4 @@ const AlumniFeedWidget = () => (
 );
 
 export default AlumniFeedWidget;
+
