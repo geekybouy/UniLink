@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react'; // FIX: add useState import
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,16 +9,19 @@ import { useForm } from 'react-hook-form';
 import { useProfile } from '@/contexts/ProfileContext';
 import { toast } from 'sonner';
 
+// Define explicit type for work experience entry
+type WorkExperienceEntry = {
+  company: string;
+  position: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+};
+
 const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onStepSave }: WizardStepProps) => {
   const { profile } = useProfile();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [workExperiences, setWorkExperiences] = useState<Array<{
-    company: string;
-    position: string;
-    startDate: string;
-    endDate: string;
-    description: string;
-  }>>([
+  const [workExperiences, setWorkExperiences] = useState<WorkExperienceEntry[]>([
     {
       company: '',
       position: '',
@@ -57,7 +59,7 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
     }
   };
 
-  const handleWorkExperienceChange = (index: number, field: string, value: string) => {
+  const handleWorkExperienceChange = (index: number, field: keyof WorkExperienceEntry, value: string) => {
     const updatedExperiences = [...workExperiences];
     updatedExperiences[index] = {
       ...updatedExperiences[index],

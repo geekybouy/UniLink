@@ -44,14 +44,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (profileData) {
         setProfile({
           id: profileData.id,
-          name: profileData.name,
-          username: profileData.username,
-          email: profileData.email,
+          name: profileData.full_name || "", // Support both full_name and name
+          username: profileData.username || "",
+          email: profileData.email || "",
           phone_number: profileData.phone_number ?? null,
           bio: profileData.bio ?? null,
           location: profileData.location ?? null,
           is_profile_complete: profileData.is_profile_complete ?? false,
-          profile_image_url: profileData.profile_image_url ?? null,
+          profile_image_url: profileData.avatar_url ?? null, // avatar_url from DB, map to profile_image_url in app
           created_at: profileData.created_at,
           updated_at: profileData.updated_at,
         });
@@ -82,7 +82,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
     try {
       const updateData: Record<string, any> = {};
-      if (data.name !== undefined) updateData.name = data.name;
+      if (data.name !== undefined) updateData.full_name = data.name; // Map 'name' => 'full_name'
       if (data.username !== undefined) updateData.username = data.username;
       if (data.email !== undefined) updateData.email = data.email;
       if (data.bio !== undefined) updateData.bio = data.bio;
