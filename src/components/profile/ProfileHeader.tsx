@@ -11,13 +11,13 @@ interface ProfileHeaderProps {
   isOwnProfile?: boolean;
 }
 
-const ProfileHeader = ({ 
-  isEditing, 
+const ProfileHeader = ({
+  isEditing,
   setIsEditing,
-  isOwnProfile = true
+  isOwnProfile = true,
 }: ProfileHeaderProps) => {
   const { profile } = useProfile();
-  
+
   if (!profile) {
     return (
       <div className="flex flex-col items-center text-center animate-pulse">
@@ -40,13 +40,13 @@ const ProfileHeader = ({
   return (
     <div className="flex flex-col items-center text-center">
       <Avatar className="h-32 w-32">
-        <AvatarImage src={profile.avatarUrl || ''} alt={profile.fullName} />
+        <AvatarImage src={profile.profile_image_url || ''} alt={profile.name} />
         <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-          {getInitials(profile.fullName)}
+          {profile.name ? getInitials(profile.name) : "U"}
         </AvatarFallback>
       </Avatar>
       <div className="mt-4 flex items-center gap-2">
-        <h2 className="text-2xl font-bold">{profile.fullName}</h2>
+        <h2 className="text-2xl font-bold">{profile.name}</h2>
         {isOwnProfile && (
           <Button
             variant="ghost"
@@ -60,13 +60,17 @@ const ProfileHeader = ({
         )}
       </div>
       <p className="text-muted-foreground">
-        {profile.university && `${profile.university}`}
-        {profile.university && profile.graduationYear && `, `}
-        {profile.graduationYear && `Class of ${profile.graduationYear}`}
+        @{profile.username}
       </p>
-      {profile.job_title && profile.current_company && (
+      <p className="text-sm text-muted-foreground mt-1">
+        {profile.email}
+      </p>
+      <p className="text-sm text-muted-foreground mt-1">
+        {profile.location || "Location not specified."}
+      </p>
+      {profile.bio && (
         <p className="text-sm text-muted-foreground mt-1">
-          {profile.job_title} at {profile.current_company}
+          {profile.bio}
         </p>
       )}
     </div>

@@ -29,6 +29,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         setProfile(null);
         return;
       }
+      // Fetch by id (uuid string, not number)
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -39,7 +40,24 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         setProfile(null);
         throw profileError;
       }
-      setProfile(profileData as UserProfile | null);
+      // Defensive: ensure all required properties exist
+      if (profileData) {
+        setProfile({
+          id: profileData.id,
+          name: profileData.name,
+          username: profileData.username,
+          email: profileData.email,
+          phone_number: profileData.phone_number ?? null,
+          bio: profileData.bio ?? null,
+          location: profileData.location ?? null,
+          is_profile_complete: profileData.is_profile_complete ?? false,
+          profile_image_url: profileData.profile_image_url ?? null,
+          created_at: profileData.created_at,
+          updated_at: profileData.updated_at,
+        });
+      } else {
+        setProfile(null);
+      }
     } catch (error: any) {
       toast.error("Could not load your profile. Check your connection or try logging in again.");
       setProfile(null);

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
@@ -73,18 +72,17 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
       // LAST STEP: finish profile then redirect appropriately
       try {
         setStepSubmitting(true);
-        await updateProfile({ isProfileComplete: true });
+        await updateProfile({ is_profile_complete: true });
         toast.success("Profile completed successfully!");
         if (onComplete) {
           onComplete();
-        } else if (profile && profile.isProfileComplete) {
+        } else if (profile && profile.is_profile_complete) {
           // If updated profile is complete, go to profile page
           navigate("/profile");
         } else {
           // Fallback: main dashboard
           navigate("/dashboard");
         }
-        // DO NOT reset currentStep here; leave state as-is for next wizard opening
       } catch (e: any) {
         toast.error("Could not complete profile: " + (e?.message || e));
         setStepSubmitting(false);
@@ -139,4 +137,3 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
 };
 
 export default ProfileWizard;
-

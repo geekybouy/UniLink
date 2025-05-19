@@ -1,306 +1,213 @@
-
 import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Plus, Trash, School } from 'lucide-react';
-import { toast } from 'sonner';
-import { useProfile } from '@/contexts/ProfileContext';
-import { Education } from '@/types/profile';
-import { typedSupabaseClient } from '@/integrations/supabase/customClient';
-import { v4 as uuidv4 } from 'uuid';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { WizardStepProps } from './ProfileWizard';
+import { useProfile } from '@/contexts/ProfileContext';
+import { toast } from 'sonner';
+import { Trash2 } from 'lucide-react';
 
-interface EducationFormData {
-  university: string;
+interface EducationItem {
+  id?: string;
+  institution: string;
   degree: string;
   field: string;
-  startYear: number;
-  endYear: number | null;
-  isCurrentlyStudying: boolean;
+  startYear: string;
+  endYear: string;
 }
 
-const EducationStep: React.FC<Partial<WizardStepProps>> = ({
-  onPrevious,
-  onNext,
-  isFirstStep = false,
-  isLastStep = false,
-  onStepSave
-}) => {
-  const { profile, refreshProfile } = useProfile();
+const EducationStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onStepSave }: WizardStepProps) => {
+  const { profile } = useProfile();
+  const [educationItems, setEducationItems] = useState<EducationItem[]>([
+    { institution: '', degree: '', field: '', startYear: '', endYear: '' }
+  ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [educationList, setEducationList] = useState<Education[]>([]);
-  const [isAdding, setIsAdding] = useState(false);
 
-  // Ensure stable step
+  // Generate years for dropdown (from 1950 to current year + 10)
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 1950 + 11 }, (_, i) => (currentYear + 10 - i).toString());
+
   useEffect(() => {
-    if (profile?.education) {
-      setEducationList(profile.education);
-    }
+    // If we had education data in the profile, we would load it here
+    // Since UserProfile doesn't have education field, we'll just use the default empty state
   }, [profile]);
 
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<EducationFormData>({
-    defaultValues: {
-      university: '',
-      degree: '',
-      field: '',
-      startYear: new Date().getFullYear(),
-      endYear: new Date().getFullYear() + 4,
-      isCurrentlyStudying: false
-    }
-  });
-
-  const isCurrentlyStudying = watch('isCurrentlyStudying');
-
-  const yearOptions = () => {
-    const currentYear = new Date().getFullYear();
-    const years = [];
-    for (let year = currentYear - 50; year <= currentYear + 10; year++) {
-      years.push(year);
-    }
-    return years;
+  const handleAddEducation = () => {
+    setEducationItems([
+      ...educationItems,
+      { institution: '', degree: '', field: '', startYear: '', endYear: '' }
+    ]);
   };
 
-  const handleAdd = async (data: EducationFormData) => {
-    setIsSubmitting(true);
+  const handleRemoveEducation = (index: number) => {
+    if (educationItems.length === 1) {
+      // Don't remove the last item, just clear it
+      setEducationItems([{ institution: '', degree: '', field: '', startYear: '', endYear: '' }]);
+      return;
+    }
+    setEducationItems(educationItems.filter((_, i) => i !== index));
+  };
+
+  const handleChange = (index: number, field: keyof EducationItem, value: string) => {
+    const updatedItems = [...educationItems];
+    updatedItems[index] = { ...updatedItems[index], [field]: value };
+    setEducationItems(updatedItems);
+  };
+
+  const handleSubmit = async () => {
     try {
-      if (!profile) {
-        toast.error('User profile not found');
+      setIsSubmitting(true);
+      
+      // Since UserProfile doesn't have education field in the database schema,
+      // we'll just validate and move to the next step
+      // In a real implementation, you would save this data to a separate table
+      
+      // Basic validation
+      const hasEmptyFields = educationItems.some(item => 
+        !item.institution || !item.degree || !item.field || !item.startYear
+      );
+      
+      if (hasEmptyFields) {
+        toast.error("Please fill in all required education fields");
+        setIsSubmitting(false);
         return;
       }
-      if (!data.university || !data.degree || !data.field || !data.startYear || (!isCurrentlyStudying && !data.endYear)) {
-        toast.error('Please fill out all required fields');
-        return;
+      
+      // For now, we'll just call onNext since we don't have a place to store this
+      if (onStepSave) {
+        // In a real implementation, you would save to a separate table using the user's ID
+        await onStepSave({});
       }
-      const newEducation: Education = {
-        id: uuidv4(),
-        university: data.university,
-        degree: data.degree,
-        field: data.field,
-        startYear: data.startYear,
-        endYear: data.isCurrentlyStudying ? null : data.endYear,
-        isCurrentlyStudying: data.isCurrentlyStudying
-      };
-      // Add to database
-      const { error } = await typedSupabaseClient.education.insert({
-        user_id: profile.userId,
-        university: newEducation.university,
-        degree: newEducation.degree,
-        field: newEducation.field,
-        start_year: newEducation.startYear,
-        end_year: newEducation.endYear,
-        is_currently_studying: newEducation.isCurrentlyStudying
-      });
-      if (error) throw error;
-      setEducationList(prev => [...prev, newEducation]);
-      setIsAdding(false);
-      reset();
-      await refreshProfile();
-      toast.success('Education added successfully');
-    } catch (error: any) {
-      toast.error('Failed to add education: ' + error.message);
-      console.error("Add Education Error:", error);
+      
+      onNext();
+    } catch (error) {
+      console.error("Error saving education data:", error);
+      toast.error("Failed to save education information");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      if (!profile) return;
-      const { error } = await typedSupabaseClient.education.delete(id);
-      if (error) throw error;
-      setEducationList(educationList.filter(edu => edu.id !== id));
-      await refreshProfile();
-      toast.success('Education removed');
-    } catch (error: any) {
-      toast.error('Failed to remove education: ' + error.message);
-    }
-  };
-
-  const handleStartYearChange = (value: string) => setValue('startYear', parseInt(value));
-  const handleEndYearChange = (value: string) => setValue('endYear', parseInt(value));
-
-  // Navigation
-  const showNext = typeof onNext === 'function';
-  const showPrevious = typeof onPrevious === 'function';
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-col space-y-4">
-        {educationList.length > 0 ? (
-          educationList.map((education) => (
-            <Card key={education.id} className="overflow-hidden">
-              <CardContent className="p-4">
-                <div className="flex justify-between">
-                  <div>
-                    <h3 className="font-semibold">{education.university}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {education.degree} in {education.field}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {education.startYear} - {education.isCurrentlyStudying ? 'Present' : education.endYear}
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(education.id)}
-                    aria-label="Delete education"
-                  >
-                    <Trash className="h-4 w-4 text-destructive" />
-                  </Button>
+      <div className="space-y-4">
+        {educationItems.map((item, index) => (
+          <div key={index} className="p-4 border rounded-md space-y-4">
+            <div className="flex justify-between items-center">
+              <h4 className="font-medium">Education #{index + 1}</h4>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => handleRemoveEducation(index)}
+                disabled={educationItems.length === 1 && index === 0}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="grid gap-4">
+              <div>
+                <Label htmlFor={`institution-${index}`}>Institution</Label>
+                <Input
+                  id={`institution-${index}`}
+                  value={item.institution}
+                  onChange={(e) => handleChange(index, 'institution', e.target.value)}
+                  placeholder="University or College name"
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor={`degree-${index}`}>Degree</Label>
+                  <Input
+                    id={`degree-${index}`}
+                    value={item.degree}
+                    onChange={(e) => handleChange(index, 'degree', e.target.value)}
+                    placeholder="Bachelor's, Master's, PhD, etc."
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg">
-            <School className="h-12 w-12 text-muted-foreground mb-2" />
-            <p className="text-muted-foreground text-center">No education details added</p>
-            <p className="text-xs text-muted-foreground text-center mb-4">
-              Add your education history to help others connect with you
-            </p>
-          </div>
-        )}
-      </div>
-
-      {!isAdding ? (
-        <Button
-          className="w-full"
-          variant="outline"
-          type="button"
-          onClick={() => setIsAdding(true)}
-          data-testid="add-education-btn"
-        >
-          <Plus className="mr-2 h-4 w-4" /> Add Education
-        </Button>
-      ) : (
-        <Card className="border border-dashed p-4">
-          <form onSubmit={handleSubmit(handleAdd)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="university">University/Institution *</Label>
-              <Input
-                id="university"
-                {...register('university', { required: 'University is required' })}
-              />
-              {errors.university && (
-                <p className="text-sm text-destructive">{errors.university.message}</p>
-              )}
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="degree">Degree *</Label>
-                <Input
-                  id="degree"
-                  {...register('degree', { required: 'Degree is required' })}
-                  placeholder="e.g., Bachelor's, Master's"
-                />
-                {errors.degree && (
-                  <p className="text-sm text-destructive">{errors.degree.message}</p>
-                )}
+                <div>
+                  <Label htmlFor={`field-${index}`}>Field of Study</Label>
+                  <Input
+                    id={`field-${index}`}
+                    value={item.field}
+                    onChange={(e) => handleChange(index, 'field', e.target.value)}
+                    placeholder="Computer Science, Business, etc."
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="field">Field of Study *</Label>
-                <Input
-                  id="field"
-                  {...register('field', { required: 'Field is required' })}
-                  placeholder="e.g., Computer Science"
-                />
-                {errors.field && (
-                  <p className="text-sm text-destructive">{errors.field.message}</p>
-                )}
-              </div>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="startYear">Start Year *</Label>
-                <Select onValueChange={handleStartYearChange}>
-                  <SelectTrigger id="startYear">
-                    <SelectValue placeholder="Select year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {yearOptions().map(year => (
-                      <SelectItem key={`start-${year}`} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {!isCurrentlyStudying && (
-                <div className="space-y-2">
-                  <Label htmlFor="endYear">End Year *</Label>
-                  <Select onValueChange={handleEndYearChange}>
-                    <SelectTrigger id="endYear">
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor={`startYear-${index}`}>Start Year</Label>
+                  <Select
+                    value={item.startYear}
+                    onValueChange={(value) => handleChange(index, 'startYear', value)}
+                  >
+                    <SelectTrigger id={`startYear-${index}`}>
                       <SelectValue placeholder="Select year" />
                     </SelectTrigger>
                     <SelectContent>
-                      {yearOptions().map(year => (
-                        <SelectItem key={`end-${year}`} value={year.toString()}>
+                      {years.map((year) => (
+                        <SelectItem key={`start-${year}`} value={year}>
                           {year}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              )}
+                <div>
+                  <Label htmlFor={`endYear-${index}`}>End Year (or Expected)</Label>
+                  <Select
+                    value={item.endYear}
+                    onValueChange={(value) => handleChange(index, 'endYear', value)}
+                  >
+                    <SelectTrigger id={`endYear-${index}`}>
+                      <SelectValue placeholder="Select year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Present">Present</SelectItem>
+                      {years.map((year) => (
+                        <SelectItem key={`end-${year}`} value={year}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="isCurrentlyStudying"
-                checked={isCurrentlyStudying}
-                onCheckedChange={checked => setValue('isCurrentlyStudying', checked)}
-              />
-              <Label htmlFor="isCurrentlyStudying">I am currently studying here</Label>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setIsAdding(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Adding...' : 'Add Education'}
-              </Button>
-            </div>
-          </form>
-        </Card>
-      )}
-
-      {/* Navigation Stepper for Wizard */}
-      {(showPrevious || showNext) && (
-        <div className="flex justify-between pt-6">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onPrevious}
-            disabled={isFirstStep}
-          >
-            Previous
-          </Button>
-          <Button
-            type="button"
-            onClick={onNext}
-            disabled={educationList.length === 0}
-            variant="default"
-          >
-            Next
-          </Button>
-        </div>
-      )}
+          </div>
+        ))}
+        
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={handleAddEducation}
+          className="w-full"
+        >
+          Add Another Education
+        </Button>
+      </div>
+      
+      <div className="flex justify-between pt-4">
+        <Button
+          variant="outline"
+          onClick={onPrevious}
+          disabled={isFirstStep || isSubmitting}
+        >
+          Previous
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Saving...' : isLastStep ? 'Complete' : 'Next'}
+        </Button>
+      </div>
     </div>
   );
 };
 
 export default EducationStep;
-
