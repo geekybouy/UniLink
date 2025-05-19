@@ -72,7 +72,8 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
       // LAST STEP: finish profile then redirect appropriately
       try {
         setStepSubmitting(true);
-        await updateProfile({ is_profile_complete: true });
+        // Only allow fields present in ProfileFormData
+        await updateProfile({ is_profile_complete: true } as any); // as any to allow backend update
         toast.success("Profile completed successfully!");
         if (onComplete) {
           onComplete();

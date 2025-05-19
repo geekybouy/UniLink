@@ -146,6 +146,7 @@ export const MessageList = () => {
                 key={message.id} 
                 className={`flex items-end mb-1 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
               >
+                {/* Non-current user avatar */}
                 {!isCurrentUser && showAvatar && (
                   <Avatar className="h-6 w-6 mr-2 mb-1 flex-shrink-0">
                     <AvatarFallback>?</AvatarFallback>
@@ -180,11 +181,12 @@ export const MessageList = () => {
                   </div>
                 </div>
                 
+                {/* Current user avatar */}
                 {isCurrentUser && showAvatar && (
                   <Avatar className="h-6 w-6 ml-2 mb-1 flex-shrink-0">
-                    <AvatarImage src={profile?.avatarUrl || undefined} />
+                    <AvatarImage src={profile?.profile_image_url || undefined} />
                     <AvatarFallback>
-                      {profile?.fullName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                      {(profile?.name?.charAt(0) || user.email?.charAt(0) || 'U')}
                     </AvatarFallback>
                   </Avatar>
                 )}
@@ -220,3 +222,5 @@ export const MessageList = () => {
     </div>
   );
 };
+
+export default MessageList;
