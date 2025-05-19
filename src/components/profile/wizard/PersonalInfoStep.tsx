@@ -19,53 +19,44 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext, onStepSave }) => 
 
   const { register, handleSubmit, setValue, formState: { errors }, watch } = useForm<ProfileFormData>({
     defaultValues: {
-      fullName: profile?.fullName || '',
+      name: profile?.name || '',
       username: profile?.username || '',
       email: profile?.email || '',
       bio: profile?.bio || '',
-      phone: profile?.phone || ''
+      phone_number: profile?.phone_number || ''
     }
   });
 
   useEffect(() => {
     if (profile) {
-      setValue('fullName', profile.fullName);
+      setValue('name', profile.name);
       setValue('username', profile.username);
       setValue('email', profile.email);
       setValue('bio', profile.bio || '');
-      setValue('phone', profile.phone || '');
-      setPreviewImage(profile.avatarUrl);
+      setValue('phone_number', profile.phone_number || '');
+      setPreviewImage(profile.profile_image_url);
     }
   }, [profile, setValue]);
 
   const onSubmit = async (data: ProfileFormData) => {
     setIsSubmitting(true);
     try {
-      let avatarUrl = profile?.avatarUrl || null;
-      if (data.avatarFile && data.avatarFile instanceof File) {
-        const newAvatarUrl = await uploadAvatar(data.avatarFile);
-        if (newAvatarUrl) {
-          avatarUrl = newAvatarUrl;
-        }
+      let profile_image_url = profile?.profile_image_url || null;
+      if (data.profile_image_file && data.profile_image_file instanceof File) {
+        const newUrl = await uploadAvatar(data.profile_image_file);
+        if (newUrl) profile_image_url = newUrl;
       }
       const saveData = {
         ...data,
-        avatarUrl,
+        profile_image_url,
       };
-
       if (onStepSave) {
         try {
           await onStepSave(saveData);
         } catch (err: any) {
-          if (err?.message?.includes("Failed to fetch")) {
-            toast.error("Could not connect to the server (maybe session expired?).");
-          } else if (err?.message?.includes("User not authenticated")) {
-            toast.error("Session expired or not logged in. Please log out, then log in again.");
-          } else {
-            toast.error("Could not save your personal info: " + (err?.message || err));
-          }
+          toast.error("Could not save your personal info: " + (err?.message || err));
           setIsSubmitting(false);
-          return; // BLOCK onNext call!
+          return;
         }
       }
       toast.success('Personal information updated successfully!');
@@ -83,7 +74,7 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext, onStepSave }) => 
       const reader = new FileReader();
       reader.onloadend = () => setPreviewImage(reader.result as string);
       reader.readAsDataURL(file);
-      setValue('avatarFile', file);
+      setValue('profile_image_file', file);
     }
   };
 
@@ -121,14 +112,14 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext, onStepSave }) => 
       </div>
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="fullName">Full Name *</Label>
+          <Label htmlFor="name">Name *</Label>
           <Input
-            id="fullName"
-            {...register('fullName', { required: 'Full name is required' })}
+            id="name"
+            {...register('name', { required: 'Name is required' })}
             autoComplete="name"
           />
-          {errors.fullName && (
-            <p className="text-sm text-destructive">{errors.fullName.message}</p>
+          {errors.name && (
+            <p className="text-sm text-destructive">{errors.name.message}</p>
           )}
         </div>
         <div className="space-y-2">
@@ -167,11 +158,11 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext, onStepSave }) => 
           )}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone Number</Label>
+          <Label htmlFor="phone_number">Phone Number</Label>
           <Input
-            id="phone"
+            id="phone_number"
             type="tel"
-            {...register('phone')}
+            {...register('phone_number')}
             autoComplete="tel"
           />
         </div>
