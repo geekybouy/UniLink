@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Menu, 
   Search, 
@@ -56,6 +55,7 @@ const Header = () => {
   const [showSearchDialog, setShowSearchDialog] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate();
 
   // Listen to scroll events to modify header appearance
   useEffect(() => {
@@ -287,7 +287,7 @@ const Header = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className="h-8 w-8 cursor-pointer">
-                  <AvatarImage src={profile?.avatarUrl || ''} />
+                  <AvatarImage src={profile?.profile_image_url || ''} />
                   <AvatarFallback>
                     {user?.email?.charAt(0).toUpperCase() || 'U'}
                   </AvatarFallback>
@@ -297,11 +297,18 @@ const Header = () => {
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile" className="w-full cursor-pointer">
-                      <User className="mr-2 h-4 w-4" />
-                      Profile
-                    </Link>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      if (profile && profile.is_profile_complete) {
+                        navigate('/profile/view');
+                      } else {
+                        navigate('/profile');
+                      }
+                    }}
+                    className="w-full cursor-pointer"
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/network" className="w-full cursor-pointer">
@@ -365,13 +372,13 @@ const Header = () => {
                   <div className="flex-1 overflow-auto py-2">
                     <div className="flex items-center px-4 py-2 mb-4">
                       <Avatar className="h-10 w-10 mr-3">
-                        <AvatarImage src={profile?.avatarUrl || ''} />
+                        <AvatarImage src={profile?.profile_image_url || ''} />
                         <AvatarFallback>
                           {user?.email?.charAt(0).toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="font-medium">{profile?.fullName || user?.email}</div>
+                        <div className="font-medium">{profile?.name || user?.email}</div>
                         <Link 
                           to="/profile" 
                           className="text-xs text-muted-foreground hover:underline"

@@ -1,6 +1,6 @@
 
 export interface UserProfile {
-  id: string;
+  id: string; // uuid (matches auth.users PK and profiles.id)
   name: string;
   username: string;
   email: string;
@@ -22,4 +22,3 @@ export interface ProfileFormData {
   location?: string;
   profile_image_file?: File | null;
 }
-
