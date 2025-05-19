@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,7 +12,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { useNavigate } from 'react-router-dom';
-import ErrorBoundary from "@/components/ErrorBoundary"; // <-- FIX: Import custom ErrorBoundary
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 interface ProfileWizardProps {
   onComplete?: () => void;
@@ -26,8 +27,6 @@ export interface WizardStepProps {
 }
 
 type StepComponentType = React.FC<WizardStepProps>;
-
-// REMOVE the WizardErrorBoundary component since it is not needed when using ErrorBoundary
 
 const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -71,13 +70,21 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // last step: finish and redirect
+      // LAST STEP: finish profile then redirect appropriately
       try {
         setStepSubmitting(true);
         await updateProfile({ isProfileComplete: true });
         toast.success("Profile completed successfully!");
-        if (onComplete) onComplete();
-        navigate('/user-dashboard'); // <--- FIX: redirect to UserDashboard!
+        if (onComplete) {
+          onComplete();
+        } else if (profile && profile.isProfileComplete) {
+          // If updated profile is complete, go to profile page
+          navigate("/profile");
+        } else {
+          // Fallback: main dashboard
+          navigate("/dashboard");
+        }
+        // DO NOT reset currentStep here; leave state as-is for next wizard opening
       } catch (e: any) {
         toast.error("Could not complete profile: " + (e?.message || e));
         setStepSubmitting(false);
@@ -105,7 +112,6 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
   const CurrentStepComponent = steps[currentStep].component;
   const progressPercentage = ((currentStep + 1) / steps.length) * 100;
 
-  // FIX: Wrap main wizard with the correct ErrorBoundary component
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gradient-to-br from-primary/5 to-background flex items-center justify-center p-4">
@@ -133,3 +139,4 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
 };
 
 export default ProfileWizard;
+
