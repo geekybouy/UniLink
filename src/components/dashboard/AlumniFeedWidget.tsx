@@ -1,0 +1,48 @@
+
+import React from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Feed } from "lucide-react";
+
+// Placeholder posts
+const mockPosts = [
+  {
+    id: 1,
+    user: "Sarah Chen",
+    content: "Just landed my dream job at Google! Grateful for UniLink community 🥳",
+    time: "2h ago",
+  },
+  {
+    id: 2,
+    user: "Amit Verma",
+    content: "Great alumni meetup in London this weekend!",
+    time: "1d ago",
+  },
+];
+
+const AlumniFeedWidget = () => (
+  <Card className="shadow-soft rounded-xl">
+    <CardHeader className="flex flex-row items-center gap-2 pb-3">
+      <Feed className="w-5 h-5 text-primary" />
+      <CardTitle className="text-lg font-semibold tracking-tight">Alumni Feed</CardTitle>
+    </CardHeader>
+    <CardContent>
+      {mockPosts.length === 0 ? (
+        <div className="text-muted-foreground text-sm py-6 text-center">
+          No updates yet. Share something with your network!
+        </div>
+      ) : (
+        <ul className="space-y-4">
+          {mockPosts.map(post => (
+            <li key={post.id} className="bg-accent/30 p-3 rounded-lg">
+              <div className="font-medium">{post.user}</div>
+              <div className="text-muted-foreground text-sm mb-1">{post.content}</div>
+              <span className="text-xs text-muted-foreground">{post.time}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </CardContent>
+  </Card>
+);
+
+export default AlumniFeedWidget;
