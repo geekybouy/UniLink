@@ -1,7 +1,9 @@
+
 import React from 'react';
 import { Route } from 'react-router-dom';
 import Dashboard from '../pages/Dashboard';
 import ProfilePage from '../pages/ProfilePage';
+import AlumniProfileView from '../pages/AlumniProfileView'; // NEW
 import EditProfilePage from '../pages/CompleteProfile';
 import CredentialWallet from '../pages/CredentialWallet';
 import ShareCredentials from '../pages/ShareCredentials';
@@ -18,6 +20,7 @@ import UserDashboardPage from '../pages/UserDashboard';
 export const mainRoutes = [
   <Route path="/dashboard" element={<Dashboard />} key="main-dashboard" />,
   <Route path="/profile" element={<ProfilePage />} key="main-profile" />,
+  <Route path="/profile/view" element={<AlumniProfileView />} key="main-profile-view" />, // NEW
   <Route path="/edit-profile" element={<EditProfilePage />} key="main-edit-profile" />,
   <Route path="/credentials" element={<CredentialWallet />} key="main-credentials" />,
   <Route path="/share-credentials" element={<ShareCredentials />} key="main-share-credentials" />,
