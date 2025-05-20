@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,16 +21,9 @@ type WorkExperienceEntry = {
 
 const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onStepSave }: WizardStepProps) => {
   const { profile } = useProfile();
-  // Fix typing by providing generic type to useState
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Explicitly define the array with correct type
-  const [workExperiences, setWorkExperiences] = useState<Array<{
-    company: string;
-    position: string;
-    startDate: string;
-    endDate: string;
-    description: string;
-  }>>([
+  // Explicitly define array element type
+  const [workExperiences, setWorkExperiences] = useState<WorkExperienceEntry[]>([
     {
       company: '',
       position: '',
@@ -64,11 +58,11 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
     }
   };
 
-  // Explicitly annotate 'field' with type
+  // Strictly type `field`
   const handleWorkExperienceChange = (
     index: number,
-    field: 'company' | 'position' | 'startDate' | 'endDate' | 'description',
-    value: string,
+    field: keyof WorkExperienceEntry,
+    value: string
   ) => {
     const updatedExperiences = [...workExperiences];
     updatedExperiences[index] = {
@@ -222,3 +216,4 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
 };
 
 export default WorkExperienceStep;
+

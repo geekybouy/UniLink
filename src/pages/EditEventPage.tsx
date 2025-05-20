@@ -36,8 +36,8 @@ function EditEventPage() {
           return;
         }
         
-        // Check if user can edit this event
-        if (eventData.created_by !== user.id && profile?.role !== 'admin') {
+        // Remove role check; only allow creator of event to edit
+        if (eventData.created_by !== user.id) {
           toast.error('You do not have permission to edit this event');
           navigate(`/events/${id}`);
           return;
@@ -45,14 +45,13 @@ function EditEventPage() {
         
         setEvent(eventData);
         
-        // Transform event data into form data format
         setFormData({
           name: eventData.name,
           description: eventData.description,
           date: new Date(eventData.date),
           end_date: eventData.end_date ? new Date(eventData.end_date) : undefined,
           location: eventData.location,
-          category: eventData.category as any, // Type conversion needed
+          category: eventData.category as any,
           is_virtual: eventData.is_virtual,
           virtual_link: eventData.virtual_link,
           max_attendees: eventData.max_attendees,
@@ -68,7 +67,7 @@ function EditEventPage() {
     };
     
     loadEvent();
-  }, [id, user, fetchEventById, navigate, profile?.role]);
+  }, [id, user, fetchEventById, navigate]);
 
   const handleSubmit = async (data: EventFormData) => {
     if (!id) return;

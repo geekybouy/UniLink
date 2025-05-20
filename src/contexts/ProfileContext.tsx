@@ -29,7 +29,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         setProfile(null);
         return;
       }
-      // Fetch by id (should be uuid, not number!)
+      // Ensure mapping ID to string (force cast for ts)
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -42,7 +42,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       }
       if (profileData) {
         setProfile({
-          id: profileData.id, // should be string (uuid)
+          id: String(profileData.id), // always string!
           name: profileData.full_name || "",
           username: profileData.username || "",
           email: profileData.email || "",
@@ -50,7 +50,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           bio: profileData.bio ?? null,
           location: profileData.location ?? null,
           is_profile_complete: profileData.is_profile_complete ?? false,
-          profile_image_url: profileData.avatar_url ?? null, // note: mapping to avatar_url in backend
+          profile_image_url: profileData.avatar_url ?? null,
           created_at: profileData.created_at,
           updated_at: profileData.updated_at,
         });
@@ -154,7 +154,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     await fetchUserProfile();
   };
 
-  // Profile completion percentage (for fun)
   const getProfileCompletion = (): number => {
     if (!profile) return 0;
     const fields = ['name', 'username', 'email', 'bio', 'location', 'profile_image_url'];

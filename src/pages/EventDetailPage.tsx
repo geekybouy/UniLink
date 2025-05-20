@@ -56,8 +56,7 @@ function EventDetailPage() {
   
   // Check if user can edit this event
   const canEdit = event && user && (
-    event.created_by === user.id || 
-    profile?.role === 'admin'
+    event.created_by === user.id
   );
 
   useEffect(() => {
