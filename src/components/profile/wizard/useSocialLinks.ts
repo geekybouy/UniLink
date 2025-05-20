@@ -19,11 +19,14 @@ export function useSocialLinks(userId: string | null | undefined) {
       return;
     }
     setLoading(true);
-    supabase
-      .from("social_links")
-      .select("*")
-      .eq("user_id", userId)
-      .then(({ data, error }) => {
+
+    // Use async/await to avoid chaining .catch or .finally on PromiseLike
+    const fetchLinks = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("social_links")
+          .select("*")
+          .eq("user_id", userId);
         if (!error && data) {
           setLinks(
             data.map((l) => ({
@@ -33,13 +36,13 @@ export function useSocialLinks(userId: string | null | undefined) {
             }))
           );
         }
-      })
-      .catch(() => {
-        // Optional: setLinks([]) or add error handling here if needed.
-      })
-      .then(() => {
+        // else leave as-is; you could optionally handle error (e.g. setLinks([]))
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchLinks();
   }, [userId]);
 
   // Saves all social links: clears old links then inserts new ones
