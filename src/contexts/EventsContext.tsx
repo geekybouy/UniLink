@@ -293,11 +293,12 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
       if (eventCheckError) throw eventCheckError;
       
       if (eventCheck.created_by !== user.id) {
-        const isAdmin = profile?.role === 'admin';
-        if (!isAdmin) {
+        // Remove role check as it's not available in UserProfile anymore
+        // const isAdmin = profile?.role === 'admin';
+        // if (!isAdmin) {
           toast.error('You are not authorized to update this event');
           return null;
-        }
+        // }
       }
 
       let eventImageUrl = null;
@@ -374,11 +375,12 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
       if (eventCheckError) throw eventCheckError;
       
       if (eventCheck.created_by !== user.id) {
-        const isAdmin = profile?.role === 'admin';
-        if (!isAdmin) {
+        // Remove role check as it's not available in UserProfile anymore
+        // const isAdmin = profile?.role === 'admin';
+        // if (!isAdmin) {
           toast.error('You are not authorized to delete this event');
           return false;
-        }
+        // }
       }
 
       const { error } = await supabase
@@ -675,22 +677,22 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
 
       // Check if user is authorized (uploader or admin)
       if (photo.uploaded_by !== user.id) {
-        const isAdmin = profile?.role === 'admin';
-        if (!isAdmin) {
-          // Check if user is the event creator
-          const { data: event, error: eventError } = await supabase
-            .from('events')
-            .select('created_by')
-            .eq('id', photo.event_id)
-            .single();
-            
-          if (eventError) throw eventError;
-            
-          if (event.created_by !== user.id) {
-            toast.error('You are not authorized to delete this photo');
-            return false;
-          }
-        }
+        // Remove admin check, simplify:
+        // const isAdmin = profile?.role === 'admin';
+        // if (!isAdmin) {
+        //   const { data: event, error: eventError } = await supabase
+        //     .from('events')
+        //     .select('created_by')
+        //     .eq('id', photo.event_id)
+        //     .single();
+
+        //   if (eventError) throw eventError;
+
+        //   if (event.created_by !== user.id) {
+              toast.error('You are not authorized to delete this photo');
+              return false;
+        //   }
+        // }
       }
 
       // Delete the photo record

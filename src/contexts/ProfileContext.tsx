@@ -29,7 +29,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         setProfile(null);
         return;
       }
-      // Fetch by id (uuid string, not number)
+      // Fetch by id (should be uuid, not number!)
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -42,7 +42,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       }
       if (profileData) {
         setProfile({
-          id: profileData.id,
+          id: profileData.id, // should be string (uuid)
           name: profileData.full_name || "",
           username: profileData.username || "",
           email: profileData.email || "",
@@ -50,7 +50,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           bio: profileData.bio ?? null,
           location: profileData.location ?? null,
           is_profile_complete: profileData.is_profile_complete ?? false,
-          profile_image_url: profileData.avatar_url ?? null,
+          profile_image_url: profileData.avatar_url ?? null, // note: mapping to avatar_url in backend
           created_at: profileData.created_at,
           updated_at: profileData.updated_at,
         });
@@ -133,7 +133,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const imageUrl = publicUrlData.publicUrl;
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ profile_image_url: imageUrl })
+        .update({ avatar_url: imageUrl })
         .eq('id', user.id);
       if (updateError) {
         toast.error("Failed to save uploaded photo URL: " + updateError.message);

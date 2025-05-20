@@ -22,7 +22,14 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
   const { profile } = useProfile();
   // Fix typing by providing generic type to useState
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [workExperiences, setWorkExperiences] = useState<WorkExperienceEntry[]>([
+  // Explicitly define the array with correct type
+  const [workExperiences, setWorkExperiences] = useState<Array<{
+    company: string;
+    position: string;
+    startDate: string;
+    endDate: string;
+    description: string;
+  }>>([
     {
       company: '',
       position: '',
@@ -57,11 +64,11 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
     }
   };
 
-  // Fix: constrain 'field' to keys of WorkExperienceEntry
-  const handleWorkExperienceChange = <K extends keyof WorkExperienceEntry>(
+  // Explicitly annotate 'field' with type
+  const handleWorkExperienceChange = (
     index: number,
-    field: K,
-    value: WorkExperienceEntry[K]
+    field: 'company' | 'position' | 'startDate' | 'endDate' | 'description',
+    value: string,
   ) => {
     const updatedExperiences = [...workExperiences];
     updatedExperiences[index] = {

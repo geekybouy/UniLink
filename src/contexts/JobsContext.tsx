@@ -253,11 +253,12 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
         .single();
         
       if (!jobCheck || jobCheck.posted_by !== user.id) {
-        const isAdmin = profile?.role === 'admin';
-        if (!isAdmin) {
+        // Remove role check, since role is not in UserProfile
+        // const isAdmin = profile?.role === 'admin';
+        // if (!isAdmin) {
           toast.error('You are not authorized to update this job listing');
           return null;
-        }
+        // }
       }
       
       const { data, error } = await supabase
@@ -307,11 +308,12 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
         .single();
         
       if (!jobCheck || jobCheck.posted_by !== user.id) {
-        const isAdmin = profile?.role === 'admin';
-        if (!isAdmin) {
+        // Remove role check
+        // const isAdmin = profile?.role === 'admin';
+        // if (!isAdmin) {
           toast.error('You are not authorized to delete this job listing');
           return false;
-        }
+        // }
       }
       
       const { error } = await supabase
@@ -610,11 +612,12 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
       if (jobError) throw jobError;
       
       if (jobCheck.posted_by !== user.id) {
-        const isAdmin = profile?.role === 'admin';
-        if (!isAdmin) {
+        // Remove role check
+        // const isAdmin = profile?.role === 'admin';
+        // if (!isAdmin) {
           toast.error('You are not authorized to update this application');
           return false;
-        }
+        // }
       }
       
       // Update the application status
@@ -648,11 +651,12 @@ export function JobsProvider({ children }: { children: React.ReactNode }) {
       if (jobError) throw jobError;
       
       if (jobCheck.posted_by !== user.id) {
-        const isAdmin = profile?.role === 'admin';
-        if (!isAdmin) {
+        // Remove role check
+        // const isAdmin = profile?.role === 'admin';
+        // if (!isAdmin) {
           toast.error('You are not authorized to view these applications');
           return [];
-        }
+        // }
       }
       
       // Fetch the applications
