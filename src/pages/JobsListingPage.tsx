@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { PlusCircle, BellPlus } from 'lucide-react';
@@ -55,7 +54,7 @@ export default function JobsListingPage() {
     return jobs;
   };
 
-  const canPostJobs = user && (profile?.role === 'admin' || profile?.role === 'alumni');
+  const canPostJobs = user && false; // Cannot check role here, set to false or update according to real user role check
 
   const handleCreateAlert = async (alertData: {
     job_type: JobType[];

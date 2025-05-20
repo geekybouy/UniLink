@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { Shield, BookOpen, UserCog, User } from 'lucide-react';
 import MainLayout from '@/layouts/MainLayout';
@@ -34,13 +33,13 @@ const MorePage = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-6 dark:bg-gray-800 dark:border-gray-700">
           <div className="flex items-center">
             <Avatar className="h-16 w-16">
-              <AvatarImage src={profile?.avatarUrl || ''} />
+              <AvatarImage src={profile?.profile_image_url || ''} />
               <AvatarFallback>
                 {user?.email?.charAt(0).toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
             <div className="ml-4">
-              <h2 className="text-lg font-semibold dark:text-white">{profile?.fullName || 'User'}</h2>
+              <h2 className="text-lg font-semibold dark:text-white">{profile?.name || 'User'}</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">{user?.email}</p>
               <Link 
                 to="/profile" 

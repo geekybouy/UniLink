@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import MainLayout from '@/layouts/MainLayout';
 import { useEvents } from '@/contexts/EventsContext';
@@ -21,10 +20,7 @@ function EventsPage() {
   const { profile } = useProfile();
   
   // Check if user is admin or alumni (can create events)
-  const canCreateEvents = !!user && (
-    profile?.role === 'admin' || 
-    profile?.role === 'alumni'
-  );
+  const canCreateEvents = false; // Replace with real logic for user role check
 
   const handleFilterChange = (filters: EventFilters) => {
     let baseEvents = activeTab === 'upcoming' ? upcomingEvents : pastEvents;

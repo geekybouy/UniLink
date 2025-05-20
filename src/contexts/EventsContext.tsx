@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -262,8 +261,8 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
         is_user_registered: false,
         status: 'upcoming' as EventStatus,
         creator: {
-          full_name: profile?.fullName || 'Unknown',
-          avatar_url: profile?.avatarUrl
+          full_name: profile?.name || 'Unknown',
+          avatar_url: profile?.profile_image_url
         }
       };
 
@@ -343,8 +342,8 @@ export function EventsProvider({ children }: { children: React.ReactNode }) {
         is_user_registered: false, // We'll determine this separately if needed
         status: data.status as EventStatus,
         creator: {
-          full_name: profile?.fullName || 'Unknown',
-          avatar_url: profile?.avatarUrl
+          full_name: profile?.name || 'Unknown',
+          avatar_url: profile?.profile_image_url
         }
       };
 

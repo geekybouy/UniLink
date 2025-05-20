@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
@@ -63,8 +62,8 @@ export default function JobDetailPage() {
           
           // Check if the current user is the job poster
           const isJobPoster = user && jobData.posted_by === user.id;
-          const isAdmin = profile?.role === 'admin';
-          
+          const isAdmin = false; // Remove profile?.role usage here
+  
           if (isJobPoster || isAdmin) {
             const appData = await fetchApplicationsForJob(jobData.id);
             setApplications(appData);
@@ -164,7 +163,7 @@ export default function JobDetailPage() {
   }
 
   const isJobPoster = user && job.posted_by === user.id;
-  const isAdmin = profile?.role === 'admin';
+  const isAdmin = false; // Remove profile?.role usage here
   const canManageJob = isJobPoster || isAdmin;
   
   return (

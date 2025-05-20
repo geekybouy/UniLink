@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,15 +58,15 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
   };
 
   // Fix: constrain 'field' to keys of WorkExperienceEntry
-  const handleWorkExperienceChange = (
+  const handleWorkExperienceChange = <K extends keyof WorkExperienceEntry>(
     index: number,
-    field: keyof WorkExperienceEntry,
-    value: string
+    field: K,
+    value: WorkExperienceEntry[K]
   ) => {
     const updatedExperiences = [...workExperiences];
     updatedExperiences[index] = {
       ...updatedExperiences[index],
-      [field]: value,
+      [field]: value
     };
     setWorkExperiences(updatedExperiences);
   };

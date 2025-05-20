@@ -104,7 +104,7 @@ const ProfileSummary = ({ onEdit }: { onEdit: () => void }) => {
         <CardHeader>
           <CardTitle className="text-2xl text-primary">My Alumni Dashboard</CardTitle>
           <CardDescription>
-            Last updated: {profile.updatedAt ? new Date(profile.updatedAt).toLocaleString() : "Unknown"}
+            Last updated: {profile.updated_at ? new Date(profile.updated_at).toLocaleString() : "Unknown"}
           </CardDescription>
         </CardHeader>
         <CardContent>

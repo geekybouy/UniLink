@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -92,7 +91,7 @@ const SystemCheckDashboard: React.FC = () => {
           </div>
           <div className="flex items-center justify-between">
             <span>Profile Context:</span>
-            {profileLoading ? <span className="text-yellow-600">Loading...</span> : profile ? <span className="text-green-600">Loaded (Profile: {profile.fullName})</span> : <span className="text-red-600">Not Loaded/No Profile</span>}
+            {profileLoading ? <span className="text-yellow-600">Loading...</span> : profile ? <span className="text-green-600">Loaded (Profile: {profile.name})</span> : <span className="text-red-600">Not Loaded/No Profile</span>}
           </div>
         </CardContent>
       </Card>
@@ -168,4 +167,3 @@ const SystemCheckDashboard: React.FC = () => {
 };
 
 export default SystemCheckDashboard;
-
