@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ type WorkExperienceEntry = {
 
 const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onStepSave }: WizardStepProps) => {
   const { profile } = useProfile();
+  // Fix typing by providing generic type to useState
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [workExperiences, setWorkExperiences] = useState<WorkExperienceEntry[]>([
     {
@@ -56,16 +58,16 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
     }
   };
 
-  // Type annotation fixes "never" error
+  // Fix: constrain 'field' to keys of WorkExperienceEntry
   const handleWorkExperienceChange = (
-    index: number, 
-    field: keyof WorkExperienceEntry, 
+    index: number,
+    field: keyof WorkExperienceEntry,
     value: string
   ) => {
     const updatedExperiences = [...workExperiences];
     updatedExperiences[index] = {
       ...updatedExperiences[index],
-      [field]: value
+      [field]: value,
     };
     setWorkExperiences(updatedExperiences);
   };
@@ -111,10 +113,10 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">Work Experience</h3>
-          <Button 
-            type="button" 
-            variant="outline" 
-            size="sm" 
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
             onClick={addWorkExperience}
           >
             <Plus className="mr-2 h-4 w-4" /> Add Experience
@@ -134,13 +136,15 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
                 <Trash className="h-4 w-4" />
               </Button>
             </div>
-            
+
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <Label>Company</Label>
                 <Input
                   value={experience.company}
-                  onChange={(e) => handleWorkExperienceChange(index, 'company', e.target.value)}
+                  onChange={(e) =>
+                    handleWorkExperienceChange(index, 'company', e.target.value)
+                  }
                   placeholder="Company name"
                 />
               </div>
@@ -148,19 +152,23 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
                 <Label>Position</Label>
                 <Input
                   value={experience.position}
-                  onChange={(e) => handleWorkExperienceChange(index, 'position', e.target.value)}
+                  onChange={(e) =>
+                    handleWorkExperienceChange(index, 'position', e.target.value)
+                  }
                   placeholder="Job title"
                 />
               </div>
             </div>
-            
+
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <Label>Start Date</Label>
                 <Input
                   type="date"
                   value={experience.startDate}
-                  onChange={(e) => handleWorkExperienceChange(index, 'startDate', e.target.value)}
+                  onChange={(e) =>
+                    handleWorkExperienceChange(index, 'startDate', e.target.value)
+                  }
                 />
               </div>
               <div>
@@ -168,16 +176,20 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
                 <Input
                   type="date"
                   value={experience.endDate}
-                  onChange={(e) => handleWorkExperienceChange(index, 'endDate', e.target.value)}
+                  onChange={(e) =>
+                    handleWorkExperienceChange(index, 'endDate', e.target.value)
+                  }
                 />
               </div>
             </div>
-            
+
             <div>
               <Label>Description</Label>
               <Textarea
                 value={experience.description}
-                onChange={(e) => handleWorkExperienceChange(index, 'description', e.target.value)}
+                onChange={(e) =>
+                  handleWorkExperienceChange(index, 'description', e.target.value)
+                }
                 placeholder="Describe your responsibilities and achievements"
                 rows={3}
               />
