@@ -33,14 +33,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', user.id)   // user.id is uuid, id is uuid, correct
         .maybeSingle();
       if (profileError) {
         toast.error(`Failed to fetch your profile: ${profileError.message || "Unknown error"}`);
         setProfile(null);
         throw profileError;
       }
-      // Defensive: ensure all required properties exist
       if (profileData) {
         setProfile({
           id: profileData.id,

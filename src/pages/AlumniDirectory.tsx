@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from 'lucide-react';
@@ -7,7 +6,7 @@ import AlumniSearchFilters from '@/components/alumni/AlumniSearchFilters';
 import AlumniGrid from '@/components/alumni/AlumniGrid';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { UserProfile, Skill } from '@/types/profile';
+import { UserProfile } from '@/types/profile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import Pagination from '@/components/alumni/Pagination';
@@ -188,38 +187,16 @@ const AlumniDirectory = () => {
         // Transform the Supabase data structure to match our UserProfile type
         const transformedAlumni: UserProfile[] = data?.map(profile => ({
           id: profile.id.toString(),
-          userId: profile.user_id || profile.id.toString(),
-          fullName: profile.full_name,
-          email: profile.email,
+          name: profile.full_name,
           username: profile.username || '',
-          bio: profile.bio || '',
-          avatarUrl: profile.avatar_url,
-          phone: null,  // Not present in profiles table
-          university: profile.university_name,
-          graduationYear: profile.graduation_year,
-          branch: profile.branch,
-          location: profile.location,
-          registrationNumber: profile.registration_number,
-          education: [], // We're not fetching these in this query
-          workExperience: [],
-          skills: profile.skills ? profile.skills.map((skill: string, index: number) => ({
-            id: `${profile.id}_skill_${index}`,
-            name: skill
-          })) : [],
-          socialLinks: [],
-          isProfileComplete: profile.is_profile_complete || false,
-          privacySettings: {
-            email: 'public',
-            phone: 'public',
-            education: 'public',
-            workExperience: 'public',
-            skills: 'public',
-            socialLinks: 'public'
-          },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          job_title: profile.job_title,
-          current_company: profile.current_company
+          email: profile.email,
+          phone_number: null,
+          bio: profile.bio || null,
+          location: profile.location || null,
+          is_profile_complete: profile.is_profile_complete || false,
+          profile_image_url: profile.avatar_url || null,
+          created_at: profile.created_at || new Date().toISOString(),
+          updated_at: profile.updated_at || new Date().toISOString(),
         })) || [];
         
         setAlumni(transformedAlumni);

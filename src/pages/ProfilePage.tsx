@@ -36,7 +36,7 @@ const ProfilePage = () => {
   useEffect(() => {
     // If the profile data finishes loading, route to profile view or wizard accordingly
     if (!isLoading && !profileLoading) {
-      if (profile && profile.isProfileComplete) {
+      if (profile && profile.is_profile_complete) { // was isProfileComplete
         navigate('/profile/view');
       } else {
         setShowWizard(true);

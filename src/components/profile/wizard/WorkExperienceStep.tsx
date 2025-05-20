@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,8 +56,12 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
     }
   };
 
-  // Explicitly cast field parameter to keyof WorkExperienceEntry to fix 'never' error
-  const handleWorkExperienceChange = (index: number, field: keyof WorkExperienceEntry, value: string) => {
+  // Type annotation fixes "never" error
+  const handleWorkExperienceChange = (
+    index: number, 
+    field: keyof WorkExperienceEntry, 
+    value: string
+  ) => {
     const updatedExperiences = [...workExperiences];
     updatedExperiences[index] = {
       ...updatedExperiences[index],
@@ -201,4 +204,3 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
 };
 
 export default WorkExperienceStep;
-
