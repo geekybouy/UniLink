@@ -34,7 +34,12 @@ export function useSocialLinks(userId: string | null | undefined) {
           );
         }
       })
-      .finally(() => setLoading(false));
+      .catch(() => {
+        // Optional: setLinks([]) or add error handling here if needed.
+      })
+      .then(() => {
+        setLoading(false);
+      });
   }, [userId]);
 
   // Saves all social links: clears old links then inserts new ones
