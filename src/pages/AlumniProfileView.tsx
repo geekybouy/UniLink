@@ -15,18 +15,28 @@ const AlumniProfileView = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
+  // New: wait until we've checked the refreshed profile before redirecting
+  const [hasCheckedProfile, setHasCheckedProfile] = useState(false);
+
   useEffect(() => {
-    if (!loading && (!profile || !profile.is_profile_complete)) {
-      navigate("/profile");
+    // Always try to refresh the profile for latest data first
+    refreshProfile()
+      .catch(() => setError("Failed to load profile data"))
+      .finally(() => setHasCheckedProfile(true));
+  // Only call this on mount
+  // eslint-disable-next-line
+  }, []);
+
+  useEffect(() => {
+    // Only check redirect *after* the refreshed profile has loaded
+    if (hasCheckedProfile && !loading) {
+      if (!profile || !profile.is_profile_complete) {
+        navigate("/profile", { replace: true });
+      }
     }
-  }, [profile, loading, navigate]);
+  }, [hasCheckedProfile, loading, profile, navigate]);
 
-  useEffect(() => {
-    // Always try to refresh the profile for latest data
-    refreshProfile().catch(() => setError("Failed to load profile data"));
-  }, [refreshProfile]);
-
-  if (loading) {
+  if (loading || !hasCheckedProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Spinner size="lg" />
@@ -52,11 +62,10 @@ const AlumniProfileView = () => {
   }
 
   if (!profile || !profile.is_profile_complete) {
-    // This will automatically redirect to profile wizard
+    // This will automatically redirect to profile wizard after refresh
     return null;
   }
 
-  // Utility to provide fallbacks for fields
   const safeDisplay = (value: any) => {
     if (typeof value === "string" && value.trim()) return value;
     if (typeof value === "number" && !isNaN(value)) return value;

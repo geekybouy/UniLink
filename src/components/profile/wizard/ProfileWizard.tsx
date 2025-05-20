@@ -29,7 +29,7 @@ type StepComponentType = React.FC<WizardStepProps>;
 
 const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const { profile, loading: profileLoading, updateProfile } = useProfile();
+  const { profile, loading: profileLoading, updateProfile, refreshProfile } = useProfile();
   const steps = [
     { id: 'personal-info', title: 'Personal Information', component: PersonalInfoStep as StepComponentType },
     { id: 'education', title: 'Education', component: EducationStep as StepComponentType },
@@ -72,12 +72,31 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
       // LAST STEP: finish profile then redirect appropriately
       try {
         setStepSubmitting(true);
-        // Save is_profile_complete before redirecting
-        await updateProfile({ is_profile_complete: true } as any);
+        // Save is_profile_complete in both profiles and users table as requested
+        if (profile?.id && (profile as any).user_id) {
+          // Update 'profiles' and 'users' tables for is_profile_complete
+          // 1. Save to 'profiles' via updateProfile
+          await updateProfile({ is_profile_complete: true } as any);
+
+          // 2. Save to 'users' table via direct Supabase call
+          // Note: The project uses 'user_id' on 'profiles', but users table PK is 'id'
+          // 'user_id' on profiles = 'id' on users
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const { supabase } = await import("@/integrations/supabase/client");
+          await supabase
+            .from("users")
+            .update({ is_profile_complete: true })
+            .eq("id", (profile as any).user_id);
+
+          // 3. Refresh the profile from Supabase
+          await refreshProfile();
+        }
+        // 4. Success message and redirect
         toast.success("Profile completed successfully!");
         if (onComplete) {
-          onComplete(); // Let parent handle the redirect
+          onComplete();
         } else {
+          // fallback, just in case
           navigate("/profile/view");
         }
       } catch (e: any) {
