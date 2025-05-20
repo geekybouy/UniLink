@@ -72,21 +72,11 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
       // LAST STEP: finish profile then redirect appropriately
       try {
         setStepSubmitting(true);
-        // Save is_profile_complete in both profiles and users table as requested
+        // Only update is_profile_complete in 'profiles' table,
+        // do not attempt to update 'users', since the column isn't there
         if (profile?.id && (profile as any).user_id) {
-          // Update 'profiles' and 'users' tables for is_profile_complete
-          // 1. Save to 'profiles' via updateProfile
+          // Update 'profiles' table for is_profile_complete
           await updateProfile({ is_profile_complete: true } as any);
-
-          // 2. Save to 'users' table via direct Supabase call
-          // Note: The project uses 'user_id' on 'profiles', but users table PK is 'id'
-          // 'user_id' on profiles = 'id' on users
-          // eslint-disable-next-line @typescript-eslint/no-var-requires
-          const { supabase } = await import("@/integrations/supabase/client");
-          await supabase
-            .from("users")
-            .update({ is_profile_complete: true })
-            .eq("id", (profile as any).user_id);
 
           // 3. Refresh the profile from Supabase
           await refreshProfile();
@@ -96,7 +86,6 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
         if (onComplete) {
           onComplete();
         } else {
-          // fallback, just in case
           navigate("/profile/view");
         }
       } catch (e: any) {
