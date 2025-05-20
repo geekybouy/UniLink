@@ -72,17 +72,13 @@ const ProfileWizard: React.FC<ProfileWizardProps> = ({ onComplete }) => {
       // LAST STEP: finish profile then redirect appropriately
       try {
         setStepSubmitting(true);
-        // Only allow fields present in ProfileFormData
-        await updateProfile({ is_profile_complete: true } as any); // as any to allow backend update
+        // Save is_profile_complete before redirecting
+        await updateProfile({ is_profile_complete: true } as any);
         toast.success("Profile completed successfully!");
         if (onComplete) {
-          onComplete();
-        } else if (profile && profile.is_profile_complete) {
-          // If updated profile is complete, go to profile page
-          navigate("/profile");
+          onComplete(); // Let parent handle the redirect
         } else {
-          // Fallback: main dashboard
-          navigate("/dashboard");
+          navigate("/profile/view");
         }
       } catch (e: any) {
         toast.error("Could not complete profile: " + (e?.message || e));

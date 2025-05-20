@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -34,10 +35,13 @@ const ProfilePage = () => {
   }, [user, navigate]);
 
   useEffect(() => {
-    // If the profile data finishes loading, route to profile view or wizard accordingly
+    // PROPER LOGIC:
+    // 1. If loaded and profile exists and is_profile_complete, we go to view page directly.
+    // 2. If loaded and profile not complete, show wizard
     if (!isLoading && !profileLoading) {
-      if (profile && profile.is_profile_complete) { // was isProfileComplete
-        navigate('/profile/view');
+      if (profile && profile.is_profile_complete) {
+        // Always route to /profile/view for profile complete
+        navigate('/profile/view', { replace: true });
       } else {
         setShowWizard(true);
       }
@@ -54,6 +58,7 @@ const ProfilePage = () => {
   }
 
   if (showWizard) {
+    // onComplete navigates to /profile/view
     return (
       <ProfileProvider>
         <ProfileWizard 
@@ -63,8 +68,7 @@ const ProfilePage = () => {
     );
   }
 
-  // Should not be possible to reach this, since we navigate on profile loaded, but
-  // fallback in case.
+  // If already complete, navigating to /profile takes user to /profile/view, so this is fallback.
   return null;
 };
 

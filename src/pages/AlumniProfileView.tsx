@@ -121,6 +121,11 @@ const AlumniProfileView = () => {
             <div>
               <span className="font-medium">Bio:</span> {profile.bio || "N/A"}
             </div>
+            {/* SOCIAL LINKS */}
+            <div>
+              <span className="font-medium">Social Links:</span>
+              <ShowUserSocialLinks userId={profile.id} />
+            </div>
           </CardContent>
         </Card>
         {/* Tabs for additional info */}
