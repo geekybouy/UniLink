@@ -1,4 +1,5 @@
-import React, { useState } from 'react'; // FIX: add useState import
+
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,10 +33,7 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
   ]);
 
   const { register, handleSubmit, formState: { errors } } = useForm({
-    // Remove job_title/current_company from defaultValues, not present on UserProfile!
-    defaultValues: {
-      // No defaults set here since data isn't on UserProfile
-    }
+    defaultValues: {}
   });
 
   const addWorkExperience = () => {
@@ -59,6 +57,7 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
     }
   };
 
+  // Explicitly cast field parameter to keyof WorkExperienceEntry to fix 'never' error
   const handleWorkExperienceChange = (index: number, field: keyof WorkExperienceEntry, value: string) => {
     const updatedExperiences = [...workExperiences];
     updatedExperiences[index] = {
@@ -93,7 +92,6 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
               id="job_title"
               {...register('job_title')}
               placeholder="Software Engineer"
-              // No default value pulled from profile, field isn't present on UserProfile
             />
           </div>
           <div>
@@ -102,7 +100,6 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
               id="current_company"
               {...register('current_company')}
               placeholder="Acme Inc."
-              // No default value pulled from profile, field isn't present on UserProfile
             />
           </div>
         </div>
@@ -204,3 +201,4 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
 };
 
 export default WorkExperienceStep;
+
