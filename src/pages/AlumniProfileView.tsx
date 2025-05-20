@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProfile } from "@/contexts/ProfileContext";
@@ -8,6 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/hooks/use-toast";
+import ShowUserSocialLinks from "@/components/profile/ShowUserSocialLinks";
 
 const AlumniProfileView = () => {
   const { profile, loading, refreshProfile } = useProfile();
