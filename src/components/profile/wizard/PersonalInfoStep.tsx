@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { ProfileFormData } from '@/types/profile';
 import { useProfile } from '@/contexts/ProfileContext';
 import { toast } from 'sonner';
 import { User, Upload } from 'lucide-react';
-import { WizardStepProps } from './ProfileWizard'; 
+import { WizardStepProps } from './ProfileWizard';
 
 const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext, onStepSave }) => {
   const { profile, uploadAvatar } = useProfile();
@@ -17,26 +18,30 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext, onStepSave }) => 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { register, handleSubmit, setValue, formState: { errors }, watch } = useForm<ProfileFormData>({
+  // Only use real Supabase data for default values; leave empty if not present
+  const { register, handleSubmit, setValue, formState: { errors }, watch, reset } = useForm<ProfileFormData>({
     defaultValues: {
-      name: profile?.name || '',
-      username: profile?.username || '',
-      email: profile?.email || '',
-      bio: profile?.bio || '',
-      phone_number: profile?.phone_number || ''
+      name: profile?.name ?? '',
+      username: profile?.username ?? '',
+      email: profile?.email ?? '',
+      bio: profile?.bio ?? '',
+      phone_number: profile?.phone_number ?? ''
     }
   });
 
   useEffect(() => {
+    // Update form if profile loads/updates (no hardcoded defaults)
     if (profile) {
-      setValue('name', profile.name);
-      setValue('username', profile.username);
-      setValue('email', profile.email);
-      setValue('bio', profile.bio || '');
-      setValue('phone_number', profile.phone_number || '');
-      setPreviewImage(profile.profile_image_url);
+      reset({
+        name: profile.name ?? '',
+        username: profile.username ?? '',
+        email: profile.email ?? '',
+        bio: profile.bio ?? '',
+        phone_number: profile.phone_number ?? ''
+      });
+      setPreviewImage(profile.profile_image_url ?? null);
     }
-  }, [profile, setValue]);
+  }, [profile, reset]);
 
   const onSubmit = async (data: ProfileFormData) => {
     setIsSubmitting(true);
@@ -87,7 +92,7 @@ const PersonalInfoStep: React.FC<WizardStepProps> = ({ onNext, onStepSave }) => 
       <div className="flex flex-col items-center mb-6">
         <div className="relative">
           <Avatar className="w-32 h-32 border-4 border-background">
-            <AvatarImage src={previewImage || ''} alt="Profile" />
+            <AvatarImage src={previewImage ?? ''} alt="Profile" />
             <AvatarFallback className="bg-primary text-3xl">
               <User size={36} />
             </AvatarFallback>
