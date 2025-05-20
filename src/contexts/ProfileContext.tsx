@@ -29,11 +29,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         setProfile(null);
         return;
       }
-      // Ensure mapping ID to string (force cast for ts)
+      // Pass numeric user.id directly
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', String(user.id)) // user.id as string
+        .eq('id', user.id) // Pass as number, matches DB
         .maybeSingle();
       if (profileError) {
         toast.error(`Failed to fetch your profile: ${profileError.message || "Unknown error"}`);
@@ -42,11 +42,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       }
       if (profileData) {
         setProfile({
-          id: String(profileData.id), // always string!
+          id: profileData.id.toString(), // stringify number for UserProfile shape
           name: profileData.full_name || "",
           username: profileData.username || "",
           email: profileData.email || "",
-          phone_number: profileData.phone_number ?? null,
+          // Only add phone_number if property exists
+          phone_number: typeof profileData.phone_number !== "undefined" ? profileData.phone_number : null,
           bio: profileData.bio ?? null,
           location: profileData.location ?? null,
           is_profile_complete: profileData.is_profile_complete ?? false,
@@ -86,13 +87,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (data.email !== undefined) updateData.email = data.email;
       if (data.bio !== undefined) updateData.bio = data.bio;
       if (data.location !== undefined) updateData.location = data.location;
-      if (data.phone_number !== undefined) updateData.phone_number = data.phone_number;
+      // only update phone_number if present in form data and column exists
+      if (typeof data.phone_number !== "undefined") updateData.phone_number = data.phone_number;
 
       if (Object.keys(updateData).length === 0) return;
       const { error } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', String(user.id)); // user.id as string
+        .eq('id', user.id); // Pass as number
       if (error) {
         toast.error(`Failed to save your profile: ${error.message || 'Unknown DB error.'}`);
         throw error;
@@ -134,7 +136,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: imageUrl })
-        .eq('id', String(user.id)); // user.id as string
+        .eq('id', user.id); // Pass as number
       if (updateError) {
         toast.error("Failed to save uploaded photo URL: " + updateError.message);
         throw updateError;
