@@ -33,7 +33,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', String(user.id)) // user.id as string
         .maybeSingle();
       if (profileError) {
         toast.error(`Failed to fetch your profile: ${profileError.message || "Unknown error"}`);
@@ -92,7 +92,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', user.id);
+        .eq('id', String(user.id)); // user.id as string
       if (error) {
         toast.error(`Failed to save your profile: ${error.message || 'Unknown DB error.'}`);
         throw error;
@@ -134,7 +134,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: imageUrl })
-        .eq('id', user.id);
+        .eq('id', String(user.id)); // user.id as string
       if (updateError) {
         toast.error("Failed to save uploaded photo URL: " + updateError.message);
         throw updateError;

@@ -33,9 +33,8 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
     }
   ]);
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
-    defaultValues: {}
-  });
+  // Provide form type to avoid TS 'never' error
+  const { register, handleSubmit, formState: { errors } } = useForm<{ job_title?: string; current_company?: string; }>();
 
   const addWorkExperience = () => {
     setWorkExperiences([
@@ -217,3 +216,4 @@ const WorkExperienceStep = ({ onNext, onPrevious, isFirstStep, isLastStep, onSte
 
 export default WorkExperienceStep;
 
+// This file is getting quite long (~200 lines). Consider refactoring into smaller components for maintainability.
