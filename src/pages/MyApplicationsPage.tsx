@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -10,6 +11,15 @@ import MainLayout from '@/layouts/MainLayout';
 import { useJobs } from '@/contexts/JobsContext';
 import { JobApplication, ApplicationStatus } from '@/types/jobs';
 import ErrorBoundary from "@/components/ErrorBoundary";
+
+// Add missing statusColors map
+const statusColors: Record<ApplicationStatus, { bg: string; text: string }> = {
+  pending: { bg: 'bg-gray-200', text: 'text-gray-700' },
+  reviewed: { bg: 'bg-blue-50', text: 'text-blue-800' },
+  interviewing: { bg: 'bg-yellow-100', text: 'text-yellow-900' },
+  accepted: { bg: 'bg-green-100', text: 'text-green-800' },
+  rejected: { bg: 'bg-red-100', text: 'text-red-700' },
+};
 
 export default function MyApplicationsPage() {
   const { userApplications, fetchUserApplications } = useJobs();
