@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 export default function CVMaker() {
   const [cvData, setCVData] = useState<CVData | null>(null);
@@ -20,8 +21,6 @@ export default function CVMaker() {
       toast.error("Please sign in to create a CV");
       return;
     }
-
-    // Process the form data
     const processedData = {
       ...data,
       skills: typeof data.skills === "string" ? 
@@ -31,18 +30,15 @@ export default function CVMaker() {
         data.certifications.split("\n").filter(c => c.trim()) : 
         data.certifications,
     };
-
     try {
       const { error } = await supabase
         .from('cvs')
         .insert({
           user_id: user.id,
           cv_data: processedData as unknown as Json,
-          template_used: "default" // You can make this dynamic when adding multiple templates
+          template_used: "default"
         });
-
       if (error) throw error;
-
       setCVData(processedData);
       toast.success("CV created successfully!");
     } catch (error) {
@@ -52,24 +48,26 @@ export default function CVMaker() {
   };
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">CV Maker</h1>
-          <Button onClick={() => navigate('/ai-cv-maker')} className="gap-2">
-            <Sparkles className="h-4 w-4" />
-            Try AI CV Maker
-          </Button>
-        </div>
-        <div className="max-w-4xl mx-auto">
-          <CVForm onSubmit={handleSubmit} />
-          {cvData && (
-            <div className="mt-8">
-              {/* CV preview will be implemented here */}
-            </div>
-          )}
+    <ErrorBoundary>
+      <div className="min-h-screen bg-background py-8">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold">CV Maker</h1>
+            <Button onClick={() => navigate('/ai-cv-maker')} className="gap-2">
+              <Sparkles className="h-4 w-4" />
+              Try AI CV Maker
+            </Button>
+          </div>
+          <div className="max-w-4xl mx-auto">
+            <CVForm onSubmit={handleSubmit} />
+            {cvData && (
+              <div className="mt-8">
+                {/* CV preview will be implemented here */}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }
