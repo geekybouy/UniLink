@@ -1,44 +1,41 @@
 
 import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "@/layouts/MainLayout";
-import { Card } from "@/components/ui/card";
-import AlumniFeedWidget from "@/components/dashboard/AlumniFeedWidget";
-import ConnectionsOverviewWidget from "@/components/dashboard/ConnectionsOverviewWidget";
-import QuickActionsWidget from "@/components/dashboard/QuickActionsWidget";
-import UpcomingEventsWidget from "@/components/dashboard/UpcomingEventsWidget";
-import JobHighlightsWidget from "@/components/dashboard/JobHighlightsWidget";
-import MentorshipCornerWidget from "@/components/dashboard/MentorshipCornerWidget";
+import { AppSidebar } from "@/components/app-sidebar";
+import BottomNav from "@/components/BottomNav";
+
+// Section pages (stubs)
+import ForYou from "./dashboard/ForYou";
+import Following from "./dashboard/Following";
+import SearchPage from "./dashboard/Search";
+import NotificationsPage from "./dashboard/Notifications";
+import EventsPage from "./dashboard/Events";
+import MessagesPage from "./dashboard/Messages";
 
 const Dashboard: React.FC = () => {
-  // Debug: log render and screen info for mobile diagnostic
-  if (typeof window !== "undefined") {
-    console.log("Dashboard page loaded. window.innerWidth:", window.innerWidth, "User agent:", navigator.userAgent);
-  }
   return (
-    <MainLayout>
-      <div className="container mx-auto py-8 px-2 md:px-6">
-        {/* Page Heading */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-8">
-          <h1 className="text-3xl font-bold font-playfair text-primary mb-2 md:mb-0">
-            Welcome to UniLink Alumni
-          </h1>
-          <QuickActionsWidget />
-        </div>
-
-        {/* Main Dashboard Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          {/* Left: Feed & Connections */}
-          <div className="md:col-span-7 flex flex-col gap-6">
-            <AlumniFeedWidget />
-            <ConnectionsOverviewWidget />
-          </div>
-          {/* Right: Events, Jobs, Mentorship */}
-          <div className="md:col-span-5 flex flex-col gap-6">
-            <UpcomingEventsWidget />
-            <JobHighlightsWidget />
-            <MentorshipCornerWidget />
+    <MainLayout hideFooter>
+      <div className="flex w-full min-h-screen">
+        {/* Sidebar for desktop/tablet */}
+        <AppSidebar />
+        {/* Main content */}
+        <div className="flex-1 flex flex-col items-center max-w-full mx-auto pt-2 pb-20 md:pb-2 bg-background">
+          <div className="w-full max-w-2xl px-2 sm:px-6">
+            <Routes>
+              <Route path="/" element={<Navigate to="for-you" replace />} />
+              <Route path="for-you" element={<ForYou />} />
+              <Route path="following" element={<Following />} />
+              <Route path="search" element={<SearchPage />} />
+              <Route path="notifications" element={<NotificationsPage />} />
+              <Route path="events" element={<EventsPage />} />
+              <Route path="messages" element={<MessagesPage />} />
+              <Route path="*" element={<div className="text-center text-muted-foreground py-20">Section Not Found</div>} />
+            </Routes>
           </div>
         </div>
+        {/* Bottom navigation for mobile */}
+        <BottomNav />
       </div>
     </MainLayout>
   );
