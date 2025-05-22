@@ -16,8 +16,13 @@ type MainLayoutProps = {
 const MainLayout = ({ children, hideFooter = false }: MainLayoutProps) => {
   const isMobile = useIsMobile();
 
+  // Debug output
+  if (typeof window !== "undefined") {
+    console.log("MainLayout render: isMobile =", isMobile, "window.innerWidth =", window.innerWidth);
+  }
+
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background w-full">
       {/* PWA Components */}
       <UpdatePrompt />
       <InstallPrompt />
@@ -27,7 +32,12 @@ const MainLayout = ({ children, hideFooter = false }: MainLayoutProps) => {
       <Header />
       
       {/* Main Content */}
-      <main className="flex-grow pt-16 pb-20 md:pb-4">
+      <main className="flex-grow pt-16 pb-20 md:pb-4 w-full min-h-[70vh] bg-background">
+        {/* DEBUG: Give a colored border for mobile */}
+        <div className="block md:hidden border-2 border-blue-400 rounded-lg p-1">
+          {/* Only visible on mobile for troubleshooting background/border */}
+          <span className="text-xs text-blue-700 font-bold">[MOBILE MAIN WRAPPER]</span>
+        </div>
         {children}
       </main>
 
@@ -41,3 +51,4 @@ const MainLayout = ({ children, hideFooter = false }: MainLayoutProps) => {
 };
 
 export default MainLayout;
+

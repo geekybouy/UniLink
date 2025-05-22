@@ -10,6 +10,10 @@ import JobHighlightsWidget from "@/components/dashboard/JobHighlightsWidget";
 import MentorshipCornerWidget from "@/components/dashboard/MentorshipCornerWidget";
 
 const Dashboard: React.FC = () => {
+  // Debug: log render and screen info for mobile diagnostic
+  if (typeof window !== "undefined") {
+    console.log("Dashboard page loaded. window.innerWidth:", window.innerWidth, "User agent:", navigator.userAgent);
+  }
   return (
     <MainLayout>
       <div className="container mx-auto py-8 px-2 md:px-6">
