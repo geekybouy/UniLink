@@ -16,7 +16,7 @@ import { useNavigate } from "react-router-dom";
 import {
   User,
   Edit,
-  Cv,
+  FileText,
   Users,
   Briefcase,
   Book,
@@ -45,7 +45,7 @@ export default function ProfileDropdown() {
       onClick: () => navigate("/profile"),
     },
     {
-      icon: Cv,
+      icon: FileText,
       label: "CV Maker",
       onClick: () => navigate("/cv-maker"),
     },
