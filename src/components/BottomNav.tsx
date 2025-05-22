@@ -3,6 +3,7 @@ import { useLocation, Link } from "react-router-dom";
 import { Search, Bell, Calendar, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Wrap all icons as functions returning JSX, for consistency
 const navItems = [
   {
     label: "For You",
@@ -14,10 +15,10 @@ const navItems = [
     path: "/dashboard/following",
     icon: (props: any) => <span className="font-bold text-lg" {...props}>👥</span>
   },
-  { label: "Search", path: "/dashboard/search", icon: Search },
-  { label: "Notif", path: "/dashboard/notifications", icon: Bell },
-  { label: "Events", path: "/dashboard/events", icon: Calendar },
-  { label: "Msg", path: "/dashboard/messages", icon: MessageCircle },
+  { label: "Search", path: "/dashboard/search", icon: (props: any) => <Search {...props} /> },
+  { label: "Notif", path: "/dashboard/notifications", icon: (props: any) => <Bell {...props} /> },
+  { label: "Events", path: "/dashboard/events", icon: (props: any) => <Calendar {...props} /> },
+  { label: "Msg", path: "/dashboard/messages", icon: (props: any) => <MessageCircle {...props} /> },
 ];
 
 const BottomNav = () => {
@@ -35,9 +36,7 @@ const BottomNav = () => {
               active ? "text-primary font-bold" : "text-gray-500"
             )}
           >
-            {typeof item.icon === "function"
-              ? item.icon({ className: "h-6 w-6 mb-1" })
-              : <item.icon className="h-6 w-6 mb-1" />}
+            {item.icon({ className: "h-6 w-6 mb-1" })}
             <span>{item.label}</span>
             {active && (
               <span className="w-6 h-1 bg-primary mt-1 rounded-t-lg"></span>
