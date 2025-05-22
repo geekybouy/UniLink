@@ -45,6 +45,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import ProfileDropdown from "@/components/profile/ProfileDropdown";
 
 const Header = () => {
   const location = useLocation();
@@ -284,68 +285,10 @@ const Header = () => {
               <NotificationsDropdown />
             </div>
             
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Avatar className="h-8 w-8 cursor-pointer">
-                  <AvatarImage src={profile?.profile_image_url || ''} />
-                  <AvatarFallback>
-                    {user?.email?.charAt(0).toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      if (profile && profile.is_profile_complete) {
-                        navigate('/profile/view');
-                      } else {
-                        navigate('/profile');
-                      }
-                    }}
-                    className="w-full cursor-pointer"
-                  >
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/network" className="w-full cursor-pointer">
-                      <Users className="mr-2 h-4 w-4" />
-                      My Network
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/my-applications" className="w-full cursor-pointer">
-                      <Briefcase className="mr-2 h-4 w-4" />
-                      My Applications
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/messages" className="w-full cursor-pointer">
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      Messages
-                      {totalUnreadMessages > 0 && (
-                        <span className="ml-auto bg-primary text-white px-1.5 rounded-full text-xs">
-                          {totalUnreadMessages > 99 ? '99+' : totalUnreadMessages}
-                        </span>
-                      )}
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/privacy-settings" className="w-full cursor-pointer">
-                      <UserCog className="mr-2 h-4 w-4" />
-                      Privacy Settings
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="text-red-500 focus:text-red-500">
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Replace old avatar/dropdown with new ProfileDropdown */}
+            <div className="hidden md:block">
+              <ProfileDropdown />
+            </div>
 
             {/* Mobile menu trigger */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
