@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Route } from 'react-router-dom';
 import Dashboard from '../pages/Dashboard';
@@ -15,9 +16,10 @@ import SettingsPage from '../pages/NotificationSettingsPage';
 import PrivacySettings from '../pages/PrivacySettings';
 import { ConnectionProvider } from '../contexts/ConnectionContext';
 import UserDashboardPage from '../pages/UserDashboard';
-import CVMaker from '../pages/CVMaker'; // ADD
-import MessagingPage from '../pages/MessagingPage'; // ADD
-import MyApplicationsPage from '../pages/MyApplicationsPage'; // ADD
+import CVMaker from '../pages/CVMaker';
+import AICVMaker from '../pages/AICVMaker'; // ADD
+import MessagingPage from '../pages/MessagingPage';
+import MyApplicationsPage from '../pages/MyApplicationsPage';
 
 export const mainRoutes = [
   <Route path="/dashboard" element={<Dashboard />} key="main-dashboard" />,
@@ -44,5 +46,6 @@ export const mainRoutes = [
   <Route path="/user-dashboard" element={<UserDashboardPage />} key="main-user-dashboard" />,
   <Route path="/messages" element={<MessagingPage />} key="main-messages" />,
   <Route path="/cv-maker" element={<CVMaker />} key="main-cv-maker" />,
+  <Route path="/ai-cv-maker" element={<AICVMaker />} key="main-ai-cv-maker" />,
   <Route path="/my-applications" element={<MyApplicationsPage />} key="main-my-applications" />,
 ];
