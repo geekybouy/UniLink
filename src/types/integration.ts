@@ -30,13 +30,13 @@ export interface ApiToken {
 export interface IntegrationConnector {
   id: string;
   name: string;
-  type: 'university_sis' | 'hr_platform' | 'certification_authority' | 'job_board';
+  type: string;
   description?: string;
   endpoint_url?: string;
-  authentication_method: 'oauth' | 'api_key' | 'basic_auth';
+  authentication_method?: string;
   configuration: Record<string, any>;
   is_active: boolean;
-  created_by: string;
+  created_by?: string;
   created_at: string;
   updated_at: string;
 }
@@ -74,42 +74,4 @@ export interface ApiUsageLog {
   user_agent?: string;
   ip_address?: string;
   created_at: string;
-}
-
-export interface IntegrationSyncLog {
-  id: string;
-  connector_id: string;
-  sync_type: 'full' | 'incremental';
-  status: 'running' | 'completed' | 'failed';
-  records_processed: number;
-  errors_count: number;
-  error_details?: Record<string, any>;
-  started_at: string;
-  completed_at?: string;
-}
-
-export interface ExternalMapping {
-  id: string;
-  connector_id: string;
-  local_entity_type: string;
-  local_entity_id: string;
-  external_entity_id: string;
-  external_entity_data?: Record<string, any>;
-  last_synced_at: string;
-  created_at: string;
-}
-
-export interface ApiEndpoint {
-  path: string;
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-  description: string;
-  parameters?: Record<string, any>;
-  response_schema?: Record<string, any>;
-  required_scopes: string[];
-}
-
-export interface WebhookEvent {
-  type: string;
-  description: string;
-  payload_schema: Record<string, any>;
 }

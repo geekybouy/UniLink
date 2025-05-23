@@ -1,7 +1,9 @@
 
-import React from "react";
-import ContractDashboard from "@/components/contracts/ContractDashboard";
+import React from 'react';
+import ContractDashboard from '@/components/contracts/ContractDashboard';
 
-export default function ContractDashboardPage() {
+const ContractDashboardPage = () => {
   return <ContractDashboard />;
-}
+};
+
+export default ContractDashboardPage;
