@@ -30,17 +30,27 @@ export const createApiApplication = async (data: Omit<ApiApplication, 'id' | 'cr
     .single();
 
   if (error) throw error;
-  return result;
+  
+  // Type assertion to ensure compatibility
+  return {
+    ...result,
+    application_type: result.application_type as 'web' | 'mobile' | 'server'
+  } as ApiApplication;
 };
 
-export const getApiApplications = async (userId: string) => {
+export const getApiApplications = async (userId: string): Promise<ApiApplication[]> => {
   const { data, error } = await supabase
     .from('api_applications')
     .select('*')
     .eq('owner_id', userId);
 
   if (error) throw error;
-  return data;
+  
+  // Type assertion to ensure compatibility
+  return (data || []).map(app => ({
+    ...app,
+    application_type: app.application_type as 'web' | 'mobile' | 'server'
+  })) as ApiApplication[];
 };
 
 export const updateApiApplication = async (id: string, data: Partial<ApiApplication>) => {
@@ -59,7 +69,12 @@ export const updateApiApplication = async (id: string, data: Partial<ApiApplicat
     .single();
 
   if (error) throw error;
-  return result;
+  
+  // Type assertion to ensure compatibility
+  return {
+    ...result,
+    application_type: result.application_type as 'web' | 'mobile' | 'server'
+  } as ApiApplication;
 };
 
 // Integration Connector Management
