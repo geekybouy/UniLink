@@ -1,214 +1,216 @@
 
+import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
-import type { 
+import { 
   ApiApplication, 
+  ApiToken, 
   IntegrationConnector, 
-  WebhookEndpoint, 
-  ApiUsageLog,
-  IntegrationSyncLog 
+  WebhookEndpoint,
+  WebhookDelivery,
+  ApiUsageLog
 } from '@/types/integration';
 
-export class IntegrationService {
-  // API Application Management
-  static async createApiApplication(data: Partial<ApiApplication>) {
-    const { data: application, error } = await supabase
-      .from('api_applications')
-      .insert([{
-        ...data,
-        client_id: crypto.randomUUID(),
-        client_secret: crypto.randomUUID().replace(/-/g, ''),
-        owner_id: (await supabase.auth.getUser()).data.user?.id
-      }])
-      .select()
-      .single();
+// API Application Management
+export const createApiApplication = async (data: Omit<ApiApplication, 'id' | 'created_at' | 'updated_at'>) => {
+  const { data: result, error } = await supabase
+    .from('api_applications')
+    .insert({
+      name: data.name,
+      description: data.description,
+      client_id: data.client_id,
+      client_secret: data.client_secret,
+      redirect_uris: data.redirect_uris,
+      scopes: data.scopes,
+      application_type: data.application_type,
+      owner_id: data.owner_id,
+      is_active: data.is_active,
+      rate_limit_per_hour: data.rate_limit_per_hour
+    })
+    .select()
+    .single();
 
-    if (error) throw error;
-    return application;
-  }
+  if (error) throw error;
+  return result;
+};
 
-  static async getApiApplications() {
-    const { data, error } = await supabase
-      .from('api_applications')
-      .select('*')
-      .order('created_at', { ascending: false });
+export const getApiApplications = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('api_applications')
+    .select('*')
+    .eq('owner_id', userId);
 
-    if (error) throw error;
-    return data;
-  }
+  if (error) throw error;
+  return data;
+};
 
-  static async updateApiApplication(id: string, updates: Partial<ApiApplication>) {
-    const { data, error } = await supabase
-      .from('api_applications')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
+export const updateApiApplication = async (id: string, data: Partial<ApiApplication>) => {
+  const { data: result, error } = await supabase
+    .from('api_applications')
+    .update({
+      name: data.name,
+      description: data.description,
+      redirect_uris: data.redirect_uris,
+      scopes: data.scopes,
+      is_active: data.is_active,
+      rate_limit_per_hour: data.rate_limit_per_hour
+    })
+    .eq('id', id)
+    .select()
+    .single();
 
-    if (error) throw error;
-    return data;
-  }
+  if (error) throw error;
+  return result;
+};
 
-  static async deleteApiApplication(id: string) {
-    const { error } = await supabase
-      .from('api_applications')
-      .delete()
-      .eq('id', id);
+// Integration Connector Management
+export const createIntegrationConnector = async (data: Omit<IntegrationConnector, 'id' | 'created_at' | 'updated_at'>) => {
+  const { data: result, error } = await supabase
+    .from('integration_connectors')
+    .insert({
+      name: data.name,
+      type: data.type,
+      description: data.description,
+      endpoint_url: data.endpoint_url,
+      authentication_method: data.authentication_method,
+      configuration: data.configuration,
+      is_active: data.is_active,
+      created_by: data.created_by
+    })
+    .select()
+    .single();
 
-    if (error) throw error;
-  }
+  if (error) throw error;
+  return result;
+};
 
-  // Integration Connectors
-  static async createConnector(data: Partial<IntegrationConnector>) {
-    const user = await supabase.auth.getUser();
-    const { data: connector, error } = await supabase
-      .from('integration_connectors')
-      .insert([{
-        ...data,
-        created_by: user.data.user?.id
-      }])
-      .select()
-      .single();
+export const getIntegrationConnectors = async () => {
+  const { data, error } = await supabase
+    .from('integration_connectors')
+    .select('*');
 
-    if (error) throw error;
-    return connector;
-  }
+  if (error) throw error;
+  return data;
+};
 
-  static async getConnectors() {
-    const { data, error } = await supabase
-      .from('integration_connectors')
-      .select('*')
-      .order('created_at', { ascending: false });
+export const updateIntegrationConnector = async (id: string, data: Partial<IntegrationConnector>) => {
+  const { data: result, error } = await supabase
+    .from('integration_connectors')
+    .update({
+      name: data.name,
+      description: data.description,
+      endpoint_url: data.endpoint_url,
+      authentication_method: data.authentication_method,
+      configuration: data.configuration,
+      is_active: data.is_active
+    })
+    .eq('id', id)
+    .select()
+    .single();
 
-    if (error) throw error;
-    return data;
-  }
+  if (error) throw error;
+  return result;
+};
 
-  static async updateConnector(id: string, updates: Partial<IntegrationConnector>) {
-    const { data, error } = await supabase
-      .from('integration_connectors')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
+// Webhook Management
+export const createWebhook = async (data: Omit<WebhookEndpoint, 'id' | 'created_at' | 'updated_at'>) => {
+  const { data: result, error } = await supabase
+    .from('webhook_endpoints')
+    .insert({
+      application_id: data.application_id,
+      url: data.url,
+      events: data.events,
+      secret: data.secret,
+      is_active: data.is_active
+    })
+    .select()
+    .single();
 
-    if (error) throw error;
-    return data;
-  }
+  if (error) throw error;
+  return result;
+};
 
-  static async deleteConnector(id: string) {
-    const { error } = await supabase
-      .from('integration_connectors')
-      .delete()
-      .eq('id', id);
+export const getWebhooks = async (applicationId: string) => {
+  const { data, error } = await supabase
+    .from('webhook_endpoints')
+    .select('*')
+    .eq('application_id', applicationId);
 
-    if (error) throw error;
-  }
+  if (error) throw error;
+  return data;
+};
 
-  // Webhook Management
-  static async createWebhookEndpoint(data: Partial<WebhookEndpoint>) {
-    const { data: webhook, error } = await supabase
-      .from('webhook_endpoints')
-      .insert([{
-        ...data,
-        secret: crypto.randomUUID().replace(/-/g, '')
-      }])
-      .select()
-      .single();
+export const updateWebhook = async (id: string, data: Partial<WebhookEndpoint>) => {
+  const { data: result, error } = await supabase
+    .from('webhook_endpoints')
+    .update({
+      url: data.url,
+      events: data.events,
+      is_active: data.is_active
+    })
+    .eq('id', id)
+    .select()
+    .single();
 
-    if (error) throw error;
-    return webhook;
-  }
+  if (error) throw error;
+  return result;
+};
 
-  static async getWebhookEndpoints(applicationId: string) {
-    const { data, error } = await supabase
-      .from('webhook_endpoints')
-      .select('*')
-      .eq('application_id', applicationId)
-      .order('created_at', { ascending: false });
+// API Usage Logging
+export const logApiUsage = async (data: Omit<ApiUsageLog, 'id' | 'created_at'>) => {
+  const { error } = await supabase
+    .from('api_usage_logs')
+    .insert([{
+      application_id: data.application_id,
+      endpoint: data.endpoint,
+      method: data.method,
+      status_code: data.status_code,
+      response_time_ms: data.response_time_ms,
+      user_agent: data.user_agent,
+      ip_address: data.ip_address
+    }]);
 
-    if (error) throw error;
-    return data;
-  }
+  if (error) throw error;
+};
 
-  static async updateWebhookEndpoint(id: string, updates: Partial<WebhookEndpoint>) {
-    const { data, error } = await supabase
-      .from('webhook_endpoints')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
+// Generate API access tokens
+export const generateApiToken = async (applicationId: string, userId: string, scopes: string[]) => {
+  const tokenId = uuidv4();
+  const expiresAt = new Date();
+  expiresAt.setFullYear(expiresAt.getFullYear() + 1); // Token valid for 1 year
 
-    if (error) throw error;
-    return data;
-  }
+  const { error } = await supabase
+    .from('api_tokens')
+    .insert([{
+      application_id: applicationId,
+      user_id: userId,
+      token_hash: tokenId,
+      scopes,
+      expires_at: expiresAt.toISOString()
+    }]);
 
-  static async deleteWebhookEndpoint(id: string) {
-    const { error } = await supabase
-      .from('webhook_endpoints')
-      .delete()
-      .eq('id', id);
+  if (error) throw error;
+  return tokenId;
+};
 
-    if (error) throw error;
-  }
+// Get API token for an application
+export const getApiTokens = async (applicationId: string) => {
+  const { data, error } = await supabase
+    .from('api_tokens')
+    .select('*')
+    .eq('application_id', applicationId)
+    .eq('is_revoked', false);
 
-  // API Usage Analytics
-  static async logApiUsage(data: Partial<ApiUsageLog>) {
-    const { error } = await supabase
-      .from('api_usage_logs')
-      .insert([data]);
+  if (error) throw error;
+  return data;
+};
 
-    if (error) throw error;
-  }
+// Revoke an API token
+export const revokeApiToken = async (tokenId: string) => {
+  const { error } = await supabase
+    .from('api_tokens')
+    .update({ is_revoked: true })
+    .eq('id', tokenId);
 
-  static async getApiUsageStats(applicationId: string, timeRange: string = '24h') {
-    const timeFilter = timeRange === '24h' ? 
-      new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() :
-      new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-
-    const { data, error } = await supabase
-      .from('api_usage_logs')
-      .select('*')
-      .eq('application_id', applicationId)
-      .gte('created_at', timeFilter)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return data;
-  }
-
-  // Integration Sync Logs
-  static async createSyncLog(data: Partial<IntegrationSyncLog>) {
-    const { data: log, error } = await supabase
-      .from('integration_sync_logs')
-      .insert([data])
-      .select()
-      .single();
-
-    if (error) throw error;
-    return log;
-  }
-
-  static async updateSyncLog(id: string, updates: Partial<IntegrationSyncLog>) {
-    const { data, error } = await supabase
-      .from('integration_sync_logs')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  }
-
-  static async getSyncLogs(connectorId: string) {
-    const { data, error } = await supabase
-      .from('integration_sync_logs')
-      .select('*')
-      .eq('connector_id', connectorId)
-      .order('started_at', { ascending: false })
-      .limit(50);
-
-    if (error) throw error;
-    return data;
-  }
-}
+  if (error) throw error;
+  return true;
+};
