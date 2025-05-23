@@ -9,6 +9,142 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      api_applications: {
+        Row: {
+          application_type: string
+          client_id: string
+          client_secret: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          owner_id: string | null
+          rate_limit_per_hour: number | null
+          redirect_uris: string[] | null
+          scopes: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          application_type?: string
+          client_id: string
+          client_secret: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          owner_id?: string | null
+          rate_limit_per_hour?: number | null
+          redirect_uris?: string[] | null
+          scopes?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          application_type?: string
+          client_id?: string
+          client_secret?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          owner_id?: string | null
+          rate_limit_per_hour?: number | null
+          redirect_uris?: string[] | null
+          scopes?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      api_tokens: {
+        Row: {
+          application_id: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_revoked: boolean | null
+          last_used_at: string | null
+          scopes: string[] | null
+          token_hash: string
+          user_id: string | null
+        }
+        Insert: {
+          application_id?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_revoked?: boolean | null
+          last_used_at?: string | null
+          scopes?: string[] | null
+          token_hash: string
+          user_id?: string | null
+        }
+        Update: {
+          application_id?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_revoked?: boolean | null
+          last_used_at?: string | null
+          scopes?: string[] | null
+          token_hash?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_tokens_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "api_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_usage_logs: {
+        Row: {
+          application_id: string | null
+          created_at: string | null
+          endpoint: string
+          id: string
+          ip_address: unknown | null
+          method: string
+          response_time_ms: number | null
+          status_code: number
+          user_agent: string | null
+        }
+        Insert: {
+          application_id?: string | null
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          ip_address?: unknown | null
+          method: string
+          response_time_ms?: number | null
+          status_code: number
+          user_agent?: string | null
+        }
+        Update: {
+          application_id?: string | null
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          ip_address?: unknown | null
+          method?: string
+          response_time_ms?: number | null
+          status_code?: number
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_usage_logs_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "api_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookmarks: {
         Row: {
           created_at: string
@@ -543,6 +679,47 @@ export type Database = {
         }
         Relationships: []
       }
+      external_mappings: {
+        Row: {
+          connector_id: string | null
+          created_at: string | null
+          external_entity_data: Json | null
+          external_entity_id: string
+          id: string
+          last_synced_at: string | null
+          local_entity_id: string
+          local_entity_type: string
+        }
+        Insert: {
+          connector_id?: string | null
+          created_at?: string | null
+          external_entity_data?: Json | null
+          external_entity_id: string
+          id?: string
+          last_synced_at?: string | null
+          local_entity_id: string
+          local_entity_type: string
+        }
+        Update: {
+          connector_id?: string | null
+          created_at?: string | null
+          external_entity_data?: Json | null
+          external_entity_id?: string
+          id?: string
+          last_synced_at?: string | null
+          local_entity_id?: string
+          local_entity_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_mappings_connector_id_fkey"
+            columns: ["connector_id"]
+            isOneToOne: false
+            referencedRelation: "integration_connectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fraud_detection_logs: {
         Row: {
           created_at: string
@@ -577,6 +754,92 @@ export type Database = {
             columns: ["credential_id"]
             isOneToOne: false
             referencedRelation: "credentials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integration_connectors: {
+        Row: {
+          authentication_method: string | null
+          configuration: Json | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          endpoint_url: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          authentication_method?: string | null
+          configuration?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          endpoint_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          authentication_method?: string | null
+          configuration?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          endpoint_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      integration_sync_logs: {
+        Row: {
+          completed_at: string | null
+          connector_id: string | null
+          error_details: Json | null
+          errors_count: number | null
+          id: string
+          records_processed: number | null
+          started_at: string | null
+          status: string
+          sync_type: string
+        }
+        Insert: {
+          completed_at?: string | null
+          connector_id?: string | null
+          error_details?: Json | null
+          errors_count?: number | null
+          id?: string
+          records_processed?: number | null
+          started_at?: string | null
+          status: string
+          sync_type: string
+        }
+        Update: {
+          completed_at?: string | null
+          connector_id?: string | null
+          error_details?: Json | null
+          errors_count?: number | null
+          id?: string
+          records_processed?: number | null
+          started_at?: string | null
+          status?: string
+          sync_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_sync_logs_connector_id_fkey"
+            columns: ["connector_id"]
+            isOneToOne: false
+            referencedRelation: "integration_connectors"
             referencedColumns: ["id"]
           },
         ]
@@ -1528,6 +1791,91 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_deliveries: {
+        Row: {
+          created_at: string | null
+          delivered_at: string | null
+          delivery_attempts: number | null
+          event_type: string
+          id: string
+          payload: Json
+          response_body: string | null
+          response_status: number | null
+          webhook_endpoint_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          delivered_at?: string | null
+          delivery_attempts?: number | null
+          event_type: string
+          id?: string
+          payload: Json
+          response_body?: string | null
+          response_status?: number | null
+          webhook_endpoint_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          delivered_at?: string | null
+          delivery_attempts?: number | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          response_body?: string | null
+          response_status?: number | null
+          webhook_endpoint_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_deliveries_webhook_endpoint_id_fkey"
+            columns: ["webhook_endpoint_id"]
+            isOneToOne: false
+            referencedRelation: "webhook_endpoints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_endpoints: {
+        Row: {
+          application_id: string | null
+          created_at: string | null
+          events: string[] | null
+          id: string
+          is_active: boolean | null
+          secret: string
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          application_id?: string | null
+          created_at?: string | null
+          events?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          secret: string
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          application_id?: string | null
+          created_at?: string | null
+          events?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          secret?: string
+          updated_at?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_endpoints_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "api_applications"
             referencedColumns: ["id"]
           },
         ]

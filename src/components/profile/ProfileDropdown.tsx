@@ -22,6 +22,8 @@ import {
   Book,
   Settings,
   LogOut,
+  Code,
+  Database,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -68,6 +70,16 @@ export default function ProfileDropdown() {
       icon: Book,
       label: "Knowledge Base",
       onClick: () => navigate("/knowledge"),
+    },
+    {
+      icon: Code,
+      label: "Developer Portal",
+      onClick: () => navigate("/developer"),
+    },
+    {
+      icon: Database,
+      label: "Integration Dashboard",
+      onClick: () => navigate("/admin/integrations"),
     },
     {
       icon: Settings,

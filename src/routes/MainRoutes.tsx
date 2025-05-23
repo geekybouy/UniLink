@@ -20,6 +20,8 @@ import CVMaker from '../pages/CVMaker';
 import AICVMaker from '../pages/AICVMaker'; // ADD
 import MessagingPage from '../pages/MessagingPage';
 import MyApplicationsPage from '../pages/MyApplicationsPage';
+import IntegrationDashboard from '../pages/admin/IntegrationDashboard';
+import DeveloperPortal from '../pages/developer/DeveloperPortal';
 
 export const mainRoutes = [
   <Route path="/dashboard" element={<Dashboard />} key="main-dashboard" />,
@@ -48,4 +50,6 @@ export const mainRoutes = [
   <Route path="/cv-maker" element={<CVMaker />} key="main-cv-maker" />,
   <Route path="/ai-cv-maker" element={<AICVMaker />} key="main-ai-cv-maker" />,
   <Route path="/my-applications" element={<MyApplicationsPage />} key="main-my-applications" />,
+  <Route path="/admin/integrations" element={<IntegrationDashboard />} key="admin-integrations" />,
+  <Route path="/developer" element={<DeveloperPortal />} key="developer-portal" />,
 ];
