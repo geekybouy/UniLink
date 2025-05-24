@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
@@ -12,56 +12,55 @@ const AuthCallback = () => {
   const { user, isLoading } = useAuth();
   const [authError, setAuthError] = useState<string | null>(null);
   const [attemptCount, setAttemptCount] = useState(0);
-  
+  const [showingLoader, setShowingLoader] = useState(true);
+
+  // Prevent double navigation
+  const hasNavigated = useRef(false);
+
   useEffect(() => {
-    // If we're not loading anymore, handle redirect or error
-    if (!isLoading) {
+    // Only navigate if not loading and haven't navigated yet
+    if (!isLoading && !hasNavigated.current) {
       if (user) {
-        console.log('Authentication successful, redirecting to dashboard');
+        hasNavigated.current = true;
+        console.log('[AuthCallback] Auth successful, redirecting to dashboard.');
         toast.success('Successfully signed in!');
-        navigate('/dashboard');
+        navigate('/dashboard', { replace: true });
       } else {
-        // If user is still null after loading is complete, there was likely an error
-        console.error('Authentication failed, no user found');
         setAuthError('Authentication failed. Please try again.');
-        
-        // Add a timeout to redirect to login if auth fails
+        setShowingLoader(false);
+        // Redirect to login after showing error
         const timeoutId = setTimeout(() => {
-          navigate('/auth/login');
-        }, 3000);
-        
+          if (!hasNavigated.current) {
+            hasNavigated.current = true;
+            navigate('/login', { replace: true });
+          }
+        }, 3500);
         return () => clearTimeout(timeoutId);
       }
     }
   }, [user, isLoading, navigate]);
 
-  // Add a safety mechanism to avoid infinite loading
+  // Add a "safety net" to never show a blank white page
   useEffect(() => {
-    const MAX_ATTEMPTS = 3;
-    
-    if (isLoading) {
-      const timeoutId = setTimeout(() => {
-        setAttemptCount(prev => {
-          const newCount = prev + 1;
-          if (newCount >= MAX_ATTEMPTS) {
-            console.error('Authentication timed out');
-            setAuthError('Authentication timed out. Please try again.');
-            navigate('/auth/login');
-          }
-          return newCount;
-        });
-      }, 5000); // Check every 5 seconds
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [isLoading, navigate]);
+    const timer = setTimeout(() => {
+      setShowingLoader(false);
+      if (!user && !authError && !isLoading && !hasNavigated.current) {
+        setAuthError('Authentication timed out. Please try again.');
+        if (!hasNavigated.current) {
+          hasNavigated.current = true;
+          navigate('/login', { replace: true });
+        }
+      }
+    }, 12000); // Max wait time is 12s
+    return () => clearTimeout(timer);
+  }, [user, isLoading, authError, navigate]);
 
   if (authError) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4 max-w-md w-full p-4">
           <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
+            <AlertCircle className="h-5 w-5 mr-2" />
             <AlertDescription>{authError}</AlertDescription>
           </Alert>
           <p className="text-sm text-muted-foreground mt-2">Redirecting to login page...</p>
@@ -70,17 +69,32 @@ const AuthCallback = () => {
     );
   }
 
+  if (showingLoader || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Spinner />
+          <p className="text-muted-foreground">Completing sign in...</p>
+          {attemptCount > 0 && (
+            <p className="text-sm text-muted-foreground">Still working... {attemptCount}/3</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Never render a blank screen
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center space-y-4">
-        <Spinner />
-        <p className="text-muted-foreground">Completing sign in...</p>
-        {attemptCount > 0 && (
-          <p className="text-sm text-muted-foreground">Still working... {attemptCount}/3</p>
-        )}
+        <Alert variant="destructive">
+          <AlertCircle className="h-5 w-5 mr-2" />
+          <AlertDescription>Something went wrong. Try again.</AlertDescription>
+        </Alert>
       </div>
     </div>
   );
 };
 
 export default AuthCallback;
+

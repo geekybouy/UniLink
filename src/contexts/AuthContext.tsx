@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -163,8 +162,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Show success message
       toast.success("Signed out successfully");
       
-      // Force page reload for a clean state
-      window.location.href = '/auth/login';
+      // Redirect using React Router if possible, else fallback to window.location (for full state clear)
+      if (window && window.location && typeof window.location.replace === 'function') {
+        window.location.replace('/login');
+      } else {
+        window.location.href = '/login';
+      }
     } catch (error) {
       console.error('Failed to sign out:', error);
       toast.error('Failed to sign out properly');

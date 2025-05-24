@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,7 +36,7 @@ const AuthLayout = () => {
   }
 
   // If user is already authenticated and not on callback page, redirect to dashboard
-  if (user && !location.pathname.includes('/auth/callback')) {
+  if (user && !location.pathname.includes('/callback')) {
     console.log('User already authenticated, redirecting to dashboard');
     return <Navigate to="/dashboard" replace />;
   }
