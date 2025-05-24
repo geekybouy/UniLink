@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,8 @@ import type { Credential } from '@/types/credentials';
 import ErrorBoundary from "@/components/ErrorBoundary";
 import CredentialWalletHeader from "@/components/credentials/CredentialWalletHeader";
 import CredentialWalletTabs from "@/components/credentials/CredentialWalletTabs";
+
+// Remove any ProfileProvider or JobsProvider wrappers here! Context is from main.tsx only.
 
 const CredentialWallet = () => {
   const { user } = useAuth();
