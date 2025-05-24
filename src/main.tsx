@@ -18,12 +18,13 @@ const root = ReactDOM.createRoot(document.getElementById('root')!);
 
 // Use a more efficient render approach
 root.render(
-  // Remove StrictMode in production to avoid double rendering
   <BrowserRouter>
     <ThemeProvider>
       <AuthProvider>
+        {/* ProfileProvider should wrap ALL providers and App */}
         <ProfileProvider>
           <MessagingProvider>
+            {/* Move JobsProvider INSIDE ProfileProvider if not already */}
             <JobsProvider>
               <EventsProvider>
                 <NotificationsProvider>
@@ -39,3 +40,4 @@ root.render(
     </ThemeProvider>
   </BrowserRouter>
 );
+
