@@ -3,14 +3,17 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Users } from "lucide-react";
 
-// Placeholder connections
+// More demo connections
 const suggested = [
   { name: "Emily Wong", role: "2018 · Product Manager" },
   { name: "Sanjay Gupta", role: "2020 · Data Scientist" },
+  { name: "Priyanka Joshi", role: "2016 · Marketing Lead" },
+  { name: "Michael Brown", role: "2023 · UX Designer" },
 ];
 
 const pending = [
   { name: "Priya Singh", role: "2019 · Software Engineer" },
+  { name: "Aravind Kumar", role: "2021 · Investment Analyst" },
 ];
 
 const ConnectionsOverviewWidget = () => (
@@ -56,3 +59,4 @@ const ConnectionsOverviewWidget = () => (
 );
 
 export default ConnectionsOverviewWidget;
+

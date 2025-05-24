@@ -3,10 +3,13 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { UserRound } from "lucide-react";
 
-// Placeholder mentorship demos
+// Richer mentorship mock data
 const demoMentors = [
   { name: "Megha Patel", area: "Tech Careers" },
   { name: "Arjun Rao", area: "MBA Prep" },
+  { name: "Dr. Nandini Mehra", area: "PhD Guidance" },
+  { name: "Lucas Fernandes", area: "Entrepreneurship" },
+  { name: "Leila Khanna", area: "Product Management" },
 ];
 
 const MentorshipCornerWidget = () => (
@@ -24,7 +27,7 @@ const MentorshipCornerWidget = () => (
         </div>
       ) : (
         <ul className="space-y-3">
-          {demoMentors.map((mentor, idx) => (
+          {demoMentors.slice(0, 4).map((mentor, idx) => (
             <li key={idx} className="flex justify-between text-sm bg-accent/30 p-2 rounded">
               <span className="font-medium">{mentor.name}</span>
               <span className="text-xs text-muted-foreground">{mentor.area}</span>
@@ -37,3 +40,4 @@ const MentorshipCornerWidget = () => (
 );
 
 export default MentorshipCornerWidget;
+

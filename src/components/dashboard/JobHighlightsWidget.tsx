@@ -3,10 +3,14 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Briefcase } from "lucide-react";
 
-// Placeholder jobs
+// Expanded demo jobs
 const demoJobs = [
   { role: "Product Designer", company: "Adobe", posted: "1d ago" },
   { role: "Frontend Engineer", company: "Flipkart", posted: "2d ago" },
+  { role: "Research Analyst", company: "McKinsey", posted: "5h ago" },
+  { role: "Data Engineer", company: "Microsoft", posted: "3d ago" },
+  { role: "Marketing Intern", company: "PepsiCo", posted: "7h ago" },
+  { role: "Software Developer", company: "Amazon", posted: "12h ago" },
 ];
 
 const JobHighlightsWidget = () => (
@@ -24,7 +28,7 @@ const JobHighlightsWidget = () => (
         </div>
       ) : (
         <ul className="space-y-3">
-          {demoJobs.map((job, idx) => (
+          {demoJobs.slice(0, 5).map((job, idx) => (
             <li key={idx} className="flex justify-between text-sm bg-accent/30 p-2 rounded">
               <span className="font-medium">{job.role} </span>
               <span className="text-xs text-muted-foreground">{job.company} · {job.posted}</span>
@@ -37,3 +41,4 @@ const JobHighlightsWidget = () => (
 );
 
 export default JobHighlightsWidget;
+

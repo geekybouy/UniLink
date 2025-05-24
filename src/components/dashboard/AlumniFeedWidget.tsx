@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Newspaper } from "lucide-react";
 
-// Placeholder posts
+// Expanded demo posts
 const mockPosts = [
   {
     id: 1,
@@ -16,6 +16,24 @@ const mockPosts = [
     user: "Amit Verma",
     content: "Great alumni meetup in London this weekend!",
     time: "1d ago",
+  },
+  {
+    id: 3,
+    user: "Li Zhang",
+    content: "Excited to announce my MBA admission at Stanford! 🚀",
+    time: "5h ago",
+  },
+  {
+    id: 4,
+    user: "Anya Patel",
+    content: "Launching a new AI startup - looking for collaborators!",
+    time: "22m ago",
+  },
+  {
+    id: 5,
+    user: "Karan Singh",
+    content: "Presented at the Global Research Conference 2025, thanks to everyone who helped along the way.",
+    time: "3d ago",
   },
 ];
 
