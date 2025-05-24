@@ -1,4 +1,3 @@
-
 import { ReactNode } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -43,7 +42,7 @@ const MainLayout = ({ children, hideFooter = false }: MainLayoutProps) => {
 
       {/* Footer */}
       {!hideFooter && <Footer />}
-
+      
       {/* Bottom Navigation - Only show on mobile */}
       {isMobile && <BottomNav />}
     </div>
@@ -51,4 +50,3 @@ const MainLayout = ({ children, hideFooter = false }: MainLayoutProps) => {
 };
 
 export default MainLayout;
-

@@ -67,7 +67,7 @@ const BottomNav = () => {
           icon={Menu}
           label="More"
           active={isActive('/more') || 
-                 isActive('/credential-wallet') || 
+                 isActive('/credentials') || 
                  isActive('/cv-maker') || 
                  isActive('/knowledge') || 
                  isActive('/my-applications') || 
