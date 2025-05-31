@@ -1,0 +1,133 @@
+
+# Supabase project ID.
+project_id = "tchudsedvmebjqzewlyb"
+
+[api]
+# Port to use for Supabase local development services.
+port = 54321
+# Schemas to expose in your API. Supabase loads these in the search_path.
+schemas = ["public", "storage", "graphql"]
+# Extra schemas to add to the search_path of every request.
+extra_search_path = ["extensions"]
+# Maximum number of rows returns by PostgREST.
+max_rows = 1000
+
+[db]
+# Port to use for the local database.
+port = 5432
+# Use a Docker container to run PostgreSQL locally.
+use_local_env = true
+# Docker image to use for the local database.
+image = "supabase/postgres:15.1.0.110"
+# Show logs from the local database.
+major_version = 15
+
+[studio]
+# Port to use for Supabase Studio.
+port = 54323
+# Supabase Studio does not support existing passwords.
+# You can reset passwords by asking for a password recovery email.
+# Reset passwords: http://localhost:54323/project/auth/users
+
+[realtime]
+# Bind realtime via either IPv4 or IPv6.
+# Not impacted when deployed to the Supabase platform.
+# ip_version = "ipv4" # or "ipv6"
+enabled = true
+
+[auth]
+# Site URL used by Supabase Auth.
+site_url = "http://localhost:3000"
+# Additional addresses that are allowed to redirect users.
+# allow_list = ["http://localhost:3000"] # DEPRECATED
+additional_redirect_urls = ["http://localhost:3000"]
+# Enable the built-in Email auth provider.
+enable_email_autolink = false # Used with passwordless sign-in.
+enable_email_signup = true
+# Enable the built-in Phone auth provider.
+enable_phone_signup = false # For future use.
+# Specify the flow type when using the passwordless sign-in.
+# passwordless_email_flow = "pkce" or "implicit"
+# Specify the message when using the passwordless sign-in.
+# passwordless_email_template = "{{ .Token }}"
+# Enable the built-in Magic Link auth provider.
+enable_magic_link = true
+# Enable the built-in Anonymous sign-ins provider.
+enable_anonymous_sign_ins = false
+# Enable the built-in Apple auth provider.
+# enable_apple = false
+# Enable the built-in Azure auth provider.
+# enable_azure = false
+# Enable the built-in Bitbucket auth provider.
+# enable_bitbucket = false
+# Enable the built-in Discord auth provider.
+# enable_discord = false
+# Enable the built-in Facebook auth provider.
+# enable_facebook = false
+# Enable the built-in Figma auth provider.
+# enable_figma = false
+# Enable the built-in GitHub auth provider.
+# enable_github = false
+# Enable the built-in GitLab auth provider.
+# enable_gitlab = false
+# Enable the built-in Google auth provider.
+# enable_google = false
+# Enable the built-in Kakao auth provider.
+# enable_kakao = false
+# Enable the built-in Keycloak auth provider.
+# enable_keycloak = false
+# Enable the built-in LinkedIn auth provider.
+# enable_linkedin = false
+# Enable the built-in Notion auth provider.
+# enable_notion = false
+# Enable the built-in Slack auth provider.
+# enable_slack = false
+# Enable the built-in Spotify auth provider.
+# enable_spotify = false
+# Enable the built-in Twitch auth provider.
+# enable_twitch = false
+# Enable the built-in Twitter auth provider.
+# enable_twitter = false
+# Enable the built-in WorkOS auth provider.
+# enable_workos = false
+# Enable the built-in Zoom auth provider.
+# enable_zoom = false
+# Enable the built-in SAML auth provider.
+# enable_saml = false
+# Path to the SAML metadata file.
+# saml_xml_file_path = "saml_metadata.xml"
+# Email address of the contact person for SAML.
+# saml_contact_email = "user@example.com"
+# Specify the subject name identifier format.
+# saml_nameid_format = "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"
+
+[inbucket]
+# Port to use for Inbucket. Inbucket is an email testing service.
+# It will catch emails sent by Supabase Auth and display them in a web interface.
+port = 54324
+# Enable Inbucket.
+enabled = true
+
+[functions.analyze-credential]
+# verify_jwt = true
+# import_map = "my_import_map.json"
+
+[functions.enhance-cv]
+# verify_jwt = true
+# import_map = "my_import_map.json"
+
+[functions.verify-credential]
+verify_jwt = false # Make it public for now
+import_map = "./supabase/functions/import_map.json" # Optional: if you need an import map
+
+# You can add an import_map.json file to your project root to manage dependencies.
+# For example:
+# {
+#   "imports": {
+#     "std/": "https://deno.land/std@0.168.0/",
+#     "supabase/": "https://esm.sh/@supabase/supabase-js@2"
+#   }
+# }
+# And then reference it in the import_map property above.
+# If verify_jwt is not set, it defaults to true. Set to false to bypass JWT validation.
+# The import_map path is relative to the Supabase project root.

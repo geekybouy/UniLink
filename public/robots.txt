@@ -1,0 +1,16 @@
+
+User-agent: *
+Allow: /
+
+# Disallow admin pages
+Disallow: /admin/
+Disallow: /auth/
+
+# Disallow API routes
+Disallow: /api/
+
+# Crawl delay
+Crawl-delay: 10
+
+# Sitemap URL
+Sitemap: https://unilink.example.com/sitemap.xml
